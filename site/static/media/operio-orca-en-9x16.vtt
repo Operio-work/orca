@@ -28,6 +28,8 @@ Scheduled routines whose drafts wait for your OK
 
 6
 00:00:42.402 --> 00:00:49.602
+ORCA by Operio
+Run it yourself: Free and open source
+Let Operio run it: ORCA Managed by Operio
 make.operio.work
-Free and open source. No account, no sudo.
-Have Operio run it for you
+Runs on herdr (Apache-2.0)
