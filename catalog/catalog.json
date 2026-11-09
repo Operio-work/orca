@@ -1,0 +1,1122 @@
+{
+  "version": 1,
+  "updated": "2026-11-09",
+  "cta": {
+    "en": "Talk to Operio",
+    "es": "Habla con Operio"
+  },
+  "entries": [
+    {
+      "id": "morning-front-desk-brief",
+      "tier": "free",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Morning Front Desk Brief",
+        "es": "Resumen matutino de recepción"
+      },
+      "problem": {
+        "en": "You start the day not knowing what is waiting: messages, bookings, reviews and overdue payments.",
+        "es": "Empiezas el día sin saber qué te espera: mensajes, reservas, reseñas y pagos atrasados."
+      },
+      "outcome": {
+        "en": "One page before you open: who needs a reply, today's bookings, new reviews and who owes you, so the first hour goes to customers instead of catching up.",
+        "es": "Una página antes de abrir: quién espera respuesta, las reservas del día, las reseñas nuevas y quién te debe, para que la primera hora sea para tus clientes y no para ponerte al día."
+      },
+      "how": {
+        "en": [
+          "Drop your WhatsApp exports, bookings list and payments list in one folder.",
+          "Every morning at 7:30 the brief is written from those files.",
+          "Read it with your coffee and start with the three things it puts first."
+        ],
+        "es": [
+          "Deja en una carpeta tus chats exportados de WhatsApp, tu lista de reservas y tu lista de pagos.",
+          "Cada mañana a las 7:30 se escribe el resumen con esos archivos.",
+          "Léelo con tu café y empieza por las tres cosas que pone primero."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Monday to Saturday at 7:30 am",
+          "es": "De lunes a sábado a las 7:30 am"
+        }
+      },
+      "approval": {
+        "en": "None: it is a read-only report for you.",
+        "es": "Ninguna: es un reporte de solo lectura para ti."
+      },
+      "tools": [
+        "WhatsApp",
+        "Email",
+        "Google Calendar",
+        "Google Sheets"
+      ],
+      "pack": "morning-front-desk-brief"
+    },
+    {
+      "id": "review-reply-desk",
+      "tier": "free",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Review Reply Desk",
+        "es": "Respuestas a reseñas"
+      },
+      "problem": {
+        "en": "Google reviews sit unanswered and hurt your ranking and your customers' trust.",
+        "es": "Las reseñas de Google se quedan sin respuesta y afectan tu posicionamiento y la confianza de tus clientes."
+      },
+      "outcome": {
+        "en": "Every review gets a warm, specific reply in the customer's language, ready to paste, so answering a week of reviews takes minutes.",
+        "es": "Cada reseña recibe una respuesta cálida y específica en el idioma del cliente, lista para pegar, y contestar las reseñas de una semana te toma minutos."
+      },
+      "how": {
+        "en": [
+          "Copy your new Google reviews into the reviews folder.",
+          "Each day a reply is drafted for every review, low ratings first.",
+          "You approve each reply and post it yourself."
+        ],
+        "es": [
+          "Copia tus reseñas nuevas de Google en la carpeta de reseñas.",
+          "Cada día se prepara una respuesta para cada reseña, primero las de calificación baja.",
+          "Apruebas cada respuesta y tú la publicas."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every day at 9:00 am",
+          "es": "Todos los días a las 9:00 am"
+        }
+      },
+      "approval": {
+        "en": "You approve every reply; nothing is posted for you.",
+        "es": "Tú apruebas cada respuesta; nada se publica por ti."
+      },
+      "tools": [
+        "Google Business Profile"
+      ],
+      "upgrade": {
+        "en": "Managed by Operio: new reviews arrive on their own and, once you trust the replies, 4 and 5-star answers can post automatically.",
+        "es": "Operado por Operio: las reseñas nuevas llegan solas y, cuando ya confías en las respuestas, las de 4 y 5 estrellas pueden publicarse automáticamente."
+      },
+      "pack": "review-reply-desk"
+    },
+    {
+      "id": "weekly-owner-report",
+      "tier": "free",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Weekly Owner Report",
+        "es": "Reporte semanal para el dueño"
+      },
+      "problem": {
+        "en": "You have no single view of last week's leads, bookings, reviews and money coming in.",
+        "es": "No tienes una sola vista de los prospectos, reservas, reseñas y cobros de la semana pasada."
+      },
+      "outcome": {
+        "en": "Monday starts with the week in five numbers, what changed against the week before and three priorities, instead of an evening of spreadsheets.",
+        "es": "El lunes empieza con la semana en cinco números, lo que cambió frente a la semana anterior y tres prioridades, en lugar de una tarde de hojas de cálculo."
+      },
+      "how": {
+        "en": [
+          "Drop your bookings, sales, leads and reviews exports in one folder.",
+          "Every Monday at 8:00 the report compares this week with the last.",
+          "Read the three priorities and plan the week."
+        ],
+        "es": [
+          "Deja en una carpeta tus exportaciones de reservas, ventas, prospectos y reseñas.",
+          "Cada lunes a las 8:00 el reporte compara esta semana con la anterior.",
+          "Lee las tres prioridades y planea tu semana."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every Monday at 8:00 am",
+          "es": "Cada lunes a las 8:00 am"
+        }
+      },
+      "approval": {
+        "en": "None: it is a read-only report for you.",
+        "es": "Ninguna: es un reporte de solo lectura para ti."
+      },
+      "tools": [
+        "Google Sheets",
+        "POS export",
+        "Google Business Profile",
+        "WhatsApp"
+      ],
+      "upgrade": {
+        "en": "Managed by Operio: the numbers come straight from your point of sale, payments, booking tool and Google profile, with no exports.",
+        "es": "Operado por Operio: los números llegan directo de tu punto de venta, tus cobros, tu sistema de reservas y tu perfil de Google, sin exportar nada."
+      },
+      "pack": "weekly-owner-report"
+    },
+    {
+      "id": "showing-day-pack",
+      "tier": "free",
+      "verticals": [
+        "real-estate"
+      ],
+      "name": {
+        "en": "Showing Day Pack",
+        "es": "Paquete para día de visitas"
+      },
+      "problem": {
+        "en": "Agents lose an hour before every showing day putting together the route and the property sheets.",
+        "es": "Los asesores pierden una hora antes de cada día de visitas armando la ruta y las fichas de las propiedades."
+      },
+      "outcome": {
+        "en": "One pack for the day: showings in order with map links, a short sheet per property matched to each client, and a checklist of keys and documents.",
+        "es": "Un paquete para el día: las visitas en orden con enlaces de mapa, una ficha corta por propiedad pensada para cada cliente y una lista de llaves y documentos."
+      },
+      "how": {
+        "en": [
+          "List the day's showings and drop the property details in one folder.",
+          "Press Run now whenever you need the pack.",
+          "Take the route, the sheets and the checklist with you."
+        ],
+        "es": [
+          "Anota las visitas del día y deja los datos de las propiedades en una carpeta.",
+          "Pulsa Ejecutar ahora cuando necesites el paquete.",
+          "Llévate la ruta, las fichas y la lista."
+        ]
+      },
+      "trigger": {
+        "kind": "on-demand",
+        "summary": {
+          "en": "When you ask for it, before a day of showings",
+          "es": "Cuando lo pides, antes de un día de visitas"
+        }
+      },
+      "approval": {
+        "en": "None: it is an internal pack for the agent.",
+        "es": "Ninguna: es un paquete interno para el asesor."
+      },
+      "tools": [
+        "Google Calendar",
+        "Drive",
+        "Google Maps"
+      ],
+      "pack": "showing-day-pack"
+    },
+    {
+      "id": "post-visit-thank-you",
+      "tier": "free",
+      "verticals": [
+        "restaurant",
+        "clinic",
+        "tourism",
+        "retail",
+        "services"
+      ],
+      "name": {
+        "en": "Post-Visit Thank-You + Review Ask",
+        "es": "Agradecimiento después de la visita + reseña"
+      },
+      "problem": {
+        "en": "Happy customers leave without being thanked or asked for a review, so your best visits never show up on Google.",
+        "es": "Los clientes contentos se van sin un agradecimiento ni una invitación a dejar reseña, y tus mejores visitas nunca aparecen en Google."
+      },
+      "outcome": {
+        "en": "Every customer gets a personal thank-you with your review link, ready to send in one tap, so more of your good visits turn into reviews.",
+        "es": "Cada cliente recibe un agradecimiento personal con tu enlace de reseñas, listo para enviar con un toque, y más de tus buenas visitas se convierten en reseñas."
+      },
+      "how": {
+        "en": [
+          "Keep a simple list of today's visits.",
+          "Each evening a thank-you is drafted for every customer, with your review link.",
+          "You review each one and tap to send it from your own WhatsApp."
+        ],
+        "es": [
+          "Lleva una lista sencilla de las visitas del día.",
+          "Cada tarde se prepara un agradecimiento para cada cliente, con tu enlace de reseñas.",
+          "Revisas cada uno y lo envías con un toque desde tu propio WhatsApp."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every day at 6:00 pm",
+          "es": "Todos los días a las 6:00 pm"
+        }
+      },
+      "approval": {
+        "en": "You approve and send every message yourself; nothing is sent for you.",
+        "es": "Tú apruebas y envías cada mensaje; nada se envía por ti."
+      },
+      "tools": [
+        "WhatsApp",
+        "Google Business Profile"
+      ],
+      "upgrade": {
+        "en": "Managed by Operio: visits are picked up from your booking tool or point of sale and thank-yous go out on their own, with templates you approve once.",
+        "es": "Operado por Operio: las visitas se toman de tu sistema de reservas o punto de venta y los agradecimientos salen solos, con plantillas que apruebas una vez."
+      },
+      "pack": "post-visit-thank-you"
+    },
+    {
+      "id": "whatsapp-after-hours-responder",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "WhatsApp After-Hours Responder",
+        "es": "Respuesta fuera de horario en WhatsApp"
+      },
+      "problem": {
+        "en": "Messages that arrive at night go unanswered and those customers book somewhere else.",
+        "es": "Los mensajes que llegan de noche se quedan sin respuesta y esos clientes reservan en otro lado."
+      },
+      "outcome": {
+        "en": "Every after-hours message gets a fast, accurate answer, and the questions that need a person are waiting for your team in the morning.",
+        "es": "Cada mensaje fuera de horario recibe una respuesta rápida y correcta, y las preguntas que necesitan a una persona esperan a tu equipo en la mañana."
+      },
+      "how": {
+        "en": [
+          "Together we write the answers to your most common questions.",
+          "After hours, each new message gets the right answer within minutes.",
+          "Anything unusual is queued for your team with the full conversation."
+        ],
+        "es": [
+          "Juntos escribimos las respuestas a tus preguntas más frecuentes.",
+          "Fuera de horario, cada mensaje nuevo recibe la respuesta correcta en minutos.",
+          "Lo que no es común queda en espera para tu equipo con toda la conversación."
+        ]
+      },
+      "trigger": {
+        "kind": "event",
+        "summary": {
+          "en": "A new WhatsApp message arrives outside business hours",
+          "es": "Llega un mensaje de WhatsApp fuera del horario de atención"
+        }
+      },
+      "approval": {
+        "en": "You approve the answer library once; anything outside it waits for a person.",
+        "es": "Apruebas una vez la lista de respuestas; lo que quede fuera espera a una persona."
+      },
+      "tools": [
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "unhappy-review-rescue",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Unhappy Review Rescue",
+        "es": "Rescate de reseñas negativas"
+      },
+      "problem": {
+        "en": "A 1 to 3-star review gets no private follow-up and that customer is lost for good.",
+        "es": "Una reseña de 1 a 3 estrellas no recibe seguimiento en privado y ese cliente se pierde para siempre."
+      },
+      "outcome": {
+        "en": "Unhappy customers hear from you the same day, privately and publicly, so problems get fixed and future customers see a business that cares.",
+        "es": "Los clientes inconformes saben de ti el mismo día, en privado y en público, así los problemas se resuelven y los futuros clientes ven un negocio que se preocupa."
+      },
+      "how": {
+        "en": [
+          "A low rating is spotted as soon as it is posted.",
+          "A private message and a public reply are prepared for your manager.",
+          "Once approved, both go out and the case is followed until it is closed."
+        ],
+        "es": [
+          "Una calificación baja se detecta en cuanto se publica.",
+          "Se preparan un mensaje privado y una respuesta pública para tu gerente.",
+          "Ya aprobados, ambos se envían y se da seguimiento al caso hasta cerrarlo."
+        ]
+      },
+      "trigger": {
+        "kind": "event",
+        "summary": {
+          "en": "A new 1 to 3-star review is posted",
+          "es": "Se publica una reseña nueva de 1 a 3 estrellas"
+        }
+      },
+      "approval": {
+        "en": "Your manager approves both the private message and the public reply.",
+        "es": "Tu gerente aprueba el mensaje privado y la respuesta pública."
+      },
+      "tools": [
+        "Google Business Profile",
+        "WhatsApp",
+        "Email"
+      ]
+    },
+    {
+      "id": "appointment-confirmer-no-show-recovery",
+      "tier": "managed",
+      "verticals": [
+        "clinic",
+        "services"
+      ],
+      "name": {
+        "en": "Appointment Confirmer + No-Show Recovery",
+        "es": "Confirmación de citas + recuperación de inasistencias"
+      },
+      "problem": {
+        "en": "No-shows cost real money and missed appointments are never rebooked.",
+        "es": "Las inasistencias cuestan dinero y las citas perdidas nunca se vuelven a agendar."
+      },
+      "outcome": {
+        "en": "Fewer empty chairs: every appointment is confirmed the day before and two hours before, and anyone who misses one gets an offer to rebook.",
+        "es": "Menos sillas vacías: cada cita se confirma un día antes y dos horas antes, y quien falta recibe una propuesta para reagendar."
+      },
+      "how": {
+        "en": [
+          "We connect to your calendar or booking tool and you approve the message wording.",
+          "Each appointment gets reminders 24 hours and 2 hours before.",
+          "When an appointment is marked missed, a rebooking offer is prepared for your staff."
+        ],
+        "es": [
+          "Nos conectamos a tu agenda o sistema de citas y apruebas el texto de los mensajes.",
+          "Cada cita recibe recordatorios 24 horas y 2 horas antes.",
+          "Cuando una cita se marca como perdida, se prepara una propuesta para reagendar para tu equipo."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "24 hours and 2 hours before each appointment, and when one is marked missed",
+          "es": "24 horas y 2 horas antes de cada cita, y cuando una se marca como perdida"
+        }
+      },
+      "approval": {
+        "en": "Reminder templates are approved once; your staff approves each rebooking offer.",
+        "es": "Las plantillas de recordatorio se aprueban una vez; tu equipo aprueba cada propuesta para reagendar."
+      },
+      "tools": [
+        "Google Calendar",
+        "booking tool",
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "recall-reactivation",
+      "tier": "managed",
+      "verticals": [
+        "clinic",
+        "services",
+        "retail"
+      ],
+      "name": {
+        "en": "Recall & Reactivation",
+        "es": "Recordatorios de regreso y reactivación"
+      },
+      "problem": {
+        "en": "Patients and customers due for a cleaning, a check-up or new glasses are simply forgotten.",
+        "es": "Los pacientes y clientes a los que les toca limpieza, revisión o lentes nuevos simplemente se olvidan."
+      },
+      "outcome": {
+        "en": "Customers who are due come back on time, which fills quiet days with revenue you already earned the trust for.",
+        "es": "Los clientes a los que les toca regresan a tiempo, y eso llena los días flojos con ingresos de gente que ya confía en ti."
+      },
+      "how": {
+        "en": [
+          "Each month we find everyone who is due, from your patient or customer list.",
+          "You review the list and the message in one go.",
+          "Messages go out in small batches and replies come back to your team."
+        ],
+        "es": [
+          "Cada mes encontramos a todos a los que les toca, a partir de tu lista de pacientes o clientes.",
+          "Revisas la lista y el mensaje de una sola vez.",
+          "Los mensajes salen en tandas pequeñas y las respuestas llegan a tu equipo."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Once a month",
+          "es": "Una vez al mes"
+        }
+      },
+      "approval": {
+        "en": "You approve the list and the message before each batch.",
+        "es": "Apruebas la lista y el mensaje antes de cada tanda."
+      },
+      "tools": [
+        "Google Sheets",
+        "WhatsApp",
+        "Email"
+      ]
+    },
+    {
+      "id": "treatment-plan-follow-up",
+      "tier": "managed",
+      "verticals": [
+        "clinic"
+      ],
+      "name": {
+        "en": "Treatment Plan Follow-Up",
+        "es": "Seguimiento de planes de tratamiento"
+      },
+      "problem": {
+        "en": "Quoted dental and physio plans are never accepted and nobody follows up.",
+        "es": "Los planes de tratamiento dental o de fisioterapia que se cotizan nunca se aceptan y nadie les da seguimiento."
+      },
+      "outcome": {
+        "en": "More quoted treatments are accepted, because every patient hears from you at the right moments with a clear next step.",
+        "es": "Se aceptan más tratamientos cotizados, porque cada paciente sabe de ti en el momento justo y con un siguiente paso claro."
+      },
+      "how": {
+        "en": [
+          "Each new treatment quote is picked up from your list.",
+          "A follow-up goes out 3, 10 and 30 days after the quote.",
+          "Patients who answer are handed to your front desk to book."
+        ],
+        "es": [
+          "Cada cotización de tratamiento nueva se toma de tu lista.",
+          "Sale un seguimiento a los 3, 10 y 30 días de la cotización.",
+          "Los pacientes que responden pasan a tu recepción para agendar."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "3, 10 and 30 days after each quote",
+          "es": "A los 3, 10 y 30 días de cada cotización"
+        }
+      },
+      "approval": {
+        "en": "The clinician approves the first message for each patient.",
+        "es": "El especialista aprueba el primer mensaje para cada paciente."
+      },
+      "tools": [
+        "Google Sheets",
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "payment-reminder-ladder",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Payment Reminder Ladder",
+        "es": "Recordatorios de pago escalonados"
+      },
+      "problem": {
+        "en": "Unpaid invoices and deposits slip through and chasing them is awkward.",
+        "es": "Las facturas y anticipos sin pagar se te pasan y cobrarlos es incómodo."
+      },
+      "outcome": {
+        "en": "You get paid sooner without making the calls: polite reminders with a payment link go out on the due date and follow up until it is settled.",
+        "es": "Cobras antes sin hacer las llamadas: recordatorios amables con enlace de pago salen en la fecha de vencimiento y siguen hasta que se liquida."
+      },
+      "how": {
+        "en": [
+          "We connect to your list of pending invoices and deposits.",
+          "A reminder with a payment link goes out on the due date, then 3 and 10 days later.",
+          "Paid items drop off on their own and late ones are flagged to you."
+        ],
+        "es": [
+          "Nos conectamos a tu lista de facturas y anticipos pendientes.",
+          "Sale un recordatorio con enlace de pago en la fecha de vencimiento y luego a los 3 y 10 días.",
+          "Lo pagado sale de la lista solo y lo atrasado se te avisa."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "On the due date, then 3 and 10 days later",
+          "es": "En la fecha de vencimiento y luego a los 3 y 10 días"
+        }
+      },
+      "approval": {
+        "en": "You approve the first reminder for each client; the later steps follow on their own.",
+        "es": "Apruebas el primer recordatorio para cada cliente; los siguientes pasos salen solos."
+      },
+      "tools": [
+        "payment links",
+        "WhatsApp",
+        "Email",
+        "Google Sheets"
+      ]
+    },
+    {
+      "id": "quote-builder",
+      "tier": "managed",
+      "verticals": [
+        "restaurant",
+        "tourism",
+        "clinic",
+        "services"
+      ],
+      "name": {
+        "en": "Quote Builder",
+        "es": "Generador de cotizaciones"
+      },
+      "problem": {
+        "en": "Custom quotes for events, groups or treatments take hours to write.",
+        "es": "Las cotizaciones a la medida para eventos, grupos o tratamientos toman horas."
+      },
+      "outcome": {
+        "en": "A complete, on-brand quote in minutes from your own price list, so you answer while the customer is still deciding.",
+        "es": "Una cotización completa y con tu imagen en minutos, a partir de tu propia lista de precios, para responder mientras el cliente todavía decide."
+      },
+      "how": {
+        "en": [
+          "Your team sends the request details in a short message.",
+          "A quote is built from your price list and your template.",
+          "You check it and approve it before it goes to the customer."
+        ],
+        "es": [
+          "Tu equipo envía los detalles de la solicitud en un mensaje corto.",
+          "Se arma la cotización con tu lista de precios y tu plantilla.",
+          "La revisas y la apruebas antes de que llegue al cliente."
+        ]
+      },
+      "trigger": {
+        "kind": "on-demand",
+        "summary": {
+          "en": "When your team asks for a quote",
+          "es": "Cuando tu equipo pide una cotización"
+        }
+      },
+      "approval": {
+        "en": "You approve every quote before it is sent.",
+        "es": "Apruebas cada cotización antes de enviarla."
+      },
+      "tools": [
+        "Google Sheets",
+        "Drive",
+        "Email",
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "factura-request-handler",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Factura Request Handler (Mexico)",
+        "es": "Solicitudes de factura (CFDI)"
+      },
+      "problem": {
+        "en": "Customers in Mexico ask for a CFDI invoice by WhatsApp and their tax details get lost.",
+        "es": "Tus clientes piden factura por WhatsApp y sus datos fiscales se pierden."
+      },
+      "outcome": {
+        "en": "Every factura request is captured with the RFC, tax regime, CFDI use and postal code complete, so your accountant stamps it without chasing anyone.",
+        "es": "Cada solicitud de factura queda registrada con RFC, régimen fiscal, uso de CFDI y código postal completos, y tu contador la timbra sin perseguir a nadie."
+      },
+      "how": {
+        "en": [
+          "A message that mentions a factura or an RFC is spotted.",
+          "Missing tax details are requested and checked against the ticket.",
+          "The complete request goes to your accountant to stamp."
+        ],
+        "es": [
+          "Se detecta un mensaje que menciona factura o RFC.",
+          "Se piden los datos fiscales que falten y se revisan contra el ticket.",
+          "La solicitud completa llega a tu contador para timbrarla."
+        ]
+      },
+      "trigger": {
+        "kind": "event",
+        "summary": {
+          "en": "A message asks for a factura or includes an RFC",
+          "es": "Un mensaje pide factura o incluye un RFC"
+        }
+      },
+      "approval": {
+        "en": "Your accountant approves every invoice before it is stamped.",
+        "es": "Tu contador aprueba cada factura antes de timbrarla."
+      },
+      "tools": [
+        "WhatsApp",
+        "Email",
+        "Google Sheets",
+        "invoicing service"
+      ]
+    },
+    {
+      "id": "reservation-waitlist-filler",
+      "tier": "managed",
+      "verticals": [
+        "restaurant",
+        "tourism"
+      ],
+      "name": {
+        "en": "Reservation Waitlist Filler",
+        "es": "Lista de espera para reservas"
+      },
+      "problem": {
+        "en": "Last-minute cancellations leave empty tables and tour seats.",
+        "es": "Las cancelaciones de último momento dejan mesas y lugares de tour vacíos."
+      },
+      "outcome": {
+        "en": "Cancelled spots are offered to the waitlist within minutes, so fewer tables and seats go empty.",
+        "es": "Los lugares cancelados se ofrecen a la lista de espera en minutos, y quedan menos mesas y lugares vacíos."
+      },
+      "how": {
+        "en": [
+          "Guests join a waitlist when you are full.",
+          "When someone cancels, the spot is offered to the next guests in line.",
+          "The first to accept gets it and your booking tool is updated."
+        ],
+        "es": [
+          "Los clientes entran a una lista de espera cuando estás lleno.",
+          "Cuando alguien cancela, el lugar se ofrece a los siguientes en la lista.",
+          "El primero que acepta se lo queda y tu sistema de reservas se actualiza."
+        ]
+      },
+      "trigger": {
+        "kind": "event",
+        "summary": {
+          "en": "A reservation or tour booking is cancelled",
+          "es": "Se cancela una reserva o un lugar en un tour"
+        }
+      },
+      "approval": {
+        "en": "None for waitlist offers; your host can pause it at any time.",
+        "es": "Ninguna para las ofertas a la lista de espera; tu anfitrión puede pausarla en cualquier momento."
+      },
+      "tools": [
+        "booking tool",
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "listing-lead-responder-property-match",
+      "tier": "managed",
+      "verticals": [
+        "real-estate"
+      ],
+      "name": {
+        "en": "Listing Lead Responder + Property Match Alerts",
+        "es": "Respuesta a prospectos + alertas de propiedades"
+      },
+      "problem": {
+        "en": "Portal and Instagram leads wait hours and go cold, and buyers' wish lists are never matched to new listings.",
+        "es": "Los prospectos de portales e Instagram esperan horas y se enfrían, y lo que buscan los compradores nunca se cruza con las propiedades nuevas."
+      },
+      "outcome": {
+        "en": "Every lead hears back in minutes and every buyer sees the right new listing first, so more conversations turn into showings.",
+        "es": "Cada prospecto recibe respuesta en minutos y cada comprador ve primero la propiedad nueva que le conviene, y más conversaciones terminan en visitas."
+      },
+      "how": {
+        "en": [
+          "New leads from portals, forms and Instagram are answered within minutes.",
+          "Each new listing is matched against your buyers' wish lists.",
+          "Your agent approves prices and shortlists before they go out."
+        ],
+        "es": [
+          "Los prospectos nuevos de portales, formularios e Instagram reciben respuesta en minutos.",
+          "Cada propiedad nueva se cruza con lo que buscan tus compradores.",
+          "Tu asesor aprueba precios y listas de propiedades antes de enviarlos."
+        ]
+      },
+      "trigger": {
+        "kind": "event",
+        "summary": {
+          "en": "A new lead arrives or a new listing is added, plus a weekly digest",
+          "es": "Llega un prospecto nuevo o se agrega una propiedad, más un resumen semanal"
+        }
+      },
+      "approval": {
+        "en": "Your agent approves property prices and each buyer's shortlist before they are sent.",
+        "es": "Tu asesor aprueba los precios y la lista de propiedades de cada comprador antes de enviarlos."
+      },
+      "tools": [
+        "Email",
+        "WhatsApp",
+        "Google Sheets"
+      ]
+    },
+    {
+      "id": "tour-pre-arrival-kit",
+      "tier": "managed",
+      "verticals": [
+        "tourism"
+      ],
+      "name": {
+        "en": "Tour Pre-Arrival Kit",
+        "es": "Kit previo al tour"
+      },
+      "problem": {
+        "en": "Guests miss pickup times and arrive without what they need.",
+        "es": "Los clientes pierden la hora de recogida y llegan sin lo que necesitan."
+      },
+      "outcome": {
+        "en": "Guests arrive on time and prepared, with fewer late starts and fewer calls to your office.",
+        "es": "Los clientes llegan a tiempo y preparados, con menos retrasos y menos llamadas a tu oficina."
+      },
+      "how": {
+        "en": [
+          "Tomorrow's bookings are read from your booking tool.",
+          "Each guest gets pickup time, meeting point and what to bring, in their language.",
+          "Replies and changes come back to your team."
+        ],
+        "es": [
+          "Se leen las reservas de mañana desde tu sistema de reservas.",
+          "Cada cliente recibe hora de recogida, punto de encuentro y qué llevar, en su idioma.",
+          "Las respuestas y los cambios llegan a tu equipo."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "24 hours before each tour",
+          "es": "24 horas antes de cada tour"
+        }
+      },
+      "approval": {
+        "en": "Message templates are approved once.",
+        "es": "Las plantillas de mensaje se aprueban una vez."
+      },
+      "tools": [
+        "booking tool",
+        "WhatsApp",
+        "Email"
+      ]
+    },
+    {
+      "id": "weather-ops-alert",
+      "tier": "managed",
+      "verticals": [
+        "tourism",
+        "restaurant"
+      ],
+      "name": {
+        "en": "Weather & Ops Alert",
+        "es": "Alerta de clima y operación"
+      },
+      "problem": {
+        "en": "Cancellations caused by storms or sargassum are handled late and in a rush.",
+        "es": "Las cancelaciones por tormentas o sargazo se atienden tarde y a las carreras."
+      },
+      "outcome": {
+        "en": "You know by 6 am if weather will hit today's plans, and every affected guest gets a clear notice with options.",
+        "es": "Sabes a las 6 am si el clima afectará los planes del día, y cada cliente afectado recibe un aviso claro con opciones."
+      },
+      "how": {
+        "en": [
+          "Every morning the forecast is checked against your bookings.",
+          "If a threshold is crossed, a notice with options is prepared for each affected guest.",
+          "Your manager approves and the notices go out."
+        ],
+        "es": [
+          "Cada mañana se cruza el pronóstico con tus reservas.",
+          "Si se rebasa un límite, se prepara un aviso con opciones para cada cliente afectado.",
+          "Tu gerente aprueba y los avisos se envían."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every day at 6:00 am, and when the forecast crosses a threshold",
+          "es": "Todos los días a las 6:00 am, y cuando el pronóstico rebasa un límite"
+        }
+      },
+      "approval": {
+        "en": "Your manager approves each guest notice.",
+        "es": "Tu gerente aprueba cada aviso a clientes."
+      },
+      "tools": [
+        "weather feed",
+        "WhatsApp",
+        "booking tool"
+      ]
+    },
+    {
+      "id": "bilingual-social-week-planner",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Bilingual Social Week Planner",
+        "es": "Planeador semanal de redes bilingüe"
+      },
+      "problem": {
+        "en": "There is no time to post consistently in Spanish and English.",
+        "es": "No hay tiempo para publicar con constancia en español y en inglés."
+      },
+      "outcome": {
+        "en": "A full week of posts in Spanish and English, reviewed in one sitting, so your profiles stay active without daily effort. Part of Operio Pulse.",
+        "es": "Una semana completa de publicaciones en español y en inglés, revisada de una sola vez, para que tus perfiles sigan activos sin esfuerzo diario. Forma parte de Operio Pulse."
+      },
+      "how": {
+        "en": [
+          "Share your photos and what is coming up this week.",
+          "Every Sunday the week's posts are written in both languages.",
+          "You approve the week in one review and posts go out on schedule."
+        ],
+        "es": [
+          "Comparte tus fotos y lo que viene esta semana.",
+          "Cada domingo se escriben las publicaciones de la semana en ambos idiomas.",
+          "Apruebas la semana en una sola revisión y las publicaciones salen a su hora."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every Sunday",
+          "es": "Cada domingo"
+        }
+      },
+      "approval": {
+        "en": "You approve the week's posts in one review.",
+        "es": "Apruebas las publicaciones de la semana en una sola revisión."
+      },
+      "tools": [
+        "Drive",
+        "Google Sheets",
+        "social scheduler"
+      ]
+    },
+    {
+      "id": "profile-freshness-menu-price-sync",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Profile Freshness Keeper + Menu & Price Sync",
+        "es": "Perfil siempre al día + menú y precios sincronizados"
+      },
+      "problem": {
+        "en": "Google profile hours, photos and prices go stale and do not match your website or delivery apps.",
+        "es": "Los horarios, fotos y precios de tu perfil de Google se quedan viejos y no coinciden con tu sitio web ni con las apps de entrega."
+      },
+      "outcome": {
+        "en": "Customers always see the right hours, fresh photos and the same prices everywhere, including holidays and season changes.",
+        "es": "Tus clientes siempre ven el horario correcto, fotos recientes y los mismos precios en todos lados, incluso en días festivos y cambios de temporada."
+      },
+      "how": {
+        "en": [
+          "Each week your profile is checked against your calendar and holidays.",
+          "When prices change, the differences across Google, your website and delivery apps are listed.",
+          "You approve the changes and posts, and they are applied."
+        ],
+        "es": [
+          "Cada semana se revisa tu perfil contra tu calendario y los días festivos.",
+          "Cuando cambian tus precios, se listan las diferencias entre Google, tu sitio web y las apps de entrega.",
+          "Apruebas los cambios y las publicaciones, y se aplican."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every week, and whenever you tell us prices changed",
+          "es": "Cada semana, y cuando nos avisas que cambiaron tus precios"
+        }
+      },
+      "approval": {
+        "en": "You approve every hours change, post and price update.",
+        "es": "Apruebas cada cambio de horario, publicación y actualización de precios."
+      },
+      "tools": [
+        "Google Business Profile",
+        "Drive",
+        "Google Sheets",
+        "website"
+      ]
+    },
+    {
+      "id": "supplier-reorder-draft",
+      "tier": "managed",
+      "verticals": [
+        "restaurant",
+        "retail"
+      ],
+      "name": {
+        "en": "Supplier Reorder Draft",
+        "es": "Pedido a proveedores"
+      },
+      "problem": {
+        "en": "You run out of key stock like produce, frames, lenses or retail items before anyone notices.",
+        "es": "Te quedas sin insumos clave como verdura, armazones, micas o mercancía antes de que alguien lo note."
+      },
+      "outcome": {
+        "en": "Purchase orders are ready before you run short, so you stop losing sales to empty shelves and rushed orders.",
+        "es": "Las órdenes de compra están listas antes de que te falte algo, y dejas de perder ventas por anaqueles vacíos y pedidos de último momento."
+      },
+      "how": {
+        "en": [
+          "Your inventory sheet is checked every day.",
+          "When an item drops below its minimum, a purchase order is drafted for that supplier.",
+          "You approve it and it is sent to the supplier."
+        ],
+        "es": [
+          "Tu hoja de inventario se revisa todos los días.",
+          "Cuando un producto baja de su mínimo, se prepara una orden de compra para ese proveedor.",
+          "La apruebas y se envía al proveedor."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every day, and when stock drops below its minimum",
+          "es": "Todos los días, y cuando un producto baja de su mínimo"
+        }
+      },
+      "approval": {
+        "en": "You approve every purchase order.",
+        "es": "Apruebas cada orden de compra."
+      },
+      "tools": [
+        "Google Sheets",
+        "WhatsApp",
+        "Email"
+      ]
+    },
+    {
+      "id": "inbox-to-tasks-document-intake",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Inbox to Tasks + Document Intake Check",
+        "es": "Del buzón a pendientes + revisión de documentos"
+      },
+      "problem": {
+        "en": "Requests in email and WhatsApp are never tracked and client paperwork arrives incomplete.",
+        "es": "Las solicitudes por correo y WhatsApp no se registran y los documentos de los clientes llegan incompletos."
+      },
+      "outcome": {
+        "en": "Every request becomes a task with an owner, and missing documents are asked for right away, so nothing is forgotten and files close faster.",
+        "es": "Cada solicitud se convierte en un pendiente con responsable, y los documentos que faltan se piden de inmediato, así nada se olvida y los expedientes se cierran más rápido."
+      },
+      "how": {
+        "en": [
+          "Every hour, new requests in email and WhatsApp are turned into tasks.",
+          "Files clients send are checked against what each case needs.",
+          "Your staff confirms the task owner and the missing-items message."
+        ],
+        "es": [
+          "Cada hora, las solicitudes nuevas de correo y WhatsApp se convierten en pendientes.",
+          "Los archivos que mandan los clientes se revisan contra lo que necesita cada caso.",
+          "Tu equipo confirma quién se encarga y el mensaje de documentos faltantes."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every hour, and when a client sends files",
+          "es": "Cada hora, y cuando un cliente envía archivos"
+        }
+      },
+      "approval": {
+        "en": "Your staff confirms each task owner and approves every missing-items message.",
+        "es": "Tu equipo confirma quién se encarga de cada pendiente y aprueba cada mensaje de documentos faltantes."
+      },
+      "tools": [
+        "Email",
+        "WhatsApp",
+        "Drive",
+        "task list"
+      ]
+    },
+    {
+      "id": "daily-sales-close",
+      "tier": "managed",
+      "verticals": [
+        "restaurant",
+        "retail"
+      ],
+      "name": {
+        "en": "Daily Sales Close",
+        "es": "Cierre diario de ventas"
+      },
+      "problem": {
+        "en": "You do not know yesterday's real numbers until the end of the month.",
+        "es": "No conoces los números reales de ayer hasta fin de mes."
+      },
+      "outcome": {
+        "en": "Yesterday's sales, tickets and payment mix arrive on your phone every morning, so you spot a bad day the next day, not weeks later.",
+        "es": "Las ventas, tickets y formas de pago de ayer llegan a tu celular cada mañana, y detectas un mal día al día siguiente, no semanas después."
+      },
+      "how": {
+        "en": [
+          "We connect to your point of sale or sales sheet.",
+          "Each night the day is closed and compared with the same day last week.",
+          "The summary arrives on your WhatsApp first thing."
+        ],
+        "es": [
+          "Nos conectamos a tu punto de venta o a tu hoja de ventas.",
+          "Cada noche se cierra el día y se compara con el mismo día de la semana pasada.",
+          "El resumen llega a tu WhatsApp a primera hora."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every night at 11:30 pm or every morning at 8:00 am",
+          "es": "Cada noche a las 11:30 pm o cada mañana a las 8:00 am"
+        }
+      },
+      "approval": {
+        "en": "None: it is a report for you.",
+        "es": "Ninguna: es un reporte para ti."
+      },
+      "tools": [
+        "POS export",
+        "Google Sheets",
+        "WhatsApp"
+      ]
+    },
+    {
+      "id": "competitor-local-watch",
+      "tier": "managed",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Competitor & Local Watch",
+        "es": "Vigilancia de competencia local"
+      },
+      "problem": {
+        "en": "You do not notice a new competitor, their promotions or their ratings until customers mention them.",
+        "es": "No notas a un competidor nuevo, sus promociones o sus calificaciones hasta que tus clientes los mencionan."
+      },
+      "outcome": {
+        "en": "A short weekly note on what changed around you, with sources and three ideas to act on, so you react first instead of last.",
+        "es": "Una nota semanal corta de lo que cambió a tu alrededor, con fuentes y tres ideas para actuar, para que reacciones primero y no al último."
+      },
+      "how": {
+        "en": [
+          "Tell us your area and the competitors you already know.",
+          "Every week public profiles, ratings and promotions nearby are checked.",
+          "You get one page with sources and three practical ideas."
+        ],
+        "es": [
+          "Dinos tu zona y los competidores que ya conoces.",
+          "Cada semana se revisan los perfiles públicos, calificaciones y promociones cercanas.",
+          "Recibes una página con fuentes y tres ideas prácticas."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every Monday",
+          "es": "Cada lunes"
+        }
+      },
+      "approval": {
+        "en": "None: it is a report for you.",
+        "es": "Ninguna: es un reporte para ti."
+      },
+      "tools": [
+        "Google Business Profile",
+        "Google Maps",
+        "web search"
+      ]
+    }
+  ]
+}
