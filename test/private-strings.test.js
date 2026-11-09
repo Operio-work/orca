@@ -13,7 +13,7 @@ const TERMS = [
 ].map(p => p.join(''));
 // site/build and site/.svelte-kit are generated from files this test already reads.
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'build', '.svelte-kit']);
-const BINARY = /\.(png|webp|woff2|ico|jpg|gif)$/i;
+const BINARY = /\.(png|webp|woff2|ico|jpg|gif|mp4)$/i;
 
 function* files(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {

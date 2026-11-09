@@ -132,11 +132,13 @@
   :global(html:not(.js)) .theme { display: none; }
 
   @media (max-width: 720px) {
-    .inner { gap: 8px; }
+    .inner { gap: 4px; }
     .by { display: none; }
     .gh { display: none; }
+    .tools { gap: 4px; }
     .links { gap: 0; justify-content: flex-end; }
-    .links a { padding: 0 8px; font-size: 0.86rem; }
+    /* "Catálogo / Instalar" plus two 40px tools must fit 390px with the 16px gutters. */
+    .links a { padding: 0 6px; font-size: 0.86rem; }
   }
   @media (max-width: 380px) {
     .wordmark { display: none; }
