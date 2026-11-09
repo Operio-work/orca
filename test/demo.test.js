@@ -252,3 +252,161 @@ test('the panel in demo mode: client switch, per-client routines, answers change
   // Nothing outside the demo folder was written.
   assert.ok(fs.readFileSync(run.json.output, 'utf8').includes('Recall list'));
 });
+
+// ── `free-orca demo --lang es` ────────────────────────────────────────────────
+const { forLang } = require('../demo/clients');
+const EN = forLang('en');
+const ES = forLang('es');
+const secs = rows => rows.map(r => r[0]);
+
+test('es: same agents, steps and timings as en, only the words change', () => {
+  assert.deepEqual(ES.CLIENTS.map(c => c.id), EN.CLIENTS.map(c => c.id));
+  assert.deepEqual(ES.CLIENTS.map(c => c.name), ['Harbor Street Bistro', 'Brightside Dental']);
+  EN.CLIENTS.forEach((c, ci) => {
+    const e = ES.CLIENTS[ci];
+    assert.deepEqual(e.tabs.map(t => t.id), c.tabs.map(t => t.id));
+    assert.equal(e.agents.length, c.agents.length);
+    c.agents.forEach((a, i) => {
+      const b = e.agents[i];
+      for (const k of ['pane', 'tab', 'kind', 'delay', 'hold', 'auto']) assert.equal(b[k], a[k], `${a.pane} ${k}`);
+      assert.match(b.name, /^[a-z][a-z0-9_-]{0,31}$/, b.name);
+      assert.notEqual(b.task, a.task, a.pane);
+      assert.deepEqual(secs(b.work), secs(a.work), `${a.pane} work`);
+      assert.equal(b.ask.options.length, a.ask.options.length, a.pane);
+      assert.deepEqual(Object.keys(b.after), Object.keys(a.after));
+      for (const n of Object.keys(a.after)) assert.deepEqual(secs(b.after[n]), secs(a.after[n]), `${a.pane} after ${n}`);
+      assert.deepEqual(secs(b.text('hola')), secs(a.text('hello')), `${a.pane} text`);
+      assert.ok(b.text('hola').some(r => r[1].includes('hola')), `${a.pane} quotes the reply`);
+    });
+  });
+});
+
+test('es: the timeline plays beat for beat like en (states, seq, line times)', () => {
+  const at = st => ({ ...st, lang: 'es' });
+  EN.CLIENTS.forEach((c, ci) => c.agents.forEach((a, i) => {
+    const b = ES.CLIENTS[ci].agents[i];
+    const ask = (a.delay + a.work[a.work.length - 1][0] + 1.2) * 1000;
+    const runs = [
+      {}, // nobody answers (auto agents answer themselves)
+      { [a.pane]: [{ at: ask + 1500, kind: 'key', value: '1' }] },
+      { [a.pane]: [{ at: ask + 2500, kind: 'key', value: String(a.ask.options.length) }] },
+      { [a.pane]: [{ at: 4000, kind: 'text', value: 'note' }, { at: ask + 3000, kind: 'text', value: 'my words' }] },
+    ];
+    for (const inputs of runs) {
+      const st = { ...tl.freshState({ now: 0, speed: 1.5 }), inputs };
+      for (let now = 0; now <= ask + 160e3; now += 700) {
+        const ve = tl.scriptedView(a, st, now);
+        const vs = tl.scriptedView(b, at(st), now);
+        assert.equal(vs.status, ve.status, `${a.pane} @${now}`);
+        assert.equal(vs.seq, ve.seq, `${a.pane} @${now}`);
+        assert.equal(vs.cycle, ve.cycle, `${a.pane} @${now}`);
+        assert.deepEqual(vs.lines.map(l => l.at), ve.lines.map(l => l.at), `${a.pane} @${now}`);
+      }
+    }
+  }));
+});
+
+// Common English words that should never appear in a Spanish question or option.
+const ENGLISH = /\b(the|and|or|of|to|for|with|should|what|how|which|who|it|them|they|as|usual|instead|keep|offer|put|leave|swap|only|first|both|draft|email|flag|apologi[sz]e|invite|thank|explain|skip|join|tables?|guests?|waitlist|order|week|day|slots?|open|reply|review|type|something|select|cancel|photo|lead|post|bright|warm|close|room|top-down|manager|call|batch|starting|monday|halibut is|chose|picked|default)\b/i;
+
+test('es: no English left in the questions and options on screen', () => {
+  for (const c of ES.CLIENTS) {
+    for (const a of c.agents) {
+      const st = { ...tl.freshState({ now: 0 }), lang: 'es' };
+      const ask = (a.delay + a.work[a.work.length - 1][0] + 1.2) * 1000;
+      const v = tl.scriptedView(a, st, ask + 10);
+      assert.equal(v.status, 'blocked', a.pane);
+      const lines = v.lines.map(l => l.text);
+      const q = lines.indexOf(` ${a.ask.question}`);
+      assert.ok(q > 0, a.pane);
+      const shown = lines.slice(q).filter(l => /^ \S|^[❯ ] \d\. /.test(l) && !/^ Enter /.test(l));
+      assert.equal(shown.length, 1 + a.ask.options.length + 1, `${a.pane}: question, options, free text`);
+      for (const line of shown) {
+        const words = line.replace(/\S+\.(jpg|png|md|csv|txt|html)\b/g, '');
+        assert.doesNotMatch(words, ENGLISH, `${a.pane}: "${line}"`);
+      }
+      // The panel reads the Spanish menu: the question, the 3 options, not the free-text line.
+      st.inputs[a.pane] = [{ at: ask + 1000, kind: 'key', value: '1' }];
+      const after = tl.scriptedView(a, st, ask + 1000 + 600).lines.map(l => l.text).join('\n');
+      assert.match(after, new RegExp(`Elegiste: 1\\. ${a.ask.options[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+      assert.doesNotMatch(after, /You chose|Working on your answer|esc to interrupt/);
+    }
+  }
+  // Idle and auto-answer chrome is Spanish too.
+  const auto = ES.CLIENTS[0].agents.find(a => a.auto);
+  const st = { ...tl.freshState({ now: 0 }), lang: 'es' };
+  const ask = (auto.delay + auto.work[auto.work.length - 1][0] + 1.2) * 1000;
+  assert.match(text(tl.scriptedView(auto, st, ask + auto.auto * 1000 + 20000)), /Opción por defecto: 1\./);
+  assert.match(text(tl.scriptedView(auto, st, 1000)), /listo para la siguiente ronda/);
+});
+
+test('es: contacts in the Spanish text stay fictional', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'demo', 'clients.es.js'), 'utf8');
+  for (const m of src.matchAll(/\(?\d{3}\)?[ .-]\d{3}-\d{4}/g)) assert.match(m[0], /^\(555\) 010-01\d\d$/, m[0]);
+  for (const m of src.matchAll(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g)) assert.match(m[0], /@([\w-]+\.)*example\.com$/, m[0]);
+  for (const m of src.matchAll(/\b[\w-]+\.example\.com\b|\b[a-z][\w-]*\.(com|net|org|mx)\b/g)) assert.match(m[0], /example\.com$/, m[0]);
+});
+
+test('es: --lang persists through --restart and --reset, and seeds Spanish routines and drafts', () => {
+  const base = tmp('demo-lang');
+  const root = path.join(base, 'demo');
+  const run = (...args) => execFileSync(process.execPath, [path.join(ROOT, 'demo', 'setup.js'), '--root', root, ...args], { encoding: 'utf8' });
+  assert.match(run('--paths'), /DEMO_LANG=en/);
+  assert.match(run('--lang', 'es', '--paths'), /DEMO_LANG=es/);
+  assert.equal(tl.loadState(root).lang, 'es');
+  assert.match(run('--restart', '--paths'), /DEMO_LANG=es/);
+  assert.match(run('--reset', '--paths'), /DEMO_LANG=es/);
+  assert.match(run('--speed', '2', '--paths'), /DEMO_LANG=es/);
+  assert.throws(() => run('--lang', 'fr'), /--lang/);
+  const L = setup.layout(root);
+  const dir = path.join(L.config, 'clients', 'harbor-street-bistro');
+  const { routines, invalid } = routinesLib.loadAll(path.join(dir, 'routines'));
+  assert.deepEqual(invalid, []);
+  for (const r of routines) assert.doesNotMatch(r.prompt, /^(You|Read|Compare|List)\b/, r.id);
+  const rs = routinesLib.readState(path.join(dir, 'routines-state.json'));
+  const ready = Object.values(rs.runs).find(r => r.state === 'ready');
+  assert.match(fs.readFileSync(ready.out, 'utf8'), /Respuestas a reseñas/);
+  // The demo-herdr answers in Spanish.
+  const st = tl.loadState(root); st.epoch = Date.now() - ASK_AT - 2000; tl.saveState(root, st);
+  const agents = JSON.parse(herdr(root, L.home, 'agent', 'list')).result.agents;
+  assert.deepEqual(agents.map(a => a.name), ['reservas', 'opiniones', 'menu-semanal', 'pedidos']);
+  assert.deepEqual(JSON.parse(herdr(root, L.home, 'tab', 'list')).result.tabs.map(t => t.label), ['Sala', 'Cocina y oficina']);
+  assert.match(herdr(root, L.home, 'agent', 'read', 'w1:p1', '--source', 'visible', '--format', 'text'), /¿Cómo le respondo al grupo de Morgan\?\n\n❯ 1\. Juntar las mesas/);
+  // Back to English: everything is seeded again in English.
+  assert.match(run('--lang', 'en', '--paths'), /DEMO_LANG=en/);
+  const en = routinesLib.loadAll(path.join(dir, 'routines')).routines;
+  assert.ok(en.find(r => r.id === 'reservation-confirmations').prompt.startsWith('Read the reservation requests'));
+});
+
+test('es: the panel starts in Spanish and reads the Spanish menu', async t => {
+  const port = 20000 + Math.floor(Math.random() * 20000);
+  const host = `127.0.0.1:${port}`;
+  const get = p => new Promise((resolve, reject) => {
+    http.get({ host: '127.0.0.1', port, path: p, headers: { Host: host } }, res => {
+      let buf = ''; res.on('data', c => { buf += c; }); res.on('end', () => resolve(JSON.parse(buf)));
+    }).on('error', reject);
+  });
+  const root = path.join(tmp('demo-es-e2e'), 'demo');
+  const L = setup.layout(root);
+  execFileSync(process.execPath, [path.join(ROOT, 'demo', 'setup.js'), '--root', root, '--lang', 'es']);
+  const st = tl.loadState(root); st.epoch = Date.now() - ASK_AT - 2000; tl.saveState(root, st);
+  const child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
+    env: {
+      PATH: process.env.PATH, HOME: L.home, FREE_ORCA_DEMO: '1', FREE_ORCA_DEMO_DIR: root, FREE_ORCA_CONFIG_DIR: L.config,
+      FREE_ORCA_HERDR_BIN: path.join(ROOT, 'demo', 'demo-herdr'), FREE_ORCA_PORT: String(port), FREE_ORCA_POLL_MS: '300',
+      FREE_ORCA_AGENT_SOCK: path.join(root, 'agents.sock'),
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  t.after(() => child.kill());
+  await new Promise((resolve, reject) => {
+    let out = '';
+    child.stdout.on('data', c => { out += c; if (out.includes('"event":"listen"')) resolve(); });
+    child.on('exit', code => reject(new Error('server exited ' + code + ' ' + out)));
+  });
+  assert.equal((await get('/api/demo')).lang, 'es');
+  const reply = await get('/api/agents/w1%3Ap1/reply');
+  assert.equal(reply.screen.question, '¿Cómo le respondo al grupo de Morgan?');
+  assert.deepEqual(reply.screen.options.map(o => o.label), ES.CLIENTS[0].agents[0].ask.options);
+  assert.ok(reply.screen.options.every(o => !o.risky));
+});

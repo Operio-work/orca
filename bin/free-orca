@@ -188,25 +188,29 @@ demo_help() {
     'free-orca demo             start the demo (agents start from the top) and print its URL' \
     'free-orca demo --reset     wipe the demo folder and start fresh (routines, drafts, history)' \
     'free-orca demo --speed N   play the agents'"'"' timeline N times faster (0.25 to 20)' \
+    'free-orca demo --lang es   play the demo in Spanish (en or es; stays until changed, --reset keeps it)' \
     'free-orca demo --stop      stop the demo'
 }
 
 cmd_demo() {
-  local reset=0 stop=0 speed=""
+  local reset=0 stop=0 speed="" lang=""
   while [ $# -gt 0 ]; do
     case "$1" in
       --reset) reset=1; shift ;;
       --stop) stop=1; shift ;;
       --speed) speed="${2:-}"; [ -n "$speed" ] || die "--speed needs a number"; shift 2 ;;
       --speed=*) speed="${1#--speed=}"; shift ;;
+      --lang) lang="${2:-}"; [ -n "$lang" ] || die "--lang needs en or es"; shift 2 ;;
+      --lang=*) lang="${1#--lang=}"; shift ;;
       -h|--help) demo_help; return 0 ;;
       *) die "unknown demo option: $1" ;;
     esac
   done
+  case "$lang" in ''|en|es) ;; *) die "--lang must be en or es" ;; esac
   [ -n "$NODE_BIN" ] || die "node not found"
   if [ "$stop" = 1 ]; then demo_stop; say "demo stopped"; return 0; fi
   if demo_alive; then
-    if [ "$reset" = 1 ] || [ -n "$speed" ]; then demo_stop
+    if [ "$reset" = 1 ] || [ -n "$speed" ] || [ -n "$lang" ]; then demo_stop
     else say "demo already running at http://127.0.0.1:$DEMO_PORT (--reset to start over, --stop to stop)"; return 0; fi
   fi
   if demo_healthy; then die "port $DEMO_PORT is already in use (set FREE_ORCA_DEMO_PORT to use another)"; fi
@@ -214,11 +218,13 @@ cmd_demo() {
   local args=(--root "$DEMO_ROOT" --restart --paths)
   [ "$reset" = 1 ] && args+=(--reset)
   [ -n "$speed" ] && args+=(--speed "$speed")
+  [ -n "$lang" ] && args+=(--lang "$lang")
   local paths; paths="$("$NODE_BIN" "$APP_DIR/demo/setup.js" "${args[@]}")" || exit 1
-  local demo_home demo_config demo_speed
+  local demo_home demo_config demo_speed demo_lang
   demo_home="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_HOME=//p')"
   demo_config="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_CONFIG=//p')"
   demo_speed="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_SPEED=//p')"
+  demo_lang="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_LANG=//p')"
   [ -n "$demo_home" ] && [ -n "$demo_config" ] || die "demo setup failed"
 
   # A clean environment: nothing from your shell or ~/.config/free-orca/env leaks in.
@@ -231,7 +237,7 @@ cmd_demo() {
   echo $! > "$DEMO_PID"
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do demo_healthy && break; sleep 0.5; done
   demo_healthy || die "the demo did not start; see $DEMO_ROOT/server.log"
-  say "demo running at http://127.0.0.1:$DEMO_PORT (speed ${demo_speed:-1}x; fictional data in $DEMO_ROOT)"
+  say "demo running at http://127.0.0.1:$DEMO_PORT (speed ${demo_speed:-1}x, ${demo_lang:-en}; fictional data in $DEMO_ROOT)"
   say "stop it with: free-orca demo --stop"
 }
 

@@ -394,7 +394,7 @@ function screenMenu(text) {
   }
   return {
     question,
-    options: opts.filter(o => !/^(chat about this|type something\.?)$/i.test(o.label)).map(o => ({ ...o, risky: RISKY.test(o.label) })),
+    options: opts.filter(o => !/^(chat about this|type something\.?|escribe algo\.?)$/i.test(o.label)).map(o => ({ ...o, risky: RISKY.test(o.label) })),
   };
 }
 async function visible(pane) {
@@ -1477,7 +1477,7 @@ async function demoApi(req, res, pathname) {
   const dir = process.env.FREE_ORCA_DEMO_DIR;
   if (req.method === 'GET' && pathname === '/api/demo') {
     const st = demoTl.loadState(dir);
-    return send(res, 200, { demo: true, clients: DEMO_CLIENTS, active: st.client, speed: st.speed });
+    return send(res, 200, { demo: true, clients: DEMO_CLIENTS, active: st.client, speed: st.speed, lang: st.lang || 'en' });
   }
   if (req.method === 'POST' && pathname === '/api/demo/client') {
     const body = await readBody(req);

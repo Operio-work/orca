@@ -53,7 +53,7 @@ switch (cmd) {
   case 'status server': process.stdout.write('status: running (demo)\n'); break;
   case 'agent list': out({ result: { agents: list().map(x => x.row) } }); break;
   case 'workspace list': {
-    const c = tl.clientById(st.client);
+    const c = tl.clientById(st.client, st.lang);
     out({ result: { workspaces: [{ workspace_id: c.ws, number: 1, label: c.name }] } });
     break;
   }
@@ -78,7 +78,7 @@ switch (cmd) {
   case 'agent send-keys':
   case 'pane send-keys': input(rest[0], 'key', rest[1]); out({ result: {} }); break;
   case 'tab create': {
-    const c = tl.clientById(st.client);
+    const c = tl.clientById(st.client, st.lang);
     const n = st.nextDyn || 1;
     st.nextDyn = n + 1;
     const pane = `${c.ws}:p${(20 + n).toString(36)}`;

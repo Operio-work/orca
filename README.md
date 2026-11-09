@@ -124,10 +124,11 @@ waiting for approval for each business.
 free-orca demo              start it (the agents start from the top)
 free-orca demo --reset      start over: routines, drafts and history too
 free-orca demo --speed 2    play the script twice as fast
+free-orca demo --lang es    play it in Spanish (agents, routines, drafts; stays until changed)
 free-orca demo --stop       stop it
 ```
 
-Screenshots are in `demo/screenshots/`.
+Screenshots are in `demo/screenshots/` (Spanish: `demo/screenshots/es/`).
 
 ## Uninstall
 

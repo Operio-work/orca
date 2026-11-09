@@ -367,6 +367,8 @@ body.sheet-open { overflow: hidden; } /* phone: the agent page owns the screen *
 .tile.unnamed .tname { font-weight: 400; font-style: italic; color: var(--text-secondary); }
 .tstat { font: 600 10px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); white-space: nowrap; overflow: hidden; }
 @container (max-width: 84px) { .ttime { display: none; } }
+/* Tall tiles: a long state ("te necesita · 17s") wraps to a second line instead of being cut. */
+@container (min-height: 56px) { .tstat { white-space: normal; } }
 .tjobs { margin-left: 5px; color: var(--color-green-ink); letter-spacing: 0; }
 .tile.blocked .tjobs { color: inherit; }
 @container (max-width: 64px) { .tjobs { display: none; } }
@@ -446,7 +448,7 @@ body.sheet-open { overflow: hidden; } /* phone: the agent page owns the screen *
 @container (max-height: 46px) { .tname { -webkit-line-clamp: 1; } .face { gap: 0; } }
 @container (max-height: 26px) { .tstat { display: none; } .face { justify-content: center; } }
 @container (max-width: 96px) { .tname { font-size: 11px; } }
-@container (max-width: 72px) { .tname { font-size: 10px; } .tstat { letter-spacing: 0.02em; } }
+@container (max-width: 72px) { .tname { font-size: 10px; } .tstat { font-size: 9px; letter-spacing: 0.02em; } }
 @container (max-width: 96px) { .solid-name .tname { display: block; white-space: nowrap; text-overflow: ellipsis; } }
 @container (max-width: 70px) { .tdots { display: none; } .tname { padding-right: 0; } }
 

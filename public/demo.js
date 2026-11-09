@@ -38,6 +38,13 @@
   async function init() {
     try { info = await call('/api/demo'); } catch { return; }
     if (!info?.demo) return;
+    // The panel starts in the demo's language (`free-orca demo --lang es`). Only when that
+    // language changes: a viewer who switches with the EN/ES button keeps their choice.
+    const seen = (() => { try { return localStorage.getItem('orca-demo-lang'); } catch { return null; } })();
+    if (info.lang && info.lang !== seen) {
+      try { localStorage.setItem('orca-demo-lang', info.lang); } catch { /* private mode */ }
+      if (info.lang !== lang && T[info.lang]) document.getElementById('lang')?.click();
+    }
     document.documentElement.classList.add('is-demo');
     document.title = 'Free-ORCA · Demo';
     badge = document.createElement('span');

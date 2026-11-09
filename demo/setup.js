@@ -7,10 +7,12 @@
 //     home/                       HOME for the demo panel: the businesses' folders, and
 //       .config/free-orca/        its config dir (state, VAPID keys, per-client routines)
 //
-//   node demo/setup.js --root <dir> [--reset] [--restart] [--speed N] [--paths]
-//     --reset    wipe and seed everything again (routines, history, drafts, timeline)
+//   node demo/setup.js --root <dir> [--reset] [--restart] [--speed N] [--lang en|es] [--paths]
+//     --reset    wipe and seed everything again (routines, history, drafts, timeline); keeps the language
 //     --restart  restart the agents' timeline from zero (keeps routines and your approvals)
 //     --speed N  timeline speed (implies --restart)
+//     --lang L   the demo's language, en or es: agents, routines, drafts and history. It stays
+//                until changed; changing it seeds everything again in that language
 //     --paths    print KEY=value lines for the launcher (HOME, config dir)
 
 const fs = require('fs');
@@ -19,19 +21,24 @@ const path = require('path');
 const crypto = require('crypto');
 const tl = require('./timeline');
 const cron = require('../lib/cron');
-const { CLIENTS, ROUTINES, ROUTINE_CHOICES, HISTORY, DRAFTS } = require('./clients');
+const { CLIENTS, ROUTINE_CHOICES, HISTORY, LANGS, forLang } = require('./clients');
 
 const APP = path.join(__dirname, '..');
 const MARK = '.free-orca-demo';
 
 function parseArgs(argv) {
-  const o = { root: path.join(os.homedir(), '.config', 'free-orca-demo'), reset: false, restart: false, speed: null, paths: false };
+  const o = { root: path.join(os.homedir(), '.config', 'free-orca-demo'), reset: false, restart: false, speed: null, lang: null, paths: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--root') o.root = path.resolve(argv[++i]);
     else if (a === '--reset') o.reset = true;
     else if (a === '--restart') o.restart = true;
     else if (a === '--paths') o.paths = true;
+    else if (a === '--lang') {
+      const l = String(argv[++i] || '').toLowerCase();
+      if (!LANGS.includes(l)) throw new Error(`--lang must be one of: ${LANGS.join(', ')}`);
+      o.lang = l;
+    }
     else if (a === '--speed') {
       const s = Number(argv[++i]);
       if (!(s >= 0.25 && s <= 20)) throw new Error('--speed must be a number from 0.25 to 20');
@@ -65,11 +72,13 @@ function writeJson(file, obj) {
   fs.writeFileSync(file, JSON.stringify(obj, null, 2) + '\n', { mode: 0o600 });
 }
 
-function seedClient(L, c, now) {
+function seedClient(L, c, now, lang) {
+  const { ROUTINES, DRAFTS, UI, prompt } = forLang(lang);
   const base = path.join(L.config, 'clients', c.id);
   const packs = [];
   for (const id of fs.readdirSync(path.join(APP, 'routines')).sort()) {
     const raw = JSON.parse(fs.readFileSync(path.join(APP, 'routines', id, 'routine.json'), 'utf8'));
+    if (prompt(raw.id)) raw.prompt = prompt(raw.id);
     writeJson(path.join(base, 'routines', id, 'routine.json'), raw);
     packs.push(raw);
   }
@@ -87,7 +96,7 @@ function seedClient(L, c, now) {
     const run = runId(at, `${c.id}/${id}/${i}`);
     const out = path.join(base, pack.approval === 'draft' ? 'drafts' : 'reports', id, run + '.md');
     fs.mkdirSync(path.dirname(out), { recursive: true, mode: 0o700 });
-    fs.writeFileSync(out, DRAFTS[`${id}@${c.id}`] || `# ${pack.name.en}\n\nDemo output. Nothing was sent.\n`, { mode: 0o600 });
+    fs.writeFileSync(out, DRAFTS[`${id}@${c.id}`] || UI.fallbackReport(pack.name[lang] || pack.name.en), { mode: 0o600 });
     const r = { id, out, approval: pack.approval, state, at, trigger, readyAt: at + 4 * 60e3 };
     if (state === 'approved' || state === 'rejected') r.decidedAt = at + 70 * 60e3;
     rstate.runs[run] = r;
@@ -103,13 +112,13 @@ function seedClient(L, c, now) {
   fs.mkdirSync(path.join(L.home, c.folder), { recursive: true });
 }
 
-function seed(L, { speed = 1 } = {}) {
+function seed(L, { speed = 1, lang = 'en' } = {}) {
   const now = Date.now();
   fs.mkdirSync(L.root, { recursive: true, mode: 0o700 });
   fs.writeFileSync(path.join(L.root, MARK), 'Free-ORCA demo folder: fictional data only. Safe to delete.\n');
   fs.mkdirSync(path.join(L.home, 'free-orca-desk'), { recursive: true });
-  for (const c of CLIENTS) seedClient(L, c, now);
-  tl.saveState(L.root, tl.freshState({ speed, now }));
+  for (const c of CLIENTS) seedClient(L, c, now, lang);
+  tl.saveState(L.root, tl.freshState({ speed, lang, now }));
 }
 
 function main() {
@@ -119,16 +128,19 @@ function main() {
   if (exists && !fs.existsSync(path.join(L.root, MARK)) && fs.readdirSync(L.root).length) {
     throw new Error(`${L.root} exists and is not a Free-ORCA demo folder; refusing to touch it`);
   }
-  if (o.reset || !fs.existsSync(path.join(L.root, MARK))) {
-    if (fs.existsSync(path.join(L.root, MARK))) fs.rmSync(L.root, { recursive: true, force: true });
-    seed(L, { speed: o.speed || 1 });
+  const marked = fs.existsSync(path.join(L.root, MARK));
+  const was = marked ? tl.loadState(L.root) : null;
+  const lang = o.lang || was?.lang || 'en';
+  // A new language seeds everything again, so routines, drafts and history match the agents.
+  if (o.reset || !marked || lang !== (was.lang || 'en')) {
+    if (marked) fs.rmSync(L.root, { recursive: true, force: true });
+    seed(L, { speed: o.speed || 1, lang });
   } else if (o.restart) {
-    const st = tl.loadState(L.root);
-    tl.saveState(L.root, tl.freshState({ speed: o.speed || st.speed || 1, client: st.client }));
+    tl.saveState(L.root, tl.freshState({ speed: o.speed || was.speed || 1, client: was.client, lang }));
   }
   if (o.paths) {
     const st = tl.loadState(L.root);
-    process.stdout.write(`DEMO_HOME=${L.home}\nDEMO_CONFIG=${L.config}\nDEMO_SPEED=${st.speed}\n`);
+    process.stdout.write(`DEMO_HOME=${L.home}\nDEMO_CONFIG=${L.config}\nDEMO_SPEED=${st.speed}\nDEMO_LANG=${st.lang || 'en'}\n`);
   }
 }
 

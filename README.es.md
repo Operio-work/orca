@@ -114,10 +114,11 @@ borrador por aprobar para cada negocio.
 free-orca demo              iniciarlo (los agentes empiezan desde el principio)
 free-orca demo --reset      empezar de cero: también rutinas, borradores e historial
 free-orca demo --speed 2    reproducir el guion al doble de velocidad
+free-orca demo --lang es    la demo en español (agentes, rutinas y borradores; se queda hasta que la cambies)
 free-orca demo --stop       detenerlo
 ```
 
-Hay capturas en `demo/screenshots/`.
+Hay capturas en `demo/screenshots/` (en español: `demo/screenshots/es/`).
 
 ## Desinstalar
 

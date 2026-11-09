@@ -554,4 +554,93 @@ Draft: Thank you, Lee! We're so glad your visit felt relaxed. See you at your ne
 `,
 };
 
-module.exports = { CLIENTS, ROUTINES, ROUTINE_CHOICES, HISTORY, DRAFTS };
+// ── Languages: `free-orca demo --lang es` ─────────────────────────────────────
+// English is the script; another language only swaps the words. Every second mark comes from
+// the English lines, so a Spanish take lines up with an English one beat for beat.
+const LANGS = ['en', 'es'];
+const UI_EN = {
+  ready: 'ready for the next run',
+  routine: 'routine',
+  noted: '● Noted — I’ll take that into account.',
+  typeSomething: 'Type something.',
+  hint: ' Enter to select · Esc to cancel',
+  chose: 'You chose',
+  picked: 'Picked by default',
+  workingOnAnswer: 'Working on your answer',
+  working: 'Working',
+  interrupt: 'esc to interrupt',
+  dynReady: 'ready',
+  routineRead: '● Reading the routine’s instructions and input files',
+  routineFiles: '  ⎿  4 files',
+  routineWriting: '● Writing the draft',
+  routineWrote: '● Wrote',
+  routineDone: '● Done. It waits in Routines for your approval — nothing was sent.',
+  dynScripted: '● This is the Free-ORCA demo: its agents are scripted, so I can’t act on that.',
+  dynTry: '  Try answering an agent that needs you.',
+  fallbackDraft: name => `# ${name}\n\nDemo draft written by a scripted agent. Nothing was sent.\n`,
+  fallbackReport: name => `# ${name}\n\nDemo output. Nothing was sent.\n`,
+};
+
+const normLang = l => (LANGS.includes(l) ? l : 'en');
+// The leading marker of a script line ("● ", "  ⎿  ", "    ✓ ", "  " …): must match between languages.
+const marker = text => (/^\s*(?:[●•⎿└✓★❯]\s*)?/.exec(text) || [''])[0].replace(/[^\s●•⎿└✓★]/g, '');
+function retext(en, words, where) {
+  if (!Array.isArray(words) || words.length !== en.length) throw new Error(`demo/clients.es.js: ${where} needs ${en.length} lines, has ${words?.length}`);
+  return en.map(([s, text], i) => {
+    if (marker(text) !== marker(words[i])) throw new Error(`demo/clients.es.js: ${where} line ${i + 1} must start like "${marker(text)}"`);
+    return [s, words[i]];
+  });
+}
+function localAgent(a, t) {
+  if (!t) throw new Error(`demo/clients.es.js: no text for ${a.pane}`);
+  const after = {};
+  for (const n of Object.keys(a.after)) after[n] = retext(a.after[n], t.after[n], `${a.pane} after[${n}]`);
+  if (t.ask.options.length !== a.ask.options.length) throw new Error(`demo/clients.es.js: ${a.pane} needs ${a.ask.options.length} options`);
+  return {
+    ...a, name: t.name, title: t.title, task: t.task, spin: t.spin,
+    work: retext(a.work, t.work, `${a.pane} work`),
+    ask: { question: t.ask.question, options: [...t.ask.options] },
+    after,
+    text: reply => retext(a.text(reply), t.text(reply), `${a.pane} text`),
+  };
+}
+
+// Routine names by their English name (the panel tells an agent which routine it runs in
+// English): the three shipped packs and the demo's own.
+function routineNames(lang) {
+  const names = new Map();
+  const add = n => { if (n && n.en) names.set(n.en, n[lang] || n.en); };
+  try {
+    const dir = require('path').join(__dirname, '..', 'routines');
+    for (const id of require('fs').readdirSync(dir)) {
+      try { add(JSON.parse(require('fs').readFileSync(require('path').join(dir, id, 'routine.json'), 'utf8')).name); } catch { /* not a pack */ }
+    }
+  } catch { /* no packs */ }
+  for (const list of Object.values(ROUTINES)) for (const r of list) add(r.name);
+  return en => names.get(en) || en;
+}
+
+const cache = new Map();
+// Everything the demo shows, in one language: { lang, CLIENTS, ROUTINES, DRAFTS, UI, prompt(id) }.
+function forLang(lang) {
+  lang = normLang(lang);
+  if (cache.has(lang)) return cache.get(lang);
+  let out;
+  if (lang === 'en') {
+    out = { lang, CLIENTS, ROUTINES, DRAFTS, UI: UI_EN, prompt: () => null, routineName: en => en };
+  } else {
+    const { ES } = require('./clients.es');
+    const clients = CLIENTS.map(c => ({
+      ...c,
+      tabs: c.tabs.map(tb => ({ ...tb, label: ES.tabs[tb.id] || tb.label })),
+      agents: c.agents.map(a => localAgent(a, ES.agents[a.pane])),
+    }));
+    const routines = {};
+    for (const [id, list] of Object.entries(ROUTINES)) routines[id] = list.map(r => ({ ...r, prompt: ES.prompts[r.id] || r.prompt }));
+    out = { lang, CLIENTS: clients, ROUTINES: routines, DRAFTS: { ...DRAFTS, ...ES.drafts }, UI: { ...UI_EN, ...ES.ui }, prompt: id => ES.prompts[id] || null, routineName: routineNames(lang) };
+  }
+  cache.set(lang, out);
+  return out;
+}
+
+module.exports = { CLIENTS, ROUTINES, ROUTINE_CHOICES, HISTORY, DRAFTS, LANGS, forLang, normLang };
