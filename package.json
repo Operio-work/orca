@@ -1,0 +1,23 @@
+{
+  "name": "free-orca",
+  "version": "0.1.0",
+  "description": "Free-ORCA by Operio: a self-hosted control panel for your AI coding agents, with scheduled routines. Runs on herdr.",
+  "homepage": "https://make.operio.work",
+  "main": "server.js",
+  "bin": {
+    "free-orca": "bin/free-orca",
+    "free-orca-send": "bin/free-orca-send"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "web-push": "3.6.7"
+  }
+}
