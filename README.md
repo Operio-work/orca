@@ -91,6 +91,8 @@ A routine pack is a folder with a `routine.json` in `~/.config/free-orca/routine
 
 - `schedule` is a 5-field cron line in the computer's local time. The scheduler runs inside
   Free-ORCA; your system crontab is never touched. Runs missed while it was stopped are skipped.
+  In the **Routines** tab you change it in plain words (every day, Mon–Fri, Mon–Sat, one day a
+  week or every hour, at a time); the cron line stays under **Advanced** for anything else.
 - `approval: "draft"` routines write to `~/.config/free-orca/drafts/<id>/`, and the draft waits
   in the **Routines** tab until you approve or reject it. Approving only marks it approved.
   `"none"` routines write a report to `~/.config/free-orca/reports/<id>/`.

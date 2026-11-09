@@ -79,7 +79,9 @@ Un paquete de rutina es una carpeta con un `routine.json` en `~/.config/free-orc
 
 - `schedule` es una línea cron de 5 campos en la hora local de la computadora. El programador
   corre dentro de Free-ORCA; nunca se toca el crontab del sistema. Las ejecuciones perdidas
-  mientras estaba detenido se saltan.
+  mientras estaba detenido se saltan. En la pestaña **Rutinas** lo cambias con palabras simples
+  (todos los días, lun–vie, lun–sáb, un día a la semana o cada hora, a una hora); la línea cron
+  queda en **Avanzado** para todo lo demás.
 - Las rutinas con `approval: "draft"` escriben en `~/.config/free-orca/drafts/<id>/`, y el
   borrador espera en la pestaña **Rutinas** hasta que lo apruebes o rechaces. Aprobar solo lo
   marca como aprobado. Las de `"none"` escriben un reporte en `~/.config/free-orca/reports/<id>/`.

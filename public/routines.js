@@ -11,7 +11,9 @@
     rtIntro: 'Routines start an agent on a schedule with a fixed task. Drafts wait here for your approval; nothing is ever sent for you. Packs live in {0}.',
     rtNone: 'No routine packs yet. Add a folder with a routine.json to {0}, then Reload.',
     rtOn: 'On', rtOff: 'Off', rtRunNow: 'Run now', rtSave: 'Save', rtReset: 'Use pack schedule',
-    rtNext: 'Next', rtNever: 'not scheduled', rtSchedule: 'Schedule (cron)', rtAgent: 'Agent', rtFolder: 'Folder',
+    rtNext: 'Next', rtNever: 'not scheduled', rtSchedule: 'Schedule', rtWhen: 'Runs',
+    rtFreq: 'How often', rtFreq_daily: 'Every day', rtFreq_weekdays: 'Weekdays (Mon–Fri)', rtFreq_monsat: 'Mon–Sat', rtFreq_weekly: 'One day a week', rtFreq_hourly: 'Every hour', rtFreq_custom: 'Custom (see Advanced)',
+    rtDay: 'Day', rtTime: 'Time', rtMinute: 'Minute past the hour', rtAtMinute: 'at :{0}', rtAdvanced: 'Advanced', rtCron: 'Cron line: minute hour day month weekday', rtCustomHint: 'This schedule is more detailed than the picker. Edit the cron line, or pick a simpler schedule above.', rtAgent: 'Agent', rtFolder: 'Folder',
     rtDraftGate: 'Draft — you approve', rtNoGate: 'Report — no approval',
     rtPrompt: 'Prompt', rtStarted: '{0} started — watch it on the map', rtSaved: 'Schedule saved', rtEnabled: '{0} on', rtDisabled: '{0} off',
     rtRuns: 'Recent runs', rtNoRuns: 'No runs yet.', rtOpen: 'Open', rtApprove: 'Approve', rtReject: 'Reject', rtApproved: 'Draft approved', rtRejected: 'Draft rejected',
@@ -24,7 +26,9 @@
     rtIntro: 'Las rutinas inician un agente con una tarea fija según un horario. Los borradores esperan aquí tu aprobación; nunca se envía nada por ti. Los paquetes están en {0}.',
     rtNone: 'Aún no hay paquetes de rutinas. Agrega una carpeta con un routine.json en {0} y pulsa Recargar.',
     rtOn: 'Activa', rtOff: 'Apagada', rtRunNow: 'Ejecutar ahora', rtSave: 'Guardar', rtReset: 'Usar horario del paquete',
-    rtNext: 'Próxima', rtNever: 'sin programar', rtSchedule: 'Horario (cron)', rtAgent: 'Agente', rtFolder: 'Carpeta',
+    rtNext: 'Próxima', rtNever: 'sin programar', rtSchedule: 'Horario', rtWhen: 'Se ejecuta',
+    rtFreq: 'Frecuencia', rtFreq_daily: 'Todos los días', rtFreq_weekdays: 'Entre semana (lun–vie)', rtFreq_monsat: 'Lun–Sáb', rtFreq_weekly: 'Un día a la semana', rtFreq_hourly: 'Cada hora', rtFreq_custom: 'Personalizado (ver Avanzado)',
+    rtDay: 'Día', rtTime: 'Hora', rtMinute: 'Minuto de cada hora', rtAtMinute: 'al minuto {0}', rtAdvanced: 'Avanzado', rtCron: 'Línea cron: minuto hora día mes día-de-semana', rtCustomHint: 'Este horario es más detallado que el selector. Edita la línea cron o elige un horario más simple arriba.', rtAgent: 'Agente', rtFolder: 'Carpeta',
     rtDraftGate: 'Borrador — tú apruebas', rtNoGate: 'Reporte — sin aprobación',
     rtPrompt: 'Instrucción', rtStarted: '{0} inició — síguelo en el mapa', rtSaved: 'Horario guardado', rtEnabled: '{0} activa', rtDisabled: '{0} apagada',
     rtRuns: 'Ejecuciones recientes', rtNoRuns: 'Aún no hay ejecuciones.', rtOpen: 'Abrir', rtApprove: 'Aprobar', rtReject: 'Rechazar', rtApproved: 'Borrador aprobado', rtRejected: 'Borrador rechazado',
@@ -61,6 +65,68 @@
     await load();
   }
 
+  // ── Schedule picker: plain choices on top, the cron line underneath ("Advanced").
+  // Unsaved choices survive the 10 s refresh in `pending` (routine id -> picker value).
+  const Cron = window.FreeOrcaCron;
+  const pending = new Map();
+  const pad2 = n => String(n).padStart(2, '0');
+  const labelled = (text, control) => { const l = mk('label', 'rt-field'); l.append(mk('span', 'rt-field-l', text), control); return l; };
+  const select = (opts, value) => {
+    const s = mk('select');
+    for (const [v, label] of opts) s.append(new Option(label, String(v), false, String(v) === String(value)));
+    return s;
+  };
+  const saveSchedule = (r, schedule) => act(() => post(`/api/routines/${enc(r.id)}/schedule`, { schedule }), () => t('rtSaved'));
+
+  function schedulePicker(r) {
+    const wrap = mk('div', 'rt-sched');
+    const parsed = Cron.fromCron(r.schedule);
+    const v = pending.get(r.id) || (parsed ? { hour: 9, day: 1, ...parsed } : { freq: 'custom', hour: 9, minute: 0, day: 1 });
+    const row = mk('div', 'rt-row rt-pick');
+    const freq = select([...Cron.FREQS, 'custom'].map(f => [f, t('rtFreq_' + f)]), v.freq);
+    freq.querySelector('option[value="custom"]').disabled = v.freq !== 'custom';
+    const day = select([1, 2, 3, 4, 5, 6, 0].map(d => [d, Cron.DAY_NAMES[lang === 'es' ? 'es' : 'en'][d]]), v.day);
+    const time = mk('input'); time.type = 'time'; time.step = 60; time.value = `${pad2(v.hour ?? 9)}:${pad2(v.minute ?? 0)}`;
+    const mins = []; for (let m = 0; m < 60; m += 5) mins.push(m);
+    if (!mins.includes(v.minute)) mins.push(v.minute), mins.sort((a, b) => a - b);
+    const minute = select(mins.map(m => [m, t('rtAtMinute', pad2(m))]), v.minute ?? 0);
+    const fDay = labelled(t('rtDay'), day), fTime = labelled(t('rtTime'), time), fMin = labelled(t('rtMinute'), minute);
+    const current = () => {
+      const [h, m] = (time.value || '09:00').split(':').map(Number);
+      return freq.value === 'hourly' ? { freq: 'hourly', minute: Number(minute.value), hour: h, day: Number(day.value) }
+        : { freq: freq.value, hour: h, minute: m, day: Number(day.value) };
+    };
+    const preview = mk('span', 'rt-preview');
+    const save = btn(t('rtSave'), 'chip small primary', () => { let line; try { line = Cron.toCron(current()); } catch { return; } pending.delete(r.id); saveSchedule(r, line); });
+    const sync = () => {
+      const f = freq.value;
+      fDay.hidden = f !== 'weekly'; fTime.hidden = f === 'hourly' || f === 'custom'; fMin.hidden = f !== 'hourly';
+      let line = null; try { if (f !== 'custom') line = Cron.toCron(current()); } catch { /* incomplete time */ }
+      save.hidden = !line || line === r.schedule;
+      preview.textContent = line && line !== r.schedule ? Cron.summary(line, lang) : '';
+    };
+    const changed = () => { if (freq.value !== 'custom') pending.set(r.id, current()); sync(); };
+    for (const x of [freq, day, time, minute]) x.addEventListener('change', changed);
+    time.addEventListener('input', changed);
+    freq.setAttribute('aria-label', t('rtFreq'));
+    row.append(labelled(t('rtFreq'), freq), fDay, fTime, fMin, preview, save);
+    if (r.schedule !== r.packSchedule) row.append(btn(t('rtReset'), 'chip small', () => { pending.delete(r.id); saveSchedule(r, ''); }));
+    sync();
+
+    const adv = mk('details', 'rt-adv');
+    adv.open = !parsed;
+    adv.append(mk('summary', null, t('rtAdvanced')));
+    if (!parsed) adv.append(mk('p', 'rt-hint', t('rtCustomHint')));
+    const advRow = mk('div', 'rt-row');
+    const input = mk('input');
+    input.value = r.schedule; input.spellcheck = false; input.autocomplete = 'off';
+    input.setAttribute('aria-label', t('rtCron')); input.placeholder = t('rtCron');
+    advRow.append(input, btn(t('rtSave'), 'chip small', () => { pending.delete(r.id); saveSchedule(r, input.value); }));
+    adv.append(advRow);
+    wrap.append(row, adv);
+    return wrap;
+  }
+
   function card(r) {
     const c = mk('article', 'rt-card' + (r.enabled ? ' on' : ''));
     const top = mk('div', 'rt-top');
@@ -72,18 +138,13 @@
 
     const meta = mk('div', 'rt-meta');
     const item = (k, v) => { const s = mk('span'); s.append(mk('b', null, k + ' '), document.createTextNode(v)); return s; };
-    meta.append(item(t('rtNext'), r.enabled ? when(r.nextAt) : t('rtNever')), item(t('rtAgent'), r.agent), item(t('rtFolder'), r.cwd), mk('span', null, t(r.approval === 'draft' ? 'rtDraftGate' : 'rtNoGate')));
-    c.append(meta);
+    meta.append(
+      item(t('rtWhen'), Cron.summary(r.schedule, lang)),
+      item(t('rtNext'), r.enabled && r.nextAt ? Cron.shortWhen(r.nextAt, lang) : t('rtNever')),
+      item(t('rtAgent'), r.agent), item(t('rtFolder'), r.cwd), mk('span', null, t(r.approval === 'draft' ? 'rtDraftGate' : 'rtNoGate')));
+    c.append(meta, schedulePicker(r));
 
-    const row = mk('div', 'rt-row');
-    const input = mk('input');
-    input.value = r.schedule; input.spellcheck = false; input.autocomplete = 'off';
-    input.setAttribute('aria-label', t('rtSchedule')); input.placeholder = t('rtSchedule');
-    row.append(input, btn(t('rtSave'), 'chip small', () => act(() => post(`/api/routines/${enc(r.id)}/schedule`, { schedule: input.value }), t('rtSaved'))));
-    if (r.schedule !== r.packSchedule) row.append(btn(t('rtReset'), 'chip small', () => act(() => post(`/api/routines/${enc(r.id)}/schedule`, { schedule: '' }), t('rtSaved'))));
-    c.append(row);
-
-    const det = mk('details', 'rt-prompt');
+    const det = mk('details', 'rt-prompt');    const det = mk('details', 'rt-prompt');
     det.append(mk('summary', null, t('rtPrompt')), mk('pre', null, r.prompt));
     c.append(det);
     return c;

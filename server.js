@@ -1407,8 +1407,9 @@ const COMPRESSIBLE = new Set(['.html', '.js', '.css', '.svg', '.webmanifest', '.
 const staticCache = new Map(); // file -> { tag, raw, br, gz }
 function serveStatic(req, res, pathname) {
   const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
-  const file = path.resolve(PUBLIC, rel);
-  if (!file.startsWith(PUBLIC + path.sep)) return send(res, 404, 'not found', 'text/plain');
+  // The cron helpers are shared with the browser (the Routines tab's schedule picker).
+  const file = rel === 'cron.js' ? path.join(__dirname, 'lib', 'cron.js') : path.resolve(PUBLIC, rel);
+  if (rel !== 'cron.js' && !file.startsWith(PUBLIC + path.sep)) return send(res, 404, 'not found', 'text/plain');
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) return send(res, 404, 'not found', 'text/plain');
     const tag = `"${st.size.toString(36)}-${Math.floor(st.mtimeMs).toString(36)}"`;
