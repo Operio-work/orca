@@ -20,6 +20,7 @@
     rtInvalid: 'Packs with problems', rtEmptyDraft: 'The agent hasn’t written this file yet.',
     rtS_started: 'running', rtS_ready: 'needs approval', rtS_approved: 'approved', rtS_rejected: 'rejected', rtS_done: 'report ready', rtS_failed: 'failed',
     rtManual: 'manual', rtScheduled: 'scheduled',
+    rtOnDemand: 'On demand', rtOnDemandHint: 'Runs only when you press Run now.', e_on_demand: 'This routine runs on demand; it has no schedule.',
   });
   Object.assign(T.es, {
     routines: 'Rutinas', rtReload: 'Recargar',
@@ -35,6 +36,7 @@
     rtInvalid: 'Paquetes con problemas', rtEmptyDraft: 'El agente aún no escribe este archivo.',
     rtS_started: 'en curso', rtS_ready: 'por aprobar', rtS_approved: 'aprobado', rtS_rejected: 'rechazado', rtS_done: 'reporte listo', rtS_failed: 'falló',
     rtManual: 'manual', rtScheduled: 'programada',
+    rtOnDemand: 'Bajo pedido', rtOnDemandHint: 'Solo corre cuando pulsas Ejecutar ahora.', e_on_demand: 'Esta rutina es bajo pedido; no tiene horario.',
   });
 
   const view = $('#routines-view');
@@ -131,18 +133,26 @@
     const c = mk('article', 'rt-card' + (r.enabled ? ' on' : ''));
     const top = mk('div', 'rt-top');
     top.append(mk('h3', 'rt-name', loc(r.name)));
-    const toggle = btn(t(r.enabled ? 'rtOn' : 'rtOff'), 'chip small', () => act(() => post(`/api/routines/${enc(r.id)}/enable`, { enabled: !r.enabled }), t(r.enabled ? 'rtDisabled' : 'rtEnabled', loc(r.name))));
-    toggle.setAttribute('aria-pressed', String(r.enabled));
-    top.append(toggle, btn(t('rtRunNow'), 'chip small primary', () => act(() => post(`/api/routines/${enc(r.id)}/run`), () => t('rtStarted', loc(r.name)))));
+    // An on-demand pack has no schedule: no on/off switch and no picker, only Run now.
+    const onDemand = !r.packSchedule;
+    if (!onDemand) {
+      const toggle = btn(t(r.enabled ? 'rtOn' : 'rtOff'), 'chip small', () => act(() => post(`/api/routines/${enc(r.id)}/enable`, { enabled: !r.enabled }), t(r.enabled ? 'rtDisabled' : 'rtEnabled', loc(r.name))));
+      toggle.setAttribute('aria-pressed', String(r.enabled));
+      top.append(toggle);
+    }
+    top.append(btn(t('rtRunNow'), 'chip small primary', () => act(() => post(`/api/routines/${enc(r.id)}/run`), () => t('rtStarted', loc(r.name)))));
     c.append(top, mk('p', 'rt-problem', loc(r.problem)));
 
     const meta = mk('div', 'rt-meta');
     const item = (k, v) => { const s = mk('span'); s.append(mk('b', null, k + ' '), document.createTextNode(v)); return s; };
-    meta.append(
+    if (onDemand) meta.append(item(t('rtWhen'), t('rtOnDemand')));
+    else meta.append(
       item(t('rtWhen'), Cron.summary(r.schedule, lang)),
-      item(t('rtNext'), r.enabled && r.nextAt ? Cron.shortWhen(r.nextAt, lang) : t('rtNever')),
-      item(t('rtAgent'), r.agent), item(t('rtFolder'), r.cwd), mk('span', null, t(r.approval === 'draft' ? 'rtDraftGate' : 'rtNoGate')));
-    c.append(meta, schedulePicker(r));
+      item(t('rtNext'), r.enabled && r.nextAt ? Cron.shortWhen(r.nextAt, lang) : t('rtNever')));
+    meta.append(item(t('rtAgent'), r.agent), item(t('rtFolder'), r.cwd), mk('span', null, t(r.approval === 'draft' ? 'rtDraftGate' : 'rtNoGate')));
+    c.append(meta);
+    if (onDemand) c.append(mk('p', 'rt-hint', t('rtOnDemandHint')));
+    else c.append(schedulePicker(r));
 
     const det = mk('details', 'rt-prompt');
     det.append(mk('summary', null, t('rtPrompt')), mk('pre', null, r.prompt));

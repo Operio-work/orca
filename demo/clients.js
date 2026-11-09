@@ -409,7 +409,7 @@ const CLIENTS = [
 ];
 
 // ── Routines tab: demo-only packs, history and drafts per client ─────────────────
-// The three shipped packs are copied from routines/ for both clients; these are added.
+// The shipped packs are copied from routines/ for both clients; these are added.
 const ROUTINES = {
   'harbor-street-bistro': [
     {
@@ -457,7 +457,7 @@ const ROUTINE_CHOICES = {
     'review-reply-desk': { enabled: true, schedule: '30 8 * * 1-5' },
     'reminder-drafts': { enabled: true },
     'recall-list': { enabled: true },
-    'competitor-local-watch': { enabled: true },
+    'weekly-owner-report': { enabled: true },
   },
 };
 
@@ -476,7 +476,7 @@ const HISTORY = {
   'brightside-dental': [
     ['reminder-drafts', 0, 'ready', 'schedule'],
     ['review-reply-desk', 0, 'approved', 'schedule'],
-    ['competitor-local-watch', 0, 'done', 'schedule'],
+    ['weekly-owner-report', 0, 'done', 'schedule'],
     ['reminder-drafts', 1, 'approved', 'schedule'],
     ['recall-list', 0, 'rejected', 'schedule'],
     ['review-reply-desk', 1, 'approved', 'manual'],
@@ -543,10 +543,25 @@ we've turned it down for the dinner service. — Harbor Street Bistro
 Draft: Thank you, Lee! We're so glad your visit felt relaxed. See you at your next cleaning.
 — Brightside Dental
 `,
-  'competitor-local-watch@brightside-dental': `# Local watch — week 45
+  'weekly-owner-report@brightside-dental': `# Weekly owner report — week 45
 
-- Two nearby practices now list Saturday hours; Brightside's Saturday slots fill first.
-- Average rating nearby: 4.5. Brightside: 4.8 (212 reviews).
+**The week in five numbers**
+- Appointments: 118 (+6 on the week before)
+- Sales: $9,840 (+4%)
+- New patient inquiries: 14 (+3)
+- New reviews: 5, average 4.8 ★
+- Unpaid: $1,160 (3 patients)
+
+**What went well**
+- Saturday slots filled first again.
+
+**What needs attention**
+- 2 orthodontic inquiries from Thursday are still unanswered.
+
+**Priorities this week**
+1. Answer the 2 orthodontic inquiries.
+2. Follow up the 3 unpaid balances.
+3. Open more Saturday slots.
 `,
   'recall-list@brightside-dental': `# Recall list
 
@@ -606,7 +621,7 @@ function localAgent(a, t) {
 }
 
 // Routine names by their English name (the panel tells an agent which routine it runs in
-// English): the three shipped packs and the demo's own.
+// English): the shipped packs and the demo's own.
 function routineNames(lang) {
   const names = new Map();
   const add = n => { if (n && n.en) names.set(n.en, n[lang] || n.en); };

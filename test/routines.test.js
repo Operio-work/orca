@@ -72,8 +72,13 @@ test('loadAll returns good packs and explains the bad ones', () => {
 test('the shipped example packs are valid and bilingual', () => {
   const { routines, invalid } = R.loadAll(path.join(__dirname, '..', 'routines'));
   assert.deepEqual(invalid, []);
-  assert.equal(routines.length, 3);
+  assert.deepEqual(routines.map(r => r.id).sort(), ['morning-front-desk-brief', 'post-visit-thank-you', 'review-reply-desk', 'showing-day-pack', 'weekly-owner-report']);
   assert.ok(routines.some(r => r.approval === 'draft'), 'at least one draft-approval example');
+  // Free packs never reach customers: drafting ones say so in their own words too.
+  const thanks = routines.find(r => r.id === 'post-visit-thank-you');
+  assert.equal(thanks.approval, 'draft');
+  assert.match(thanks.prompt, /never send/i);
+  assert.equal(routines.find(r => r.id === 'showing-day-pack').schedule, null, 'showing-day-pack is on demand');
   for (const r of routines) for (const f of ['name', 'problem']) for (const l of ['en', 'es']) assert.ok(r[f][l].length > 5, `${r.id} ${f}.${l}`);
 });
 
@@ -111,4 +116,21 @@ test('run ids, output paths, prompt and the JSON-lines log', () => {
   const lines = R.readLog(path.join(dir, 'logs'));
   assert.deepEqual(lines.map(l => l.state), ['started', 'draft_ready']);
   assert.ok(lines.every(l => l.ts && l.run === run && l.output === out));
+});
+
+test('a pack without a schedule is on demand: valid, never scheduled, overrides ignored', () => {
+  const o = good(); delete o.schedule;
+  const v = R.validate(o);
+  assert.equal(v.ok, true, v.errors.join('; '));
+  assert.equal(v.routine.schedule, null);
+  assert.equal(R.validate({ ...good(), schedule: null }).routine.schedule, null);
+  assert.equal(R.validate({ ...good(), schedule: '' }).ok, false, 'an empty string is a mistake, not on demand');
+  const e = R.effective(v.routine, { routines: { [o.id]: { enabled: true, schedule: '15 8 * * *' } }, runs: {} });
+  assert.equal(e.schedule, null);
+  assert.equal(e.packSchedule, null);
+  const { Scheduler } = require('../lib/scheduler');
+  const fired = [];
+  const s = new Scheduler({ list: () => [e], fire: async r => { fired.push(r.id); } });
+  assert.equal(s.nextFor(e), null);
+  return s.tick().then(() => assert.deepEqual(fired, []));
 });

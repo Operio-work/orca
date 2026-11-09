@@ -114,6 +114,22 @@ test('a draft routine runs, reaches the agent, and waits for approval', async ()
   assert.deepEqual(states, ['started', 'prompt_queued', 'draft_ready', 'approved']);
 });
 
+test('an on-demand routine has no schedule, cannot be given one, and runs when asked', async () => {
+  fs.cpSync(path.join(ROOT, 'routines', 'showing-day-pack'), path.join(CFG, 'routines', 'showing-day-pack'), { recursive: true });
+  const r = (await req('GET', '/api/routines')).json.routines.find(x => x.id === 'showing-day-pack');
+  assert.equal(r.schedule, null);
+  assert.equal(r.packSchedule, null);
+  assert.equal(r.nextAt, null);
+  assert.equal((await post('/api/routines/showing-day-pack/enable', { enabled: true })).status, 200);
+  assert.equal((await req('GET', '/api/routines')).json.routines.find(x => x.id === 'showing-day-pack').nextAt, null);
+  const bad = await post('/api/routines/showing-day-pack/schedule', { schedule: '0 9 * * *' });
+  assert.equal(bad.status, 409);
+  assert.equal(bad.json.error, 'on_demand');
+  const run = await post('/api/routines/showing-day-pack/run', {});
+  assert.equal(run.status, 200, run.text);
+  assert.ok(run.json.output.startsWith(path.join(CFG, 'reports', 'showing-day-pack')));
+});
+
 test('VAPID keys are generated on first run, owner-only', () => {
   const f = path.join(CFG, 'vapid.json');
   assert.ok(JSON.parse(fs.readFileSync(f, 'utf8')).publicKey);

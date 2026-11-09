@@ -93,6 +93,8 @@ A routine pack is a folder with a `routine.json` in `~/.config/free-orca/routine
   Free-ORCA; your system crontab is never touched. Runs missed while it was stopped are skipped.
   In the **Routines** tab you change it in plain words (every day, Mon–Fri, Mon–Sat, one day a
   week or every hour, at a time); the cron line stays under **Advanced** for anything else.
+  Leave `schedule` out for an **on-demand** routine: the tab shows it as "On demand" and it runs
+  only when you press **Run now**.
 - `approval: "draft"` routines write to `~/.config/free-orca/drafts/<id>/`, and the draft waits
   in the **Routines** tab until you approve or reject it. Approving only marks it approved.
   `"none"` routines write a report to `~/.config/free-orca/reports/<id>/`.
@@ -101,8 +103,18 @@ A routine pack is a folder with a `routine.json` in `~/.config/free-orca/routine
   example, permission to write the file) or stop it like any other agent.
 - Every run is logged as JSON lines (input, output path, state) in `~/.config/free-orca/logs/routines.jsonl`.
 
-Three examples ship turned off: Morning Front Desk Brief, Review Reply Desk and Competitor &
-Local Watch. They read files you drop in `~/free-orca-desk/`.
+Five packs ship turned off. They read files you drop in `~/free-orca-desk/` and never send
+anything to your customers: they report, or they draft and you send.
+
+| Pack | Runs | Output |
+|---|---|---|
+| Morning Front Desk Brief | Mon–Sat 07:30 | report |
+| Review Reply Desk | every day 09:00 | draft replies, you post them |
+| Weekly Owner Report | Monday 08:00 | report |
+| Showing Day Pack (real estate) | on demand | report: route, property sheets, checklist |
+| Post-Visit Thank-You + Review Ask | every day 18:00 | draft messages with a WhatsApp link you tap to send |
+
+The full list, including the routines Operio runs for you, is in `catalog/catalog.json`.
 
 ## Settings
 

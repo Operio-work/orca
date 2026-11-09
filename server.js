@@ -1617,6 +1617,7 @@ async function routinesApi(req, res, pathname) {
     return send(res, 200, { ok: true, enabled: cur.enabled });
   }
   if (m[2] === 'schedule') {
+    if (!r.packSchedule) throw new HttpError(409, 'on_demand');
     const sched = String(body.schedule || '').trim();
     if (sched && !cronLib.isValid(sched)) throw new HttpError(400, 'bad_schedule');
     if (sched && sched !== r.packSchedule) cur.schedule = sched; else delete cur.schedule;

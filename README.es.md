@@ -82,6 +82,8 @@ Un paquete de rutina es una carpeta con un `routine.json` en `~/.config/free-orc
   mientras estaba detenido se saltan. En la pestaña **Rutinas** lo cambias con palabras simples
   (todos los días, lun–vie, lun–sáb, un día a la semana o cada hora, a una hora); la línea cron
   queda en **Avanzado** para todo lo demás.
+  Si omites `schedule`, la rutina es **bajo pedido**: la pestaña la muestra como "Bajo pedido" y
+  solo corre cuando pulsas **Ejecutar ahora**.
 - Las rutinas con `approval: "draft"` escriben en `~/.config/free-orca/drafts/<id>/`, y el
   borrador espera en la pestaña **Rutinas** hasta que lo apruebes o rechaces. Aprobar solo lo
   marca como aprobado. Las de `"none"` escriben un reporte en `~/.config/free-orca/reports/<id>/`.
@@ -91,8 +93,18 @@ Un paquete de rutina es una carpeta con un `routine.json` en `~/.config/free-orc
 - Cada ejecución queda registrada como líneas JSON (entrada, ruta de salida, estado) en
   `~/.config/free-orca/logs/routines.jsonl`.
 
-Se incluyen tres ejemplos apagados: Resumen matutino de recepción, Respuestas a reseñas y
-Vigilancia de competencia local. Leen los archivos que dejes en `~/free-orca-desk/`.
+Se incluyen cinco paquetes apagados. Leen los archivos que dejes en `~/free-orca-desk/` y nunca
+le envían nada a tus clientes: hacen un reporte, o preparan un borrador y tú lo envías.
+
+| Paquete | Se ejecuta | Resultado |
+|---|---|---|
+| Resumen matutino de recepción | lun–sáb 07:30 | reporte |
+| Respuestas a reseñas | todos los días 09:00 | borradores de respuesta, tú los publicas |
+| Reporte semanal para el dueño | lunes 08:00 | reporte |
+| Paquete para día de visitas (inmobiliarias) | bajo pedido | reporte: ruta, fichas de propiedades, lista |
+| Agradecimiento después de la visita + reseña | todos los días 18:00 | borradores con un enlace de WhatsApp que tocas para enviar |
+
+La lista completa, con las rutinas que Operio opera por ti, está en `catalog/catalog.json`.
 
 ## Ajustes
 

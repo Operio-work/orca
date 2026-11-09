@@ -144,7 +144,7 @@ test('setup seeds both clients and refuses folders that are not the demo’s', (
     const dir = path.join(L.config, 'clients', c.id);
     const { routines, invalid } = routinesLib.loadAll(path.join(dir, 'routines'));
     assert.deepEqual(invalid, []);
-    assert.equal(routines.length, 3 + ROUTINES[c.id].length);
+    assert.equal(routines.length, fs.readdirSync(path.join(ROOT, 'routines')).length + ROUTINES[c.id].length);
     const rs = routinesLib.readState(path.join(dir, 'routines-state.json'));
     const runs = Object.entries(rs.runs);
     assert.equal(runs.length, HISTORY[c.id].length);
