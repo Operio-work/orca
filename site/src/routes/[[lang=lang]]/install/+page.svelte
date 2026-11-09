@@ -12,6 +12,7 @@
   const toc = $derived([
     ['requirements', i.reqTitle],
     ['install', i.installTitle],
+    ['windows', i.wslTitle],
     ['phone', i.phoneTitle],
     ['commands', i.commandsTitle],
     ['update', i.updateTitle],
@@ -66,6 +67,27 @@
         <CopyCommand cmd={READ_FIRST} strings={t.copy} />
         <CopyCommand cmd={FROM_GIT} strings={t.copy} />
       </div>
+    </section>
+
+    <section id="windows">
+      <h2>{i.wslTitle}</h2>
+      <p>{i.wslBody}</p>
+      <ol class="steps-list">
+        <li>
+          <div class="step-body">
+            <span>{i.wslSteps[0]}</span>
+            <CopyCommand cmd="wsl --install -d Ubuntu" strings={t.copy} prompt={false} />
+          </div>
+        </li>
+        <li><span>{i.wslSteps[1]}</span></li>
+        <li>
+          <div class="step-body">
+            <span>{i.wslSteps[2]}</span>
+            <CopyCommand cmd={INSTALL_CMD} strings={t.copy} />
+          </div>
+        </li>
+      </ol>
+      <p class="note">{i.wslNote} <a class="link" href="{GITHUB_URL}/issues">{i.wslIssue}</a></p>
     </section>
 
     <section id="phone">

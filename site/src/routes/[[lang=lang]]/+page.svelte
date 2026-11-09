@@ -101,6 +101,20 @@
   </div>
 </section>
 
+<section class="section vs-teaser" aria-labelledby="vs">
+  <div class="container vs-grid">
+    <h2 id="vs">{h.vsTitle}</h2>
+    <div>
+      <ul class="vs-lines">
+        {#each h.vsLines as line}
+          <li><span class="vs-mark" aria-hidden="true"><Icon name="check" size={15} /></span>{line}</li>
+        {/each}
+      </ul>
+      <a class="link vs-more" href={href(lang, '/compare')}>{h.vsMore} <span class="arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></a>
+    </div>
+  </div>
+</section>
+
 <section class="section" aria-labelledby="how">
   <div class="container">
     <div class="section-head"><h2 id="how">{h.howTitle}</h2></div>
@@ -365,6 +379,22 @@
     :global(:root:not([data-theme='light'])) .stage img { filter: brightness(0.93); }
   }
 
+  /* ── How ORCA compares: three lines and a link, no table on the home page ── */
+  .vs-teaser { padding: 64px 0; }
+  .vs-grid { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); gap: 48px; align-items: start; }
+  .vs-lines { list-style: none; display: grid; gap: 14px; }
+  .vs-lines li { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: baseline; color: var(--text-secondary); max-width: 60ch; }
+  .vs-mark {
+    display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+    background: var(--tint-orange); color: var(--color-orange-ink);
+    transform: translateY(5px);
+  }
+  .vs-more { display: inline-block; margin-top: 22px; margin-left: 36px; }
+  .vs-more .arrow { display: inline-block; vertical-align: -3px; margin-left: 4px; transition: transform var(--dur) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .vs-more:hover .arrow { transform: translateX(3px); }
+  }
+
   /* ── How ── */
   .how { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; position: relative; }
   .how::before {
@@ -476,13 +506,14 @@
     .hero-copy { max-width: 42rem; }
   }
   @media (max-width: 900px) {
+    .vs-grid { grid-template-columns: 1fr; gap: 20px; }
     .pain { grid-template-columns: 1fr; gap: 24px; padding: 32px 0; }
     .biz-grid, .faq-grid { grid-template-columns: 1fr; gap: 32px; }
     .faq-grid .section-head { margin-bottom: 0; }
   }
   @media (max-width: 768px) {
     /* Phone rhythm: tighter than desktop, same order and content. */
-    .pain-body, .fix-body, .how p, .security p, .managed-head p, .biz-grid .section-head p { font-size: 0.95rem; line-height: 1.5; }
+    .vs-lines li, .pain-body, .fix-body, .how p, .security p, .managed-head p, .biz-grid .section-head p { font-size: 0.95rem; line-height: 1.5; }
     .hero-lead { font-size: 1.05rem; line-height: 1.5; }
     .section { padding: 40px 0; }
     .section-head { margin-bottom: 24px; }
