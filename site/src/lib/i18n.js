@@ -13,25 +13,70 @@ const en = {
   copy: { copy: 'Copy', copied: 'Copied', label: 'Copy the command', done: 'Command copied' },
 
   home: {
-    title: 'Free-ORCA by Operio: office routines that run on your computer',
+    title: 'Free-ORCA by Operio: one board for all your AI agents',
     description:
-      'Free-ORCA is a free, open-source control panel that runs office routines on your own computer: a morning brief, review replies, a weekly report. Every draft waits for your OK.',
-    promise: 'Office routines that run on your computer and wait for your OK.',
+      'Free-ORCA is a free, open-source control panel for the AI agents on your own computer: one live board, phone alerts when an agent needs you, one-tap answers, and scheduled routines whose drafts wait for your OK.',
+    headline: 'Run all your AI agents without watching every terminal.',
     lead:
-      'Turn on a routine and it writes your morning brief, your review replies or your weekly report on schedule, using the AI assistant you already have. You read it, approve it and send it yourself. Free and open source.',
+      'Free-ORCA puts every agent on one live board, alerts your phone when one needs you, and lets you answer with a tap. Free, open source, on your own computer.',
     installLabel: 'Install on Linux or macOS',
     installNote: 'Node.js 20 or newer. No account, no sudo.',
     installMore: 'Install guide',
     secondary: 'Have Operio run it for you',
 
-    demoTitle: 'One evening at a restaurant',
-    demoBody:
-      'This is the built-in demo with Harbor Street Bistro, a fictional restaurant. The reservations routine drafted four confirmations and stopped to ask how to seat a party of eight. One tap answers it.',
-    demoAltDesktop:
-      'Free-ORCA on a laptop: the reservations routine lists four drafted confirmations and asks how to answer a party of eight, with three options to tap.',
-    demoAltPhone:
-      'Free-ORCA on a phone: the Harbor Street Bistro map, with two routines waiting for an answer, one working and one idle.',
-    demoTry: 'Try it yourself with',
+    video: {
+      play: 'Watch the demo',
+      length: '0:50',
+      playLabel: 'Play the Free-ORCA demo video, 50 seconds, music only with no narration',
+      label: 'Free-ORCA demo video. Music only, no narration. Captions repeat the text shown on screen.',
+      close: 'Close the video',
+      captions: 'English',
+      posterAlt:
+        'Free-ORCA demo: an agent stops to ask how to seat a party of eight, with three answers to tap.'
+    },
+
+    painsTitle: 'Several agents should not mean babysitting them',
+    painsLead: 'Four things that slow you down once more than one agent is running, and what Free-ORCA does about each.',
+    painLabel: 'The problem',
+    fixLabel: 'With Free-ORCA',
+    pains: [
+      {
+        id: 'needs-you',
+        pain: 'Agents stall while you are in another window',
+        painBody: 'An agent asks a question, then sits idle for an hour because you never saw it.',
+        fix: 'Your phone tells you, and one tap answers',
+        fixBody:
+          'When an agent needs a decision, its tile turns red and your phone gets a “needs you” alert. Pick an answer and it gets back to work.',
+        alt: 'An agent on a phone asking “How should I answer the Morgan party?”, with three answers to tap.'
+      },
+      {
+        id: 'board',
+        pain: 'Five agents, five tabs, no idea who is stuck',
+        painBody: 'You click through terminals to find out who is working, who is done and who is waiting on you.',
+        fix: 'One live board for every agent',
+        fixBody:
+          'Each agent is a tile painted by its status: working, needs you, done. You read the whole team at a glance.',
+        alt: 'The live board: counts for needs you, working and idle, and four agent tiles in two groups, two of them red.'
+      },
+      {
+        id: 'phone',
+        pain: 'You can’t leave the desk while they run',
+        painBody: 'Step away and the work stops, because the next question waits until you are back.',
+        fix: 'Run them from your phone',
+        fixBody:
+          'Read the output, reply, and start new agents from anywhere, over a private connection to your own computer.',
+        alt: 'Free-ORCA on a phone: the New button, the status counts and the agent tiles.'
+      },
+      {
+        id: 'approve',
+        pain: 'The same instructions every morning, and drafts that go out unchecked',
+        painBody: 'You retype the same tasks every day, and nothing stops a draft from leaving before you read it.',
+        fix: 'Scheduled routines whose drafts wait for your OK',
+        fixBody:
+          'Save a task once and pick when it runs. What it writes waits in the Routines tab until you approve it.',
+        alt: 'The Routines tab on a phone: a review-reply draft marked “needs approval”, with Approve and Reject buttons.'
+      }
+    ],
 
     howTitle: 'How it works',
     steps: [
@@ -40,34 +85,34 @@ const en = {
         body: 'One line in the terminal. It starts with your computer and opens in your browser at 127.0.0.1:7171.'
       },
       {
-        title: 'Turn on a routine',
-        body: 'Pick when it runs and drop your exports in one folder: WhatsApp chats, the bookings list, new reviews.'
+        title: 'Start your agents',
+        body: 'Open Claude Code, Codex or opencode with the New button. Each one gets a tile on the board.'
       },
       {
-        title: 'Approve and send',
-        body: 'The draft waits in the Routines tab. Read it, change what you like, approve it and send it yourself.'
+        title: 'Answer from anywhere',
+        body: 'Turn on phone alerts over a private connection. When an agent needs you, answer with a tap and carry on with your day.'
       }
     ],
 
+    bizTitle: 'Run a business?',
+    bizBody:
+      'Free-ORCA also runs office routines on a schedule: a morning brief, review replies, a weekly report. They read the files you give them and write a report or a draft. Nothing reaches your customers until you send it.',
     freeTitle: 'Five routines, free',
-    freeBody:
-      'They read the files you give them and write a report or a draft. They never message your customers or post anything.',
     freeOutput: { report: 'Report', draft: 'Draft you send' },
-
     managedTitle: 'Want it to run on its own?',
     managedBody:
       'Operio runs 18 more routines for you. They connect to WhatsApp, your Google Business Profile and your booking tools, and send with the approvals you set.',
     managedAll: 'See the full catalog',
+    partnerBody: 'Agencies and consultants: offer managed routines to your clients and earn 25%.',
+    partnerCta: 'Partner program',
 
     compareTitle: 'Free or managed',
     compareHead: { topic: 'What you get', free: 'Free-ORCA', managed: 'Managed by Operio' },
     compareRows: [
       ['Where it runs', 'Your own computer', 'Operio runs it for you'],
       ['Sending to customers', 'Never. You copy, paste and send', 'Yes, behind the approvals you set'],
-      ['Where the data comes from', 'Files you drop in a folder', 'Straight from WhatsApp, Google, bookings and your point of sale'],
       ['Setup', 'You install it with one line', 'Operio sets it up with you'],
-      ['When something breaks', 'You check the log', 'Operio is watching and fixes it'],
-      ['Routines', 'Five free routines, or write your own', 'All 23, in English and Spanish']
+      ['When something breaks', 'You check the log', 'Operio is watching and fixes it']
     ],
     compareFreeCta: 'Install free',
 
@@ -92,11 +137,6 @@ const en = {
     ],
     securityMore: 'Phone access and the full security model',
 
-    partnerTitle: 'Agencies and consultants',
-    partnerBody:
-      'Offer managed routines to your clients and earn 25% through the Operio partner program.',
-    partnerCta: 'Partner program',
-
     faqTitle: 'Questions',
     faq: [
       {
@@ -104,33 +144,29 @@ const en = {
         a: 'Yes. Free-ORCA is open source under the MIT license, with no account and no trial period. The only cost is the AI assistant you already use.'
       },
       {
-        q: 'What do I need?',
-        a: 'A Linux or macOS computer that is on when your routines are scheduled, Node.js 20 or newer, and an AI assistant installed and signed in: Claude Code, Codex or opencode.'
+        q: 'Which AI agents does it work with?',
+        a: 'Claude Code, Codex, opencode and other agents that run in a terminal. Install and sign in to them as usual; Free-ORCA shows them, starts them and passes on your answers.'
       },
       {
-        q: 'Will it message my customers?',
-        a: 'No. Free routines only write reports and drafts, and you send them yourself. Sending on its own, with approvals, is what the managed version does.'
+        q: 'What do I need?',
+        a: 'A Linux or macOS computer, Node.js 20 or newer, and at least one AI agent installed and signed in. For routines, the computer has to be on when they are scheduled.'
       },
       {
         q: 'Can I use it from my phone?',
         a: 'Yes, through a private network (Tailscale) or an SSH tunnel. The install guide shows both, step by step.'
       },
       {
-        q: 'Can I write my own routines?',
-        a: 'Yes. A routine is a small file with a task, a schedule and whether its result needs your approval. The README on GitHub shows the format.'
+        q: 'Will it message my customers?',
+        a: 'No. Free routines only write reports and drafts, and you send them yourself. Sending on its own, with approvals, is what the managed version does.'
       },
       {
         q: 'How can I see it before I set anything up?',
-        a: 'Run free-orca demo. It opens a second panel with two fictional businesses whose routines work, ask you questions and finish, with no real data and no cost.'
-      },
-      {
-        q: 'What does Operio add?',
-        a: 'Operio runs the routines for you: connected to your real tools, sending with your approvals, in English and Spanish, and watched so they keep working.'
+        a: 'Run free-orca demo. It opens a second panel with two fictional businesses whose agents work, ask you questions and finish, with no real data and no cost.'
       }
     ],
 
-    finalTitle: 'Start with one routine tomorrow morning',
-    finalBody: 'Install Free-ORCA tonight and the morning brief is waiting when you open.'
+    finalTitle: 'Put every agent on one board',
+    finalBody: 'One line to install. No account and no sudo.'
   },
 
   catalog: {
@@ -246,7 +282,7 @@ const en = {
   },
 
   footer: {
-    tagline: 'Office routines on your own computer. Free and open source.',
+    tagline: 'One board for all your AI agents, on your own computer. Free and open source.',
     product: 'Free-ORCA',
     operio: 'Operio',
     talk: 'Talk to Operio',
@@ -273,25 +309,70 @@ const es = {
   copy: { copy: 'Copiar', copied: 'Copiado', label: 'Copiar el comando', done: 'Comando copiado' },
 
   home: {
-    title: 'Free-ORCA por Operio: rutinas de oficina que corren en tu computadora',
+    title: 'Free-ORCA por Operio: un tablero para todos tus agentes de IA',
     description:
-      'Free-ORCA es un panel gratuito y de código abierto que corre rutinas de oficina en tu propia computadora: un resumen matutino, respuestas a reseñas, un reporte semanal. Cada borrador espera tu visto bueno.',
-    promise: 'Rutinas de oficina que corren en tu computadora y esperan tu visto bueno.',
+      'Free-ORCA es un panel gratuito y de código abierto para los agentes de IA de tu propia computadora: un tablero en vivo, avisos en el celular cuando un agente te necesita, respuestas con un toque y rutinas programadas cuyos borradores esperan tu visto bueno.',
+    headline: 'Maneja todos tus agentes de IA sin vigilar cada terminal.',
     lead:
-      'Activa una rutina y escribe tu resumen matutino, tus respuestas a reseñas o tu reporte semanal a la hora que elijas, con el asistente de IA que ya tienes. Tú lo lees, lo apruebas y lo envías. Gratis y de código abierto.',
+      'Free-ORCA pone a cada agente en un tablero en vivo, te avisa en el celular cuando uno te necesita y lo respondes con un toque. Gratis, de código abierto y en tu propia computadora.',
     installLabel: 'Instala en Linux o macOS',
     installNote: 'Node.js 20 o más reciente. Sin cuenta, sin sudo.',
     installMore: 'Guía de instalación',
     secondary: 'Que Operio lo opere por ti',
 
-    demoTitle: 'Una noche en un restaurante',
-    demoBody:
-      'Es la demo incluida con Harbor Street Bistro, un restaurante ficticio. La rutina de reservas preparó cuatro confirmaciones y se detuvo a preguntar dónde sentar a un grupo de ocho. Lo respondes con un toque.',
-    demoAltDesktop:
-      'Free-ORCA en una laptop: la rutina de reservas muestra cuatro confirmaciones listas y pregunta cómo responder a un grupo de ocho, con tres opciones para tocar.',
-    demoAltPhone:
-      'Free-ORCA en un celular: el mapa de Harbor Street Bistro, con dos rutinas esperando respuesta, una trabajando y una inactiva.',
-    demoTry: 'Pruébala tú con',
+    video: {
+      play: 'Ver la demo',
+      length: '0:50',
+      playLabel: 'Reproducir el video de la demo de Free-ORCA, 50 segundos, solo música y sin narración',
+      label: 'Video de la demo de Free-ORCA. Solo música, sin narración. Los subtítulos repiten el texto que aparece en pantalla.',
+      close: 'Cerrar el video',
+      captions: 'Español',
+      posterAlt:
+        'Demo de Free-ORCA: un agente se detiene a preguntar dónde sentar a un grupo de ocho, con tres respuestas para tocar.'
+    },
+
+    painsTitle: 'Tener varios agentes no debería significar cuidarlos todo el día',
+    painsLead: 'Cuatro cosas que te frenan en cuanto corre más de un agente, y lo que Free-ORCA hace con cada una.',
+    painLabel: 'El problema',
+    fixLabel: 'Con Free-ORCA',
+    pains: [
+      {
+        id: 'needs-you',
+        pain: 'Tus agentes se quedan esperando mientras estás en otra ventana',
+        painBody: 'Un agente te hace una pregunta y se queda parado una hora porque no la viste.',
+        fix: 'Te avisa en el celular y respondes con un toque',
+        fixBody:
+          'Cuando un agente necesita una decisión, su recuadro se pone rojo y te llega un aviso de “te necesita”. Eliges una respuesta y vuelve a trabajar.',
+        alt: 'Un agente en el celular pregunta “¿Cómo le respondo al grupo de Morgan?”, con tres respuestas para tocar.'
+      },
+      {
+        id: 'board',
+        pain: 'Cinco agentes, cinco pestañas y no sabes quién está atorado',
+        painBody: 'Saltas de terminal en terminal para ver quién trabaja, quién terminó y quién te está esperando.',
+        fix: 'Un tablero en vivo con todos tus agentes',
+        fixBody:
+          'Cada agente es un recuadro pintado según su estado: trabajando, te necesita, terminado. Ves a todo el equipo de un vistazo.',
+        alt: 'El tablero en vivo: cuántos te necesitan, trabajan o están inactivos, y cuatro recuadros de agentes en dos grupos, dos en rojo.'
+      },
+      {
+        id: 'phone',
+        pain: 'No puedes despegarte del escritorio mientras corren',
+        painBody: 'Te alejas y el trabajo se detiene, porque la siguiente pregunta espera a que regreses.',
+        fix: 'Manéjalos desde tu celular',
+        fixBody:
+          'Lee lo que hacen, respóndeles y arranca agentes nuevos desde donde estés, con una conexión privada a tu propia computadora.',
+        alt: 'Free-ORCA en un celular: el botón Nuevo, los contadores de estado y los recuadros de los agentes.'
+      },
+      {
+        id: 'approve',
+        pain: 'Las mismas instrucciones cada mañana y borradores que salen sin revisar',
+        painBody: 'Repites las mismas tareas todos los días y nada impide que un borrador salga antes de que lo leas.',
+        fix: 'Rutinas programadas cuyos borradores esperan tu visto bueno',
+        fixBody:
+          'Guarda una tarea una vez y elige cuándo corre. Lo que escribe te espera en la pestaña Rutinas hasta que lo apruebas.',
+        alt: 'La pestaña Rutinas en un celular: un borrador de respuestas a reseñas marcado “por aprobar”, con los botones Aprobar y Rechazar.'
+      }
+    ],
 
     howTitle: 'Cómo funciona',
     steps: [
@@ -300,34 +381,34 @@ const es = {
         body: 'Una línea en la terminal. Arranca con tu computadora y se abre en tu navegador en 127.0.0.1:7171.'
       },
       {
-        title: 'Activa una rutina',
-        body: 'Elige cuándo corre y deja tus archivos en una carpeta: chats de WhatsApp, la lista de reservas, las reseñas nuevas.'
+        title: 'Arranca tus agentes',
+        body: 'Abre Claude Code, Codex u opencode con el botón Nuevo. Cada uno aparece como un recuadro en el tablero.'
       },
       {
-        title: 'Aprueba y envía',
-        body: 'El borrador te espera en la pestaña Rutinas. Léelo, cambia lo que quieras, apruébalo y envíalo tú.'
+        title: 'Responde desde donde estés',
+        body: 'Activa los avisos en tu celular con una conexión privada. Cuando un agente te necesita, respondes con un toque y sigues con tu día.'
       }
     ],
 
+    bizTitle: '¿Tienes un negocio?',
+    bizBody:
+      'Free-ORCA también corre rutinas de oficina a la hora que elijas: un resumen matutino, respuestas a reseñas, un reporte semanal. Leen los archivos que les das y escriben un reporte o un borrador. Nada les llega a tus clientes hasta que tú lo envías.',
     freeTitle: 'Cinco rutinas, gratis',
-    freeBody:
-      'Leen los archivos que les das y escriben un reporte o un borrador. Nunca les escriben a tus clientes ni publican nada.',
     freeOutput: { report: 'Reporte', draft: 'Borrador que tú envías' },
-
     managedTitle: '¿Quieres que corra sola?',
     managedBody:
-      'Operio opera 18 rutinas más por ti. Se conectan a WhatsApp, a tu Perfil de Negocio de Google y a tus sistemas de reservas, y envían con las aprobaciones que tú pones.',
+      'Operio opera 18 rutinas más por ti. Se conectan a WhatsApp, a tu Perfil de Negocio de Google y a tus herramientas de reservas, y envían con las aprobaciones que tú pones.',
     managedAll: 'Ver el catálogo completo',
+    partnerBody: 'Agencias y consultores: ofrece rutinas operadas a tus clientes y gana el 25%.',
+    partnerCta: 'Programa de socios',
 
     compareTitle: 'Gratis u operado',
     compareHead: { topic: 'Qué obtienes', free: 'Free-ORCA', managed: 'Operado por Operio' },
     compareRows: [
       ['Dónde corre', 'En tu propia computadora', 'Operio lo opera por ti'],
       ['Envíos a clientes', 'Nunca. Tú copias, pegas y envías', 'Sí, con las aprobaciones que tú pones'],
-      ['De dónde salen los datos', 'Archivos que dejas en una carpeta', 'Directo de WhatsApp, Google, tus reservas y tu punto de venta'],
       ['Instalación', 'La instalas tú con una línea', 'Operio la configura contigo'],
-      ['Si algo falla', 'Revisas el registro', 'Operio lo vigila y lo arregla'],
-      ['Rutinas', 'Cinco rutinas gratis, o escribe las tuyas', 'Las 23, en español e inglés']
+      ['Si algo falla', 'Revisas el registro', 'Operio lo vigila y lo arregla']
     ],
     compareFreeCta: 'Instalar gratis',
 
@@ -352,11 +433,6 @@ const es = {
     ],
     securityMore: 'Acceso desde el celular y el modelo de seguridad completo',
 
-    partnerTitle: 'Agencias y consultores',
-    partnerBody:
-      'Ofrece rutinas operadas a tus clientes y gana el 25% con el programa de socios de Operio.',
-    partnerCta: 'Programa de socios',
-
     faqTitle: 'Preguntas',
     faq: [
       {
@@ -364,33 +440,29 @@ const es = {
         a: 'Sí. Free-ORCA es de código abierto con licencia MIT, sin cuenta y sin periodo de prueba. Lo único que pagas es el asistente de IA que ya usas.'
       },
       {
-        q: '¿Qué necesito?',
-        a: 'Una computadora con Linux o macOS que esté prendida a la hora de tus rutinas, Node.js 20 o más reciente y un asistente de IA instalado y con sesión iniciada: Claude Code, Codex u opencode.'
+        q: '¿Con qué agentes de IA funciona?',
+        a: 'Con Claude Code, Codex, opencode y otros agentes que corren en una terminal. Los instalas e inicias sesión como siempre; Free-ORCA los muestra, los arranca y les pasa tus respuestas.'
       },
       {
-        q: '¿Les va a escribir a mis clientes?',
-        a: 'No. Las rutinas gratis solo escriben reportes y borradores, y tú los envías. Enviar por su cuenta, con aprobaciones, es lo que hace la versión operada.'
+        q: '¿Qué necesito?',
+        a: 'Una computadora con Linux o macOS, Node.js 20 o más reciente y al menos un agente de IA instalado y con sesión iniciada. Para las rutinas, la computadora tiene que estar prendida a la hora programada.'
       },
       {
         q: '¿Lo puedo usar desde mi celular?',
         a: 'Sí, con una red privada (Tailscale) o un túnel SSH. La guía de instalación muestra las dos formas, paso a paso.'
       },
       {
-        q: '¿Puedo escribir mis propias rutinas?',
-        a: 'Sí. Una rutina es un archivo pequeño con una tarea, un horario y si el resultado necesita tu aprobación. El README en GitHub muestra el formato.'
+        q: '¿Les va a escribir a mis clientes?',
+        a: 'No. Las rutinas gratis solo escriben reportes y borradores, y tú los envías. Enviar por su cuenta, con aprobaciones, es lo que hace la versión operada.'
       },
       {
         q: '¿Cómo lo veo antes de configurar algo?',
-        a: 'Corre free-orca demo. Abre un segundo panel con dos negocios ficticios cuyas rutinas trabajan, te hacen preguntas y terminan, sin datos reales y sin costo.'
-      },
-      {
-        q: '¿Qué agrega Operio?',
-        a: 'Operio opera las rutinas por ti: conectadas a tus herramientas reales, enviando con tus aprobaciones, en español e inglés, y vigiladas para que sigan funcionando.'
+        a: 'Corre free-orca demo. Abre un segundo panel con dos negocios ficticios cuyos agentes trabajan, te hacen preguntas y terminan, sin datos reales y sin costo.'
       }
     ],
 
-    finalTitle: 'Empieza con una rutina mañana temprano',
-    finalBody: 'Instala Free-ORCA hoy en la noche y el resumen matutino te espera cuando abras.'
+    finalTitle: 'Pon a todos tus agentes en un solo tablero',
+    finalBody: 'Una línea para instalar. Sin cuenta y sin sudo.'
   },
 
   catalog: {
@@ -506,7 +578,7 @@ const es = {
   },
 
   footer: {
-    tagline: 'Rutinas de oficina en tu propia computadora. Gratis y de código abierto.',
+    tagline: 'Un tablero para todos tus agentes de IA, en tu propia computadora. Gratis y de código abierto.',
     product: 'Free-ORCA',
     operio: 'Operio',
     talk: 'Habla con Operio',
