@@ -8,7 +8,7 @@ const en = {
   nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', github: 'ORCA on GitHub', home: 'ORCA home' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
-  byOperio: 'by Operio',
+  by: 'by',
 
   copy: { copy: 'Copy', copied: 'Copied', label: 'Copy the command', done: 'Command copied' },
 
@@ -315,6 +315,7 @@ const en = {
 
   footer: {
     tagline: 'One board for all your AI agents, on your own computer. Free and open source.',
+    madeBy: 'ORCA is made by Operio',
     product: 'ORCA',
     operio: 'Operio',
     talk: 'Talk to Operio',
@@ -336,7 +337,7 @@ const es = {
   nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
-  byOperio: 'por Operio',
+  by: 'por',
 
   copy: { copy: 'Copiar', copied: 'Copiado', label: 'Copiar el comando', done: 'Comando copiado' },
 
@@ -643,6 +644,7 @@ vsTitle: 'Cómo se compara ORCA',
 
   footer: {
     tagline: 'Un tablero para todos tus agentes de IA, en tu propia computadora. Gratis y de código abierto.',
+    madeBy: 'ORCA es de Operio',
     product: 'ORCA',
     operio: 'Operio',
     talk: 'Habla con Operio',

@@ -1,6 +1,7 @@
 <script>
   import { page } from '$app/state';
   import Icon from './Icon.svelte';
+  import OperioLogo from './OperioLogo.svelte';
   import { href, basePath, GITHUB_URL } from '#lib/site.js';
 
   /** @type {{ lang: string, t: any, altHref?: string }} */
@@ -34,11 +35,13 @@
 <a class="skip" href="#main">{t.skip}</a>
 <header class="nav" class:scrolled>
   <nav class="container inner" aria-label="Main">
-    <a class="brand" href={href(lang, '/')} aria-label={t.nav.home}>
-      <img src="/favicon.svg" alt="" width="30" height="30" />
-      <span class="wordmark">ORCA</span>
-      <span class="by">{t.byOperio}</span>
-    </a>
+    <div class="brand-row">
+      <a class="brand" href={href(lang, '/')} aria-label={t.nav.home}>
+        <img src="/favicon.svg" alt="" width="30" height="30" />
+        <span class="wordmark">ORCA</span>
+      </a>
+      <span class="by"><span class="by-word">{t.by}</span><OperioLogo height={20} /></span>
+    </div>
     <ul class="links">
       <li><a href={href(lang, '/catalog')} aria-current={section === 'catalog' ? 'page' : undefined}>{t.nav.catalog}</a></li>
       <li><a href={href(lang, '/install')} aria-current={section === 'install' ? 'page' : undefined}>{t.nav.install}</a></li>
@@ -83,13 +86,13 @@
   }
   .inner { display: flex; align-items: center; height: var(--nav-h); gap: 24px; }
 
-  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+  .brand-row { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
   .brand img { border-radius: 7px; }
   .wordmark { font-family: var(--font-mono); font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em; }
-  .by {
-    font-family: var(--font-mono); font-size: var(--text-xs); font-style: italic;
-    color: var(--color-orange-ink); align-self: flex-end; margin-bottom: 3px; margin-left: -4px;
-  }
+  /* "by" + the Operio logo: a quiet signature next to the product name, not a second brand. */
+  .by { display: inline-flex; align-items: center; gap: 6px; }
+  .by-word { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-tertiary); }
 
   .links { display: flex; list-style: none; gap: 4px; flex: 1; }
   .links a {

@@ -1,6 +1,7 @@
 <script>
   import Seo from '#lib/components/Seo.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import OperioLogo from '#lib/components/OperioLogo.svelte';
   import CopyCommand from '#lib/components/CopyCommand.svelte';
   import { INSTALL_CMD, TALK_URL, GITHUB_URL } from '#lib/site.js';
 
@@ -154,6 +155,7 @@
     </section>
 
     <section class="help" aria-labelledby="help">
+      <OperioLogo height={22} />
       <h2 id="help">{i.helpTitle}</h2>
       <p>{i.helpBody}</p>
       <a class="btn btn-primary" href={TALK_URL}>{t.footer.talk} <span class="arrow"><Icon name="arrow" size={17} /></span></a>

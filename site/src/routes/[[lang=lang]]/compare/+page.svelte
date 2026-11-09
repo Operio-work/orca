@@ -1,6 +1,7 @@
 <script>
   import Seo from '#lib/components/Seo.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import OperioLogo from '#lib/components/OperioLogo.svelte';
   import { href, TALK_URL, HERDR_URL, GITHUB_URL } from '#lib/site.js';
   import { TOOLS, ROWS, CHECKED, ORCA_PICK, copy } from '#lib/compare.js';
 
@@ -152,7 +153,10 @@
         <a class="btn btn-ghost" href={href(lang, '/install')}>{k.local.cta} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
       </div>
       <div class="opt opt-managed">
-        <span class="tier tier-managed">{t.tier.managed}</span>
+        <div class="opt-top">
+          <span class="tier tier-managed">{t.tier.managed}</span>
+          <OperioLogo height={20} />
+        </div>
         <h3>{k.managed.title}</h3>
         <p>{k.managed.body}</p>
         <a class="btn btn-primary" href={TALK_URL}>{k.managed.cta} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
@@ -300,6 +304,7 @@
   .opt { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 32px; }
   .opt + .opt { border-left: 1px solid var(--color-border); }
   .opt-managed { background: var(--tint-orange); }
+  .opt-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; align-self: stretch; }
   .opt h3 { font-size: var(--text-xl); margin-top: 4px; }
   .opt p { color: var(--text-secondary); max-width: 44ch; flex: 1; }
   .opt .btn { margin-top: 8px; }

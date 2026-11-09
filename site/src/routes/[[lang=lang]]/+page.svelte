@@ -3,6 +3,7 @@
   import CopyCommand from '#lib/components/CopyCommand.svelte';
   import HeroVideo from '#lib/components/HeroVideo.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import OperioLogo from '#lib/components/OperioLogo.svelte';
   import { freeEntries, packOutput } from '#lib/catalog.js';
   import { href, INSTALL_CMD, TALK_URL, partnersUrl } from '#lib/site.js';
 
@@ -59,7 +60,7 @@
 <div class="proof">
   <div class="container">
     <p>
-      <span class="proof-marks" aria-hidden="true"><Icon name="laptop" size={16} /><Icon name="phone" size={16} /></span>
+      <OperioLogo height={24} alt="" />
       <span><strong>{h.proofLead}</strong> {h.proofBody}</span>
     </p>
   </div>
@@ -300,12 +301,7 @@
     font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);
   }
   .proof strong { color: var(--text-primary); font-weight: 650; }
-  .proof-marks {
-    display: inline-flex; gap: 4px; flex-shrink: 0;
-    padding: 6px 9px; border-radius: 999px;
-    border: 1px solid var(--color-border); background: var(--color-surface);
-    color: var(--color-orange-ink);
-  }
+
 
   /* ── Pain → fix ── */
   .pains { list-style: none; border-top: 1px solid var(--color-border); }
@@ -530,7 +526,6 @@
     .hero-secondary { margin-top: 16px; }
 
     .proof p { align-items: flex-start; gap: 12px; padding: 14px 0; font-size: 0.9rem; }
-    .proof-marks { margin-top: 1px; }
 
     /* Pains: a flat, legible crop of the relevant part of each screen, no device frame. */
     .pain { gap: 16px; padding: 22px 0; }

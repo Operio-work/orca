@@ -1,5 +1,6 @@
 <script>
   import { href, GITHUB_URL, HERDR_URL, TALK_URL, partnersUrl } from '#lib/site.js';
+  import OperioLogo from './OperioLogo.svelte';
 
   /** @type {{ lang: string, t: any }} */
   let { lang, t } = $props();
@@ -13,6 +14,10 @@
         <span class="wordmark">ORCA</span>
       </a>
       <p class="tagline">{t.footer.tagline}</p>
+      <a class="made-by" href={lang === 'es' ? 'https://operio.work/es' : 'https://operio.work'}>
+        <OperioLogo height={30} />
+        <span>{t.footer.madeBy}</span>
+      </a>
     </div>
     <div class="cols">
       <div class="col">
@@ -44,6 +49,12 @@
   .mark img { border-radius: 8px; }
   .wordmark { font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem; }
   .tagline { margin-top: 14px; color: var(--text-secondary); font-size: 0.92rem; }
+  .made-by {
+    display: inline-flex; align-items: center; gap: 12px; margin-top: 24px;
+    color: var(--text-secondary); font-size: var(--text-sm); text-decoration: none;
+    border-radius: var(--radius); transition: color var(--dur-fast) ease;
+  }
+  .made-by:hover { color: var(--color-orange-ink); }
   .cols { display: flex; gap: 64px; flex-wrap: wrap; }
   .col { display: flex; flex-direction: column; gap: 4px; min-width: 9rem; }
   .col h2 { margin-bottom: 8px; }

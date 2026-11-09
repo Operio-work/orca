@@ -1,6 +1,7 @@
 <script>
   import Seo from '#lib/components/Seo.svelte';
   import Icon from '#lib/components/Icon.svelte';
+  import OperioLogo from '#lib/components/OperioLogo.svelte';
   import CopyCommand from '#lib/components/CopyCommand.svelte';
   import { cta, deskFolders, related } from '#lib/catalog.js';
   import { href, INSTALL_CMD, TALK_URL } from '#lib/site.js';
@@ -107,6 +108,7 @@
         </section>
       {:else}
         <section class="box box-managed" aria-labelledby="run">
+          <OperioLogo height={22} />
           <h2 id="run">{r.managedTitle}</h2>
           <p>{r.managedBody}</p>
           <a class="btn btn-primary" href={TALK_URL}>{L(cta)} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
@@ -174,6 +176,7 @@
   .box .btn { width: 100%; }
   .step-body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   .box code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+  .box-managed :global(.op-logo) { margin-bottom: 14px; }
   .box-managed { border-color: color-mix(in srgb, var(--color-orange) 45%, var(--color-border)); }
   .guide { display: inline-block; margin-top: 18px; font-size: 0.92rem; }
 
