@@ -161,8 +161,8 @@ if [ -n "$SOURCE" ]; then
   [ -f "$SOURCE/server.js" ] && [ -f "$SOURCE/package.json" ] || die "--source ${SOURCE} is not a Free-ORCA checkout"
   say "installing the panel from ${SOURCE}"
   mkdir -p "$SRC_DIR"
-  # Copy without git history, local deps, tests or the demo screenshots.
-  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots . ) | (cd "$SRC_DIR" && tar -xf -)
+  # Copy without git history, local deps, tests, the demo screenshots or the website.
+  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots --exclude=./site . ) | (cd "$SRC_DIR" && tar -xf -)
 else
   [ -n "$PANEL_URL" ] && [ -n "$PANEL_SHA256" ] || die "no Free-ORCA release is pinned in this script yet. Clone the repository and run: bash install.sh --source <checkout>"
   say "downloading the panel ${PANEL_VERSION}"
