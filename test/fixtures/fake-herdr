@@ -1,0 +1,34 @@
+#!/usr/bin/env node
+'use strict';
+// A stand-in for the herdr CLI, for tests: keeps panes/agents in $FAKE_HERDR_DIR/state.json
+// and records every prompt in prompts.jsonl. Prints JSON like herdr does.
+const fs = require('fs');
+const path = require('path');
+const dir = process.env.FAKE_HERDR_DIR;
+const file = path.join(dir, 'state.json');
+let st = { n: 0, agents: [] };
+try { st = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { /* first call */ }
+const save = () => fs.writeFileSync(file, JSON.stringify(st));
+const out = o => process.stdout.write(JSON.stringify(o));
+const [a, b, ...rest] = process.argv.slice(2);
+const flag = name => { const i = rest.indexOf(name); return i >= 0 ? rest[i + 1] : undefined; };
+const cmd = `${a} ${b}`;
+if (cmd === 'status server') { process.stdout.write('status: running\n'); process.exit(0); }
+if (cmd === 'agent list') out({ result: { agents: st.agents } });
+else if (cmd === 'workspace list') out({ result: { workspaces: [{ workspace_id: 'w1', number: 1 }] } });
+else if (cmd === 'tab list') out({ result: { tabs: [] } });
+else if (cmd === 'pane list') out({ result: { panes: [] } });
+else if (cmd === 'tab create') {
+  st.n++; const pane = `w1:p${st.n}`;
+  st.agents.push({ pane_id: pane, tab_id: `w1:t${st.n}`, terminal_id: `term${st.n}`, name: flag('--label'), agent: null, agent_status: 'unknown', cwd: flag('--cwd') });
+  save(); out({ result: { root_pane: { pane_id: pane } } });
+} else if (cmd === 'agent start') {
+  const pane = flag('--pane'); const ag = st.agents.find(x => x.pane_id === pane);
+  ag.agent = flag('--kind'); ag.name = b && rest[0]; ag.agent_status = 'idle'; save(); out({ result: {} });
+} else if (cmd === 'pane get') {
+  const ag = st.agents.find(x => x.pane_id === rest[0]);
+  out({ result: { pane: ag ? { pane_id: ag.pane_id, terminal_id: ag.terminal_id } : null } });
+} else if (cmd === 'agent prompt') {
+  fs.appendFileSync(path.join(dir, 'prompts.jsonl'), JSON.stringify({ pane: rest[0], text: rest[1] }) + '\n');
+  out({ result: {} });
+} else out({ result: {} });
