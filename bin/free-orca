@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+# free-orca — run and manage Free-ORCA (https://make.operio.work)
+#
+#   free-orca start       start the panel (and a herdr server if none is running)
+#   free-orca stop        stop the panel (your agents keep running in herdr)
+#   free-orca restart     stop, then start
+#   free-orca status      is it running, where, which versions
+#   free-orca update      move the panel and herdr together to the versions the installer pins
+#   free-orca demo        the demo workspace (coming in P3)
+#   free-orca uninstall   remove Free-ORCA (keeps ~/.config/free-orca unless --purge)
+#   free-orca run         run the panel in the foreground (what the service runs)
+#   free-orca version     print versions
+
+set -euo pipefail
+
+# Resolve this script through symlinks (no readlink -f on older macOS).
+self="${BASH_SOURCE[0]}"
+while [ -L "$self" ]; do
+  dir="$(cd "$(dirname "$self")" && pwd -P)"
+  self="$(readlink "$self")"
+  case "$self" in /*) ;; *) self="$dir/$self" ;; esac
+done
+APP_DIR="$(cd "$(dirname "$self")/.." && pwd -P)"
+
+PREFIX="${FREE_ORCA_PREFIX:-$(dirname "$APP_DIR")}"
+CONFIG_DIR="${FREE_ORCA_CONFIG_DIR:-$HOME/.config/free-orca}"
+NODE_BIN="$(command -v node || true)"
+HERDR_BIN="$PREFIX/bin/herdr"
+SERVICE=none
+SERVICE_ENABLED=0
+# Values written by install.sh (absent when running from a checkout).
+if [ -f "$PREFIX/install.env" ]; then
+  # shellcheck disable=SC1091
+  . "$PREFIX/install.env"
+fi
+[ -x "$HERDR_BIN" ] || HERDR_BIN="$(command -v herdr || echo "$HERDR_BIN")"
+ENV_FILE="$CONFIG_DIR/env"
+PID_FILE="$CONFIG_DIR/free-orca.pid"
+LOG_FILE="$CONFIG_DIR/logs/server.log"
+UNIT=free-orca.service
+LABEL=work.operio.free-orca
+INSTALL_URL="${FREE_ORCA_INSTALL_URL:-https://make.operio.work/install.sh}"
+
+say() { printf '%s\n' "free-orca: $*"; }
+die() { printf '%s\n' "free-orca: ERROR: $*" >&2; exit 1; }
+
+load_env() {
+  if [ -f "$ENV_FILE" ]; then set -a; # shellcheck disable=SC1090
+    . "$ENV_FILE"; set +a; fi
+  export FREE_ORCA_CONFIG_DIR="$CONFIG_DIR"
+  export FREE_ORCA_HERDR_BIN="${FREE_ORCA_HERDR_BIN:-$HERDR_BIN}"
+}
+port() { load_env; printf '%s' "${FREE_ORCA_PORT:-7171}"; }
+host() { load_env; printf '%s' "${FREE_ORCA_HOST:-127.0.0.1}"; }
+
+healthy() {
+  local h; h="$(host)"; case "$h" in 0.0.0.0|::|'[::]') h=127.0.0.1 ;; esac
+  case "$h" in *:*) h="[$h]" ;; esac
+  if command -v curl >/dev/null 2>&1; then curl -fsS -m 2 "http://$h:$(port)/healthz" >/dev/null 2>&1
+  else "$NODE_BIN" -e "require('http').get('http://$h:$(port)/healthz',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+  fi
+}
+
+herdr_running() { "$HERDR_BIN" status server 2>/dev/null | grep -q 'status: running'; }
+
+ensure_herdr() {
+  [ "${FREE_ORCA_SKIP_HERDR:-0}" = 1 ] && return 0
+  [ -x "$HERDR_BIN" ] || die "herdr not found at $HERDR_BIN (run the installer again)"
+  herdr_running && return 0
+  say "starting a herdr server"
+  mkdir -p "$CONFIG_DIR/logs"
+  nohup "$HERDR_BIN" server >>"$CONFIG_DIR/logs/herdr.log" 2>&1 &
+  sleep 1
+}
+
+pid_alive() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; }
+
+use_service() { # true when the installed service should be used
+  [ "${FREE_ORCA_NO_SERVICE:-0}" != 1 ] && [ "$SERVICE_ENABLED" = 1 ] && [ "$SERVICE" != none ]
+}
+
+cmd_run() {
+  load_env
+  [ -n "$NODE_BIN" ] || die "node not found"
+  exec "$NODE_BIN" "$APP_DIR/server.js"
+}
+
+cmd_start() {
+  if use_service && [ "$SERVICE" = systemd ]; then
+    systemctl --user start free-orca-herdr.service "$UNIT"
+  elif use_service && [ "$SERVICE" = launchd ]; then
+    launchctl kickstart "gui/$(id -u)/$LABEL-herdr" >/dev/null 2>&1 || true
+    launchctl kickstart "gui/$(id -u)/$LABEL"
+  else
+    if pid_alive; then say "already running (pid $(cat "$PID_FILE"))"; return 0; fi
+    ensure_herdr
+    mkdir -p "$CONFIG_DIR/logs"
+    load_env
+    nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$LOG_FILE" 2>&1 &
+    echo $! > "$PID_FILE"
+  fi
+  for _ in 1 2 3 4 5 6 7 8 9 10; do healthy && break; sleep 0.5; done
+  if healthy; then say "running at http://127.0.0.1:$(port)"; else die "did not answer on port $(port); see free-orca status"; fi
+}
+
+cmd_stop() {
+  if use_service && [ "$SERVICE" = systemd ]; then
+    systemctl --user stop "$UNIT"
+  elif use_service && [ "$SERVICE" = launchd ]; then
+    launchctl kill TERM "gui/$(id -u)/$LABEL" >/dev/null 2>&1 || true
+  else
+    if pid_alive; then kill "$(cat "$PID_FILE")"; fi
+    rm -f "$PID_FILE"
+  fi
+  say "stopped (herdr and your agents keep running)"
+}
+
+cmd_status() {
+  local panel="stopped"
+  healthy && panel="running at http://127.0.0.1:$(port)"
+  say "panel:   $panel"
+  if [ "${FREE_ORCA_SKIP_HERDR:-0}" != 1 ] && [ -x "$HERDR_BIN" ]; then
+    if herdr_running; then say "herdr:   server running ($HERDR_BIN)"; else say "herdr:   no server running"; fi
+  fi
+  say "service: $SERVICE$( [ "$SERVICE_ENABLED" = 1 ] || printf ' (not enabled)')"
+  if [ -f "$PREFIX/manifest.json" ]; then
+    say "versions: $("$NODE_BIN" -p "const m=require('$PREFIX/manifest.json'); 'panel ' + m.panel + ', herdr ' + m.herdr")"
+  fi
+  say "config:  $CONFIG_DIR"
+  [ "$(host)" = 127.0.0.1 ] || say "WARNING: listening on $(host), not 127.0.0.1 (there is no login)"
+  healthy
+}
+
+pass_flags() { [ "$SERVICE_ENABLED" = 1 ] || printf '%s\n' --no-service; }
+
+cmd_update() {
+  local src=""
+  while [ $# -gt 0 ]; do
+    case "$1" in --source) src="${2:-}"; shift 2 ;; --source=*) src="${1#--source=}"; shift ;; *) die "unknown option: $1" ;; esac
+  done
+  local flags=(); while IFS= read -r f; do [ -n "$f" ] && flags+=("$f"); done < <(pass_flags)
+  if [ -n "$src" ]; then
+    [ -f "$src/install.sh" ] || die "$src has no install.sh"
+    bash "$src/install.sh" --source "$src" ${flags[@]+"${flags[@]}"}
+  else
+    # The installer pins one panel release and one herdr release together, with checksums.
+    local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/free-orca-update.XXXXXX")"
+    trap 'rm -rf "$tmp"' EXIT
+    say "fetching the installer from $INSTALL_URL"
+    curl -fsSL --proto '=https' --tlsv1.2 -o "$tmp/install.sh" "$INSTALL_URL" || die "could not download $INSTALL_URL"
+    bash "$tmp/install.sh" ${flags[@]+"${flags[@]}"}
+  fi
+}
+
+cmd_uninstall() {
+  local u="$APP_DIR/uninstall.sh"
+  [ -f "$u" ] || die "uninstall.sh not found next to the app"
+  # Run a copy: the uninstaller deletes the folder this script lives in.
+  local tmp; tmp="$(mktemp "${TMPDIR:-/tmp}/free-orca-uninstall.XXXXXX")"
+  cp "$u" "$tmp"
+  FREE_ORCA_PREFIX="$PREFIX" FREE_ORCA_CONFIG_DIR="$CONFIG_DIR" bash "$tmp" "$@"
+  rm -f "$tmp"
+}
+
+cmd_version() {
+  if [ -f "$PREFIX/manifest.json" ]; then cat "$PREFIX/manifest.json"
+  else "$NODE_BIN" -p "'free-orca ' + require('$APP_DIR/package.json').version"; fi
+}
+
+case "${1:-help}" in
+  start) cmd_start ;;
+  stop) cmd_stop ;;
+  restart) cmd_stop; cmd_start ;;
+  status) cmd_status ;;
+  update) shift; cmd_update "$@" ;;
+  demo) echo "free-orca demo: coming in P3 (two fictional businesses, scripted agents, no API spend)." ;;
+  uninstall) shift; cmd_uninstall "$@" ;;
+  run) cmd_run ;;
+  version|--version|-V) cmd_version ;;
+  help|-h|--help) sed -n '2,13p' "$self" | sed 's/^# \{0,1\}//' ;;
+  *) die "unknown command: $1 (try: free-orca help)" ;;
+esac
