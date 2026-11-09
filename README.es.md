@@ -23,15 +23,15 @@ el instalador descarga su versión oficial y la verifica. Ver `THIRD_PARTY_NOTIC
 Linux (x86_64, arm64) o macOS (Apple silicon, Intel), Node.js 20 o más nuevo. Sin sudo, sin Docker.
 
 ```bash
-git clone <este repositorio> free-orca && cd free-orca
-bash install.sh
+curl -fsSL https://make.operio.work/install.sh | bash
 ```
 
-(`curl -fsSL https://make.operio.work/install.sh | bash` cuando se publique la primera versión.)
+O desde una copia del repositorio: `git clone https://github.com/operio-work/free-orca && cd free-orca && bash install.sh`.
 
 El instalador:
 
-- descarga herdr **0.9.5** para tu plataforma y verifica su sha256 contra las sumas del script;
+- descarga herdr **0.9.5** para tu plataforma y la versión publicada del panel de Free-ORCA, y
+  verifica las dos contra las sumas sha256 del script (si no coinciden, no instala nada);
 - instala el panel en `~/.local/share/free-orca` y `free-orca` en `~/.local/bin`;
 - instala un servicio de usuario de systemd (Linux) o un agente de launchd (macOS) y lo inicia
   (`--no-service` escribe los archivos sin activarlos);

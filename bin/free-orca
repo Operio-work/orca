@@ -242,8 +242,11 @@ cmd_demo() {
 }
 
 cmd_version() {
-  if [ -f "$PREFIX/manifest.json" ]; then cat "$PREFIX/manifest.json"
-  else "$NODE_BIN" -p "'free-orca ' + require('$APP_DIR/package.json').version"; fi
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" -p "'free-orca ' + require('$APP_DIR/package.json').version"
+  if [ -f "$PREFIX/manifest.json" ]; then
+    "$NODE_BIN" -p "const m=require('$PREFIX/manifest.json'); 'herdr ' + m.herdr + ' (' + m.herdrAsset + ', sha256 ' + m.herdrSha256 + ')'"
+  fi
 }
 
 case "${1:-help}" in

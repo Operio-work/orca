@@ -23,15 +23,15 @@ its official release and checks it. See `THIRD_PARTY_NOTICES.md`.
 Linux (x86_64, arm64) or macOS (Apple silicon, Intel), Node.js 20 or newer. No sudo, no Docker.
 
 ```bash
-git clone <this repository> free-orca && cd free-orca
-bash install.sh
+curl -fsSL https://make.operio.work/install.sh | bash
 ```
 
-(`curl -fsSL https://make.operio.work/install.sh | bash` once the first release is published.)
+Or from a checkout: `git clone https://github.com/operio-work/free-orca && cd free-orca && bash install.sh`.
 
 The installer:
 
-- downloads herdr **0.9.5** for your platform and verifies its sha256 against checksums in the script;
+- downloads herdr **0.9.5** for your platform and the Free-ORCA panel release, and verifies both
+  against sha256 sums in the script (nothing is installed on a mismatch);
 - installs the panel to `~/.local/share/free-orca` and `free-orca` to `~/.local/bin`;
 - installs a systemd user service (Linux) or a launchd agent (macOS) and starts it
   (`--no-service` writes the files without enabling them);
@@ -156,6 +156,11 @@ npm install
 npm test
 FREE_ORCA_PORT=7172 node server.js
 ```
+
+Releases: `scripts/release.sh` builds `dist/free-orca-<version>.tar.gz` reproducibly from the
+`v<version>` tag (or HEAD); pin its sha256 in `install.sh` as `PANEL_SHA256`. The website build
+(`site/`) ships that tarball under `/releases/` and fails if the pin does not match. See
+`CHANGELOG.md`, `CONTRIBUTING.md` and `SECURITY.md`.
 
 ## Want it run for you?
 
