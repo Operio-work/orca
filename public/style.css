@@ -1052,12 +1052,24 @@ dialog input:focus, dialog select:focus { outline: none; border-color: var(--col
   .chip:hover, .btn:hover, .key:hover, .name:hover, .tile:hover .face { border-color: var(--color-border); }
   .chip.primary:hover, .btn.primary:hover, .key.primary:hover { background: var(--color-orange); border-color: var(--color-orange); box-shadow: none; }
 }
+/* ── Demo mode (free-orca demo): badge + business switch ── */
+.demo-badge { justify-self: start; display: inline-flex; align-items: center; height: 18px; padding: 0 7px; border-radius: 999px; font: 600 0.62rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--on-orange); background: var(--color-orange); }
+.demo-row { grid-column: 1 / -1; display: flex; gap: 4px; margin-top: var(--space-3); padding: 3px; border: 1px solid var(--color-border); border-radius: calc(var(--radius) + 3px); background: var(--color-surface); width: fit-content; max-width: 100%; }
+.demo-client { flex: 1 1 auto; min-height: 32px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius); background: transparent; color: var(--text-secondary); font: 600 var(--text-sm) var(--font-sans); white-space: nowrap; cursor: pointer; }
+.demo-client:hover { color: var(--text-primary); }
+.demo-client[aria-pressed="true"] { background: var(--color-orange); color: var(--on-orange); }
+.demo-client:focus-visible { outline: none; box-shadow: var(--ring); }
+@media (max-width: 479px) { .demo-row { width: 100%; } .demo-client { padding: 0 var(--space-2); font-size: var(--text-xs); } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
 /* Phones: the header holds New, view picker, alerts, theme and language — New goes icon-only to fit */
 @media (max-width: 479px) {
+  /* "Free-ORCA" and six header buttons don't share a 390 px row: the buttons get their own. */
+  .bar { grid-template-columns: minmax(0, 1fr); row-gap: var(--space-3); }
+  .actions { grid-column: 1; grid-row: 2; }
   #new { width: 40px; padding: 0; justify-content: center; }
   #new span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 }
@@ -1123,7 +1135,7 @@ button.tile.empty { cursor: pointer; }
 .rt-field { display: grid; gap: 4px; min-width: 0; }
 .rt-field-l { font: 400 0.68rem/1 var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
 .rt-field select, .rt-field input { min-height: 34px; font: 400 var(--text-sm) var(--font-sans); padding: 4px 10px; border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-bg); color: var(--text-primary); color-scheme: inherit; }
-.rt-row .rt-field input { flex: none; min-width: 0; width: 8.5em; }
+.rt-row .rt-field input { flex: none; min-width: 0; width: 9.5em; }
 .rt-field select:focus, .rt-field input:focus { outline: none; border-color: var(--color-orange); box-shadow: var(--ring); }
 .rt-preview { font: 600 var(--text-xs) var(--font-mono); color: var(--color-orange-ink); align-self: center; }
 .rt-adv summary { cursor: pointer; font: 400 var(--text-xs) var(--font-mono); color: var(--text-muted); }

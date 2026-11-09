@@ -110,6 +110,25 @@ Local Watch. They read files you drop in `~/free-orca-desk/`.
 `FREE_ORCA_HOST` (127.0.0.1), `FREE_ORCA_ALLOWED_HOSTS`, `FREE_ORCA_FOLDERS` (folders offered
 for new agents, default `~`), `FREE_ORCA_SHELL_CONFIRM_MIN` (15).
 
+## Demo
+
+`free-orca demo` starts a second panel on **http://127.0.0.1:7172** with two fictional
+businesses, Harbor Street Bistro and Brightside Dental, that you switch between at the top.
+Their agents are scripted: each one works, stops to ask you something (answer with a tap or a
+reply, and the next lines change with your answer), finishes, and starts again. No API spend,
+no real data, and it never touches herdr, your agents or `~/.config/free-orca` (it lives in
+`~/.config/free-orca-demo`). The Routines tab has example packs, run history and a draft
+waiting for approval for each business.
+
+```
+free-orca demo              start it (the agents start from the top)
+free-orca demo --reset      start over: routines, drafts and history too
+free-orca demo --speed 2    play the script twice as fast
+free-orca demo --stop       stop it
+```
+
+Screenshots are in `demo/screenshots/`.
+
 ## Uninstall
 
 `free-orca uninstall` (add `--purge` to also delete `~/.config/free-orca`). It never stops your

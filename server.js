@@ -597,6 +597,11 @@ async function sessionPids() {
 }
 
 async function measureMemory() {
+  if (DEMO) { // fictional, steady numbers: the demo's agents are scripts, not processes
+    const agents = await listAgents();
+    const rows = agents.map((a, i) => ({ pane: a.pane, name: a.name, agent: a.agent, pss: 182000 + ((i * 37) % 9) * 21000, swap: 0, procs: 3 }));
+    return { at: Date.now(), agents: rows, total: { pss: rows.reduce((s, r) => s + r.pss, 0), swap: 0, procs: rows.length * 3 }, machine: { memTotal: 16777216, memUsed: 6501171, swapTotal: 2097152, swapUsed: 0 } };
+  }
   const [agents, { procs, children }, bySession, meminfo] = await Promise.all([listAgents(), procTable(), sessionPids(), readText('/proc/meminfo')]);
   const isHerdr = pid => procs.get(pid)?.comm === 'herdr';
   // Pane roots: herdr's direct children. Walk up from a pid to the one whose parent is herdr.
@@ -1449,6 +1454,44 @@ let rstate = routinesLib.readState(CFG.ROUTINES_STATE);
 const saveRstate = () => routinesLib.writeState(CFG.ROUTINES_STATE, rstate);
 const RUNS_KEEP = 200;
 
+// ─── Demo mode (`free-orca demo`) ─────────────────────────────────────────────
+// Two fictional businesses played by demo/demo-herdr. Each client has its own routines,
+// drafts and run log under CONFIG_DIR/clients/<id>/; switching client swaps them.
+const DEMO = process.env.FREE_ORCA_DEMO === '1' && !!process.env.FREE_ORCA_DEMO_DIR;
+const demoTl = DEMO ? require('./demo/timeline') : null;
+const DEMO_CLIENTS = DEMO ? require('./demo/clients').CLIENTS.map(c => ({ id: c.id, name: c.name, short: c.short })) : [];
+function useDemoClient(id) {
+  const base = path.join(STATE_DIR, 'clients', id);
+  Object.assign(CFG, {
+    ROUTINES_DIR: path.join(base, 'routines'), ROUTINES_STATE: path.join(base, 'routines-state.json'),
+    DRAFTS_DIR: path.join(base, 'drafts'), REPORTS_DIR: path.join(base, 'reports'), LOGS_DIR: path.join(base, 'logs'),
+  });
+  RDIRS.drafts = CFG.DRAFTS_DIR; RDIRS.reports = CFG.REPORTS_DIR;
+  rstate = routinesLib.readState(CFG.ROUTINES_STATE);
+  layoutCache.at = 0;
+}
+if (DEMO) useDemoClient(demoTl.loadState(process.env.FREE_ORCA_DEMO_DIR).client);
+
+async function demoApi(req, res, pathname) {
+  if (!DEMO) return send(res, 200, { demo: false });
+  const dir = process.env.FREE_ORCA_DEMO_DIR;
+  if (req.method === 'GET' && pathname === '/api/demo') {
+    const st = demoTl.loadState(dir);
+    return send(res, 200, { demo: true, clients: DEMO_CLIENTS, active: st.client, speed: st.speed });
+  }
+  if (req.method === 'POST' && pathname === '/api/demo/client') {
+    const body = await readBody(req);
+    if (!DEMO_CLIENTS.some(c => c.id === body.client)) throw new HttpError(400, 'bad_request');
+    const st = demoTl.loadState(dir);
+    st.client = body.client;
+    demoTl.saveState(dir, st);
+    useDemoClient(body.client);
+    log('demo.client', { client: body.client });
+    return send(res, 200, { ok: true, active: body.client });
+  }
+  throw new HttpError(404, 'not_found');
+}
+
 function loadRoutines() {
   const { routines, invalid } = routinesLib.loadAll(CFG.ROUTINES_DIR);
   return { routines: routines.map(r => routinesLib.effective(r, rstate)), invalid };
@@ -1603,6 +1646,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname.startsWith('/api/')) {
     try {
       if (url.pathname.startsWith('/api/routines')) return await routinesApi(req, res, url.pathname);
+      if (url.pathname === '/api/demo' || url.pathname.startsWith('/api/demo/')) return await demoApi(req, res, url.pathname);
       return await api(req, res, url);
     } catch (e) {
       const status = e.status || 500;
@@ -1626,6 +1670,6 @@ if (!guard.isLoopbackBind(HOST)) {
 }
 
 server.listen(PORT, HOST, () => {
-  log('listen', { host: HOST, port: PORT, herdr: HERDR, allowedHosts: [...ALLOWED_HOSTS.names, ...ALLOWED_HOSTS.pinned], pushDevices: state.subs.length });
+  log('listen', { host: HOST, port: PORT, demo: DEMO || undefined, herdr: HERDR, allowedHosts: [...ALLOWED_HOSTS.names, ...ALLOWED_HOSTS.pinned], pushDevices: state.subs.length });
   scheduler.start();
 });

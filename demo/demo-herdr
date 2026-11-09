@@ -1,0 +1,109 @@
+#!/usr/bin/env node
+'use strict';
+// A stand-in for the herdr CLI used by `free-orca demo`: answers the same commands with the
+// same JSON shapes, from the scripted timeline in demo/timeline.js. It never starts a process,
+// never talks to a real herdr and only writes inside $FREE_ORCA_DEMO_DIR.
+const path = require('path');
+const os = require('os');
+const tl = require('./timeline');
+
+const DIR = process.env.FREE_ORCA_DEMO_DIR;
+if (!DIR) { process.stderr.write('demo-herdr: FREE_ORCA_DEMO_DIR is not set\n'); process.exit(2); }
+const HOME = process.env.HOME || os.homedir();
+const now = Date.now();
+let st = tl.loadState(DIR);
+let dirty = false;
+
+const out = o => { process.stdout.write(JSON.stringify(o)); };
+const fail = (code, message) => { process.stdout.write(JSON.stringify({ error: { code, message } })); process.exit(1); };
+const [a, b, ...rest] = process.argv.slice(2);
+const flag = name => { const i = rest.indexOf(name); return i >= 0 ? rest[i + 1] : undefined; };
+const cmd = `${a} ${b}`;
+
+tl.writeDueOutputs(st, now, DIR);
+const list = () => tl.agentsFor(st, now, HOME);
+const find = pane => list().find(x => x.row.pane_id === pane);
+const anyDyn = pane => (st.dyn || []).find(d => d.pane === pane);
+const cutLines = (lines, n) => lines.slice(-Math.max(1, Math.min(Number(n) || 200, 400)));
+
+function read(pane, { source = 'recent', lines = 200, format = 'text' }) {
+  const x = find(pane);
+  if (!x) fail('pane_not_found', `pane ${pane} not found`);
+  let rows = x.view.lines.map(r => r.text);
+  rows = source === 'visible' ? cutLines(rows, 45) : cutLines(rows, lines);
+  const text = rows.map(r => (format === 'ansi' ? tl.colorize(r) : tl.stripAnsi(r))).join(format === 'ansi' ? '\r\n' : '\n');
+  process.stdout.write(text + '\n');
+}
+
+function input(pane, kind, value) {
+  const x = find(pane) || (anyDyn(pane) && { dyn: anyDyn(pane) });
+  if (!x) fail('pane_not_found', `pane ${pane} not found`);
+  if (x.dyn) {
+    if (kind === 'text') { x.dyn.prompts = [...(x.dyn.prompts || []), { at: now, text: String(value) }]; dirty = true; }
+    return;
+  }
+  // Keys only count while the agent is asking; typed text is an answer when it asks and a
+  // note otherwise.
+  if (kind === 'key' && x.view.status !== 'blocked') return;
+  (st.inputs[pane] ||= []).push({ at: now, kind, value: String(value).slice(0, 400) });
+  dirty = true;
+}
+
+switch (cmd) {
+  case 'status server': process.stdout.write('status: running (demo)\n'); break;
+  case 'agent list': out({ result: { agents: list().map(x => x.row) } }); break;
+  case 'workspace list': {
+    const c = tl.clientById(st.client);
+    out({ result: { workspaces: [{ workspace_id: c.ws, number: 1, label: c.name }] } });
+    break;
+  }
+  case 'tab list': out({ result: { tabs: tl.tabsFor(st) } }); break;
+  case 'pane list': out({ result: { panes: list().map(x => ({ pane_id: x.row.pane_id, tab_id: x.row.tab_id, terminal_id: x.row.terminal_id, agent: x.row.agent, cwd: x.row.cwd, foreground_cwd: x.row.cwd })) } }); break;
+  case 'pane layout': {
+    const pane = flag('--pane');
+    const x = find(pane);
+    if (!x) fail('pane_not_found', `pane ${pane} not found`);
+    out({ result: { layout: tl.layoutFor(st, x.row.tab_id) } });
+    break;
+  }
+  case 'pane get': {
+    const x = find(rest[0]);
+    out({ result: { pane: x ? { pane_id: x.row.pane_id, tab_id: x.row.tab_id, terminal_id: x.row.terminal_id, agent: x.row.agent, scroll: { viewport_rows: 50 } } : null } });
+    break;
+  }
+  case 'agent read': read(rest[0], { source: flag('--source'), lines: flag('--lines'), format: flag('--format') }); break;
+  case 'pane read': read(rest[0], { source: flag('--source'), lines: flag('--lines'), format: flag('--format') }); break;
+  case 'agent prompt': input(rest[0], 'text', rest[1]); out({ result: {} }); break;
+  case 'pane send-text': input(rest[0], 'text', rest[1]); out({ result: {} }); break;
+  case 'agent send-keys':
+  case 'pane send-keys': input(rest[0], 'key', rest[1]); out({ result: {} }); break;
+  case 'tab create': {
+    const c = tl.clientById(st.client);
+    const n = st.nextDyn || 1;
+    st.nextDyn = n + 1;
+    const pane = `${c.ws}:p${(20 + n).toString(36)}`;
+    const tab = `${c.ws}:t${(20 + n).toString(36)}`;
+    (st.dyn ||= []).push({ pane, tab, client: c.id, name: flag('--label') || null, kind: null, cwd: flag('--cwd') || path.join(HOME, c.folder), created: now, prompts: [] });
+    dirty = true;
+    out({ result: { root_pane: { pane_id: pane }, tab: { tab_id: tab } } });
+    break;
+  }
+  case 'pane split': fail('workspace', 'the demo opens new agents in a new tab'); break;
+  case 'agent start': {
+    const d = anyDyn(flag('--pane'));
+    if (!d) fail('pane_not_found', 'pane not found');
+    d.kind = flag('--kind') || 'claude';
+    d.name = b && rest[0] ? rest[0] : d.name;
+    dirty = true;
+    out({ result: {} });
+    break;
+  }
+  case 'agent rename': case 'pane rename': {
+    const d = anyDyn(rest[0]);
+    if (d && rest[1] && rest[1] !== '--clear') { d.name = rest[1]; dirty = true; }
+    out({ result: {} });
+    break;
+  }
+  default: out({ result: {} }); // focus, zoom, close…: nothing to do in a demo
+}
+if (dirty) tl.saveState(DIR, st);

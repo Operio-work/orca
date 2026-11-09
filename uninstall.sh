@@ -9,6 +9,7 @@ set -euo pipefail
 
 PREFIX="${FREE_ORCA_PREFIX:-$HOME/.local/share/free-orca}"
 CONFIG_DIR="${FREE_ORCA_CONFIG_DIR:-$HOME/.config/free-orca}"
+DEMO_ROOT="${FREE_ORCA_DEMO_ROOT:-$HOME/.config/free-orca-demo}"
 BIN_DIR="$HOME/.local/bin"
 HERDR_CONFIG="$HOME/.config/herdr/config.toml"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
@@ -65,6 +66,12 @@ if [ -f "$CONFIG_DIR/free-orca.pid" ]; then
   rm -f "$CONFIG_DIR/free-orca.pid"
 fi
 
+# The demo panel (free-orca demo), if it is running.
+if [ -f "$DEMO_ROOT/server.pid" ]; then
+  kill "$(cat "$DEMO_ROOT/server.pid")" 2>/dev/null || true
+  rm -f "$DEMO_ROOT/server.pid"
+fi
+
 # Links on PATH: only ours (pointing into PREFIX).
 for name in free-orca free-orca-send herdr; do
   link="$BIN_DIR/$name"
@@ -92,6 +99,8 @@ if [ "$PURGE" -eq 1 ]; then
   case "$CONFIG_DIR" in ""|"/"|"$HOME"|"$HOME/") say "refusing to delete CONFIG_DIR=$CONFIG_DIR"; exit 1 ;; esac
   rm -rf "$CONFIG_DIR"
   say "deleted $CONFIG_DIR"
+  # The demo folder holds only fictional data, and is marked as such.
+  if [ -f "$DEMO_ROOT/.free-orca-demo" ]; then rm -rf "$DEMO_ROOT"; say "deleted $DEMO_ROOT"; fi
 else
   say "kept your settings, routines and drafts in $CONFIG_DIR (delete it, or run with --purge)"
 fi

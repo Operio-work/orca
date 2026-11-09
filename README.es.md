@@ -100,6 +100,25 @@ Vigilancia de competencia local. Leen los archivos que dejes en `~/free-orca-des
 `FREE_ORCA_HOST` (127.0.0.1), `FREE_ORCA_ALLOWED_HOSTS`, `FREE_ORCA_FOLDERS` (carpetas que se
 ofrecen para agentes nuevos, por defecto `~`), `FREE_ORCA_SHELL_CONFIRM_MIN` (15).
 
+## Demo
+
+`free-orca demo` inicia un segundo panel en **http://127.0.0.1:7172** con dos negocios
+ficticios, Harbor Street Bistro y Brightside Dental, que cambias arriba. Sus agentes siguen un
+guion: cada uno trabaja, se detiene a preguntarte algo (responde con un toque o un mensaje y
+las siguientes líneas cambian según tu respuesta), termina y vuelve a empezar. Sin gasto de API,
+sin datos reales, y nunca toca herdr, tus agentes ni `~/.config/free-orca` (vive en
+`~/.config/free-orca-demo`). La pestaña Rutinas trae paquetes de ejemplo, historial y un
+borrador por aprobar para cada negocio.
+
+```
+free-orca demo              iniciarlo (los agentes empiezan desde el principio)
+free-orca demo --reset      empezar de cero: también rutinas, borradores e historial
+free-orca demo --speed 2    reproducir el guion al doble de velocidad
+free-orca demo --stop       detenerlo
+```
+
+Hay capturas en `demo/screenshots/`.
+
 ## Desinstalar
 
 `free-orca uninstall` (agrega `--purge` para borrar también `~/.config/free-orca`). Nunca

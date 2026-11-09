@@ -6,7 +6,8 @@
 #   free-orca restart     stop, then start
 #   free-orca status      is it running, where, which versions
 #   free-orca update      move the panel and herdr together to the versions the installer pins
-#   free-orca demo        the demo workspace (coming in P3)
+#   free-orca demo        a demo with two fictional businesses and scripted agents on
+#                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   free-orca uninstall   remove Free-ORCA (keeps ~/.config/free-orca unless --purge)
 #   free-orca run         run the panel in the foreground (what the service runs)
 #   free-orca version     print versions
@@ -162,6 +163,78 @@ cmd_uninstall() {
   rm -f "$tmp"
 }
 
+# ── Demo: fictional businesses, scripted agents, no API spend ────────────────
+# Runs a second panel on its own port and folder, with demo/demo-herdr in place of herdr.
+# It never reads your env file, never starts or talks to herdr and never touches
+# ~/.config/free-orca.
+DEMO_ROOT="${FREE_ORCA_DEMO_ROOT:-$HOME/.config/free-orca-demo}"
+DEMO_PORT="${FREE_ORCA_DEMO_PORT:-7172}"
+DEMO_PID="$DEMO_ROOT/server.pid"
+demo_alive() { [ -f "$DEMO_PID" ] && kill -0 "$(cat "$DEMO_PID")" 2>/dev/null; }
+demo_healthy() {
+  "$NODE_BIN" -e "require('http').get({host:'127.0.0.1',port:$DEMO_PORT,path:'/healthz',headers:{Host:'127.0.0.1:$DEMO_PORT'}},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+}
+demo_stop() {
+  if demo_alive; then
+    local pid; pid="$(cat "$DEMO_PID")"
+    kill "$pid" 2>/dev/null || true
+    for _ in 1 2 3 4 5 6 7 8 9 10; do kill -0 "$pid" 2>/dev/null || break; sleep 0.3; done
+  fi
+  rm -f "$DEMO_PID"
+}
+
+demo_help() {
+  printf '%s\n' \
+    'free-orca demo             start the demo (agents start from the top) and print its URL' \
+    'free-orca demo --reset     wipe the demo folder and start fresh (routines, drafts, history)' \
+    'free-orca demo --speed N   play the agents'"'"' timeline N times faster (0.25 to 20)' \
+    'free-orca demo --stop      stop the demo'
+}
+
+cmd_demo() {
+  local reset=0 stop=0 speed=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --reset) reset=1; shift ;;
+      --stop) stop=1; shift ;;
+      --speed) speed="${2:-}"; [ -n "$speed" ] || die "--speed needs a number"; shift 2 ;;
+      --speed=*) speed="${1#--speed=}"; shift ;;
+      -h|--help) demo_help; return 0 ;;
+      *) die "unknown demo option: $1" ;;
+    esac
+  done
+  [ -n "$NODE_BIN" ] || die "node not found"
+  if [ "$stop" = 1 ]; then demo_stop; say "demo stopped"; return 0; fi
+  if demo_alive; then
+    if [ "$reset" = 1 ] || [ -n "$speed" ]; then demo_stop
+    else say "demo already running at http://127.0.0.1:$DEMO_PORT (--reset to start over, --stop to stop)"; return 0; fi
+  fi
+  if demo_healthy; then die "port $DEMO_PORT is already in use (set FREE_ORCA_DEMO_PORT to use another)"; fi
+
+  local args=(--root "$DEMO_ROOT" --restart --paths)
+  [ "$reset" = 1 ] && args+=(--reset)
+  [ -n "$speed" ] && args+=(--speed "$speed")
+  local paths; paths="$("$NODE_BIN" "$APP_DIR/demo/setup.js" "${args[@]}")" || exit 1
+  local demo_home demo_config demo_speed
+  demo_home="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_HOME=//p')"
+  demo_config="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_CONFIG=//p')"
+  demo_speed="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_SPEED=//p')"
+  [ -n "$demo_home" ] && [ -n "$demo_config" ] || die "demo setup failed"
+
+  # A clean environment: nothing from your shell or ~/.config/free-orca/env leaks in.
+  env -i PATH="$PATH" ${TZ:+TZ="$TZ"} ${LANG:+LANG="$LANG"} HOME="$demo_home" \
+    FREE_ORCA_DEMO=1 FREE_ORCA_DEMO_DIR="$DEMO_ROOT" FREE_ORCA_CONFIG_DIR="$demo_config" \
+    FREE_ORCA_HERDR_BIN="$APP_DIR/demo/demo-herdr" FREE_ORCA_HOST=127.0.0.1 FREE_ORCA_PORT="$DEMO_PORT" \
+    FREE_ORCA_AGENT_SOCK="${TMPDIR:-/tmp}/free-orca-demo-$(id -u)/agents.sock" \
+    FREE_ORCA_POLL_MS=1500 FREE_ORCA_MIN_WORK_SEC=5 FREE_ORCA_FOLDERS="~" \
+    nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$DEMO_ROOT/server.log" 2>&1 &
+  echo $! > "$DEMO_PID"
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do demo_healthy && break; sleep 0.5; done
+  demo_healthy || die "the demo did not start; see $DEMO_ROOT/server.log"
+  say "demo running at http://127.0.0.1:$DEMO_PORT (speed ${demo_speed:-1}x; fictional data in $DEMO_ROOT)"
+  say "stop it with: free-orca demo --stop"
+}
+
 cmd_version() {
   if [ -f "$PREFIX/manifest.json" ]; then cat "$PREFIX/manifest.json"
   else "$NODE_BIN" -p "'free-orca ' + require('$APP_DIR/package.json').version"; fi
@@ -173,10 +246,10 @@ case "${1:-help}" in
   restart) cmd_stop; cmd_start ;;
   status) cmd_status ;;
   update) shift; cmd_update "$@" ;;
-  demo) echo "free-orca demo: coming in P3 (two fictional businesses, scripted agents, no API spend)." ;;
+  demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,13p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,14p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: free-orca help)" ;;
 esac

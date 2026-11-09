@@ -1647,11 +1647,11 @@ holoBtn.addEventListener('pointerenter', warmHolo, { once: true });
 holoBtn.addEventListener('focus', warmHolo, { once: true });
 let lastData = null;
 
-// An agent that needs you opens its panel by itself — unless a panel is already
-// open, or you closed this very question already.
+// An agent that needs you opens its panel by itself — unless a panel or the Routines tab
+// is already open, or you closed this very question already.
 function attend() {
   if (pendingPane && byPane.has(pendingPane)) { const p = pendingPane; pendingPane = null; select(p); return; }
-  if (selected) return;
+  if (selected || !$('#routines-view').hidden) return; // never cover the Routines tab
   const a = agents.find(x => x.status === 'blocked' && dismissed.get(x.pane) !== x.since);
   if (a) select(a.pane);
 }

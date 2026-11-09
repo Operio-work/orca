@@ -161,8 +161,8 @@ if [ -n "$SOURCE" ]; then
   [ -f "$SOURCE/server.js" ] && [ -f "$SOURCE/package.json" ] || die "--source ${SOURCE} is not a Free-ORCA checkout"
   say "installing the panel from ${SOURCE}"
   mkdir -p "$SRC_DIR"
-  # Copy without git history, local deps or tests.
-  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test . ) | (cd "$SRC_DIR" && tar -xf -)
+  # Copy without git history, local deps, tests or the demo screenshots.
+  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots . ) | (cd "$SRC_DIR" && tar -xf -)
 else
   [ -n "$PANEL_URL" ] && [ -n "$PANEL_SHA256" ] || die "no Free-ORCA release is pinned in this script yet. Clone the repository and run: bash install.sh --source <checkout>"
   say "downloading the panel ${PANEL_VERSION}"
@@ -183,7 +183,7 @@ rm -rf "$PREFIX/app.old"
 [ -d "$PREFIX/app" ] && mv "$PREFIX/app" "$PREFIX/app.old"
 mv "$SRC_DIR" "$PREFIX/app"
 rm -rf "$PREFIX/app.old"
-chmod 755 "$PREFIX/app/bin/free-orca" "$PREFIX/app/bin/free-orca-send"
+chmod 755 "$PREFIX/app/bin/free-orca" "$PREFIX/app/bin/free-orca-send" "$PREFIX/app/demo/demo-herdr"
 cp "$PREFIX/app/LICENSE" "$PREFIX/LICENSE"
 cp "$PREFIX/app/THIRD_PARTY_NOTICES.md" "$PREFIX/THIRD_PARTY_NOTICES.md"
 say "panel ${SRC_VERSION} installed in ${PREFIX}/app"
