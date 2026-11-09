@@ -1,0 +1,16 @@
+{
+  "id": "morning-front-desk-brief",
+  "name": {
+    "en": "Morning Front Desk Brief",
+    "es": "Resumen matutino de recepción"
+  },
+  "problem": {
+    "en": "You start the day not knowing what is waiting: messages, bookings, reviews and overdue payments.",
+    "es": "Empiezas el día sin saber qué te espera: mensajes, reservas, reseñas y pagos atrasados."
+  },
+  "prompt": "You prepare the owner's morning brief for a small business.\n\nInput: the folder ~/free-orca-desk/inbox. The owner drops exports there: WhatsApp chat exports (.txt), a bookings or appointments list (.csv), copied Google reviews (.txt) and a payments or invoices list (.csv). Only read files changed in the last 2 days. If the folder is missing or empty, create it and write a short brief that explains, in English and Spanish, which files to drop there.\n\nWrite a one-page brief with these sections, each with at most 5 bullets, most urgent first:\n1. Needs a reply today (who, what they asked, how long they have waited)\n2. Today's bookings and anything unusual about them\n3. New reviews (stars, one-line summary)\n4. Overdue payments (client, amount, days late)\n5. Three things to do first\n\nWrite it in the language most of the messages are in (Spanish or English). Never invent data: if a section has nothing, say so. Read only; do not change, move or delete any input file.",
+  "schedule": "30 7 * * 1-6",
+  "approval": "none",
+  "agent": "claude",
+  "cwd": "~"
+}
