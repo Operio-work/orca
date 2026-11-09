@@ -16,9 +16,11 @@ const en = {
     title: 'Free-ORCA by Operio: one board for all your AI agents',
     description:
       'Free-ORCA is a free, open-source control panel for the AI agents on your own computer: one live board, phone alerts when an agent needs you, one-tap answers, and scheduled routines whose drafts wait for your OK.',
-    headline: 'Run all your AI agents without watching every terminal.',
+    headline: 'All your AI agents on one board, and\u00a0in your pocket.',
     lead:
-      'Free-ORCA puts every agent on one live board, alerts your phone when one needs you, and lets you answer with a tap. Free, open source, on your own computer.',
+      'Free-ORCA shows what every agent is doing at a glance, alerts your phone when one needs you, and lets you answer with a tap. Free, open source, on your own computer.',
+    proofLead: 'Built by Operio.',
+    proofBody: 'Our own team runs its agents on it every day: from the desk and from the phone.',
     installLabel: 'Install on Linux or macOS',
     installNote: 'Node.js 20 or newer. No account, no sudo.',
     installMore: 'Install guide',
@@ -312,9 +314,11 @@ const es = {
     title: 'Free-ORCA por Operio: un tablero para todos tus agentes de IA',
     description:
       'Free-ORCA es un panel gratuito y de código abierto para los agentes de IA de tu propia computadora: un tablero en vivo, avisos en el celular cuando un agente te necesita, respuestas con un toque y rutinas programadas cuyos borradores esperan tu visto bueno.',
-    headline: 'Maneja todos tus agentes de IA sin vigilar cada terminal.',
+    headline: 'Todos tus agentes de IA en un tablero, y en tu bolsillo.',
     lead:
-      'Free-ORCA pone a cada agente en un tablero en vivo, te avisa en el celular cuando uno te necesita y lo respondes con un toque. Gratis, de código abierto y en tu propia computadora.',
+      'Free-ORCA te muestra de un vistazo qué hace cada agente, te avisa en el celular cuando uno te necesita y lo respondes con un toque. Gratis, de código abierto y en tu propia computadora.',
+    proofLead: 'Hecho por Operio.',
+    proofBody: 'Nuestro equipo maneja sus propios agentes con esto todos los días: desde el escritorio y desde el celular.',
     installLabel: 'Instala en Linux o macOS',
     installNote: 'Node.js 20 o más reciente. Sin cuenta, sin sudo.',
     installMore: 'Guía de instalación',

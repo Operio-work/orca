@@ -44,6 +44,15 @@
   </div>
 </section>
 
+<div class="proof">
+  <div class="container">
+    <p>
+      <span class="proof-marks" aria-hidden="true"><Icon name="laptop" size={16} /><Icon name="phone" size={16} /></span>
+      <span><strong>{h.proofLead}</strong> {h.proofBody}</span>
+    </p>
+  </div>
+</div>
+
 <section class="section pains-section" aria-labelledby="pains">
   <div class="container">
     <div class="section-head">
@@ -241,6 +250,21 @@
     to { clip-path: inset(0 0 0 0 round var(--radius-lg)); opacity: 1; transform: none; }
   }
 
+  /* ── Proof strip: one quiet line under the hero ── */
+  .proof { border-block: 1px solid var(--color-border); }
+  .proof p {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 0;
+    font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);
+  }
+  .proof strong { color: var(--text-primary); font-weight: 650; }
+  .proof-marks {
+    display: inline-flex; gap: 4px; flex-shrink: 0;
+    padding: 6px 9px; border-radius: 999px;
+    border: 1px solid var(--color-border); background: var(--color-surface);
+    color: var(--color-orange-ink);
+  }
+
   /* ── Pain → fix ── */
   .pains { list-style: none; border-top: 1px solid var(--color-border); }
   .pain {
@@ -429,43 +453,89 @@
     .faq-grid .section-head { margin-bottom: 0; }
   }
   @media (max-width: 768px) {
-    .hero { padding: 32px 0 48px; }
+    /* Phone rhythm: tighter than desktop, same order and content. */
+    .pain-body, .fix-body, .how p, .security p, .managed-head p, .biz-grid .section-head p { font-size: 0.95rem; line-height: 1.5; }
+    .hero-lead { font-size: 1.05rem; line-height: 1.5; }
+    .section { padding: 40px 0; }
+    .section-head { margin-bottom: 24px; }
+    .section-head h2 + p { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
+
+    .hero { padding: 24px 0 36px; }
+    .hero-grid { gap: 32px; }
     h1 { font-size: clamp(2rem, 8.6vw, 2.6rem); }
-    .install { margin-top: 28px; }
-    .stage { height: 248px; }
-    .stage img { width: 184px; border-width: 5px; }
-    .stage:not([data-shot='needs-you']):not([data-shot='board']) img { top: 24px; border-radius: 22px 22px 0 0; }
-    .stage[data-shot='needs-you'] img { bottom: 24px; border-radius: 0 0 22px 22px; }
-    .stage[data-shot='board'] img { left: 16px; width: 480px; border-width: 1px; }
-    .how { grid-template-columns: 1fr; gap: 28px; }
+    .hero-lead { margin-top: 14px; }
+    .install { margin-top: 24px; }
+    .hero-secondary { margin-top: 16px; }
+
+    .proof p { align-items: flex-start; gap: 12px; padding: 14px 0; font-size: 0.9rem; }
+    .proof-marks { margin-top: 1px; }
+
+    /* Pains: a flat, legible crop of the relevant part of each screen, no device frame. */
+    .pain { gap: 16px; padding: 22px 0; }
+    .pain h3 { font-size: 1.3rem; }
+    .pain-body { margin-top: 8px; }
+    /* Fix: mark beside the title, the body takes the full width below. */
+    .fix { margin-top: 16px; padding-top: 14px; grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; row-gap: 0; align-items: center; }
+    .fix > div { display: contents; }
+    .fix-mark { width: 24px; height: 24px; }
+    .fix-title { font-size: 1.05rem; }
+    .fix-body { grid-column: 1 / -1; margin-top: 6px; }
+    .stage { height: auto; aspect-ratio: 2 / 1; background-image: none; }
+    .stage[data-shot='board'] { aspect-ratio: 910 / 340; }
+    .stage img,
+    .stage:not([data-shot='needs-you']):not([data-shot='board']) img,
+    .stage[data-shot='needs-you'] img,
+    .stage[data-shot='board'] img {
+      position: static; transform: none;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: 50% var(--crop-y, 0%);
+      border: 0; border-radius: 0; box-shadow: none;
+      -webkit-mask-image: none; mask-image: none;
+    }
+    .stage[data-shot='needs-you'] { --crop-y: 74%; }
+    .stage[data-shot='phone'] { --crop-y: 44%; }
+    .stage[data-shot='approve'] { --crop-y: 14%; }
+
+    .how { grid-template-columns: 1fr; gap: 20px; }
     .how::before { top: 20px; bottom: 20px; left: 20px; right: auto; width: 1px; height: auto; background: linear-gradient(180deg, var(--color-orange), var(--color-border)); }
     .how li { display: grid; grid-template-columns: 40px 1fr; column-gap: 18px; }
     .how-n { grid-row: span 2; margin-bottom: 0; }
-    .how h3 { font-size: var(--text-lg); margin: 8px 0 6px; }
-    .free-list a { grid-template-columns: minmax(0, 1fr) 20px; gap: 12px 16px; padding: 18px 0; margin: 0; }
+    .how h3 { font-size: var(--text-lg); margin: 8px 0 4px; }
+
+    .biz-grid { gap: 24px; }
+    .free-list a { grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 16px; padding: 14px 0; margin: 0; }
     .fl-meta { grid-row: 2; flex-direction: row; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
     .fl-arrow { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
-    .managed { margin-top: 48px; }
-    .security { grid-template-columns: 1fr; }
-    .final { padding: 64px 0; }
+    .managed { margin-top: 36px; }
+    .managed-head { margin-bottom: 16px; }
 
-    /* Compare table becomes stacked rows */
-    .compare thead { display: none; }
-    .compare, .compare tbody, .compare tr, .compare th, .compare td, .compare tfoot { display: block; width: auto; }
-    .compare tbody tr { padding: 16px 16px 18px; }
-    .compare tbody tr + tr { border-top: 1px solid var(--color-border); }
-    .compare tbody th, .compare tbody td { padding: 0; border: 0 !important; background: none !important; }
-    .compare tbody th { margin-bottom: 10px; width: auto; }
-    .compare tbody td { width: auto; display: grid; grid-template-columns: 5.5rem 1fr; gap: 12px; padding: 4px 0; }
-    .compare tbody td::before {
-      content: attr(data-label);
-      font-family: var(--font-mono); font-size: 0.66rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-      color: var(--text-tertiary); padding-top: 3px;
-    }
-    .compare tbody td:last-child::before { color: var(--color-orange-ink); }
-    .compare tfoot tr { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-top: 1px solid var(--color-border); }
-    .compare tfoot td { padding: 0; border: 0; background: none !important; }
+    /* Compare: still three columns, set as a compact grid so the CTAs can span the width. */
+    .compare { display: grid; grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr) minmax(0, 1fr); }
+    .compare thead, .compare tbody, .compare tfoot, .compare tr { display: contents; }
+    .compare th, .compare td, .compare tbody th { padding: 10px 10px; font-size: 0.86rem; line-height: 1.4; width: auto; }
+    .compare thead th { padding-top: 12px; padding-bottom: 10px; }
+    .compare thead th { display: flex; align-items: center; }
+    .compare .tier { height: auto; min-height: 22px; padding: 3px 8px; font-size: 0.6rem; letter-spacing: 0.06em; white-space: normal; line-height: 1.25; }
     .compare tfoot td:first-child { display: none; }
+    .compare tfoot td { grid-column: 1 / -1; padding: 12px; }
+    .compare tfoot td + td { border-top: 0; padding-top: 0; }
+    .compare tfoot td:nth-child(2) { background: var(--color-bg); }
+    .compare tfoot td:last-child { background: var(--color-bg) !important; padding-bottom: 14px; }
     .compare tfoot .btn { width: 100%; }
+
+    .security { grid-template-columns: 1fr; }
+    .security li { grid-template-columns: 32px minmax(0, 1fr); column-gap: 12px; row-gap: 6px; align-items: center; padding: 16px 0; }
+    .security li > div { display: contents; }
+    .sec-icon { width: 32px; height: 32px; }
+    .security h3 { margin-bottom: 0; }
+    .security p { grid-column: 1 / -1; }
+    .sec-more { margin-top: 16px; }
+
+    .faq-grid { gap: 20px; }
+    summary { padding: 15px 0; font-size: 1rem; }
+    details p { padding: 0 8px 18px 0; }
+
+    .final { padding: 48px 0; }
+    .final-inner { gap: 16px; }
   }
 </style>

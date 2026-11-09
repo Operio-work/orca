@@ -1,6 +1,7 @@
 <script>
   // Click-to-play demo video. Before the click only the poster image loads (no <video> element
-  // exists yet). Phones in portrait get the 9:16 cut and poster, everything else the 16:9 one.
+  // exists yet). The poster is always the 16:9 frame, so the phone hero stays short; phones in
+  // portrait then play the 9:16 cut (with its own poster), everything else the 16:9 one.
   // Without JS the poster is a plain link to the mp4.
   import { tick } from 'svelte';
 
@@ -69,7 +70,6 @@
   {:else}
     <a class="poster" href="{base}-16x9.mp4" onclick={open} bind:this={trigger} aria-label={s.playLabel}>
       <picture>
-        <source media={PORTRAIT} srcset="{base}-9x16-poster.webp" width="540" height="960" />
         <img src="{base}-16x9-poster.webp" width="1280" height="720" alt={s.posterAlt} fetchpriority="high" />
       </picture>
       <span class="cue" aria-hidden="true">
@@ -93,7 +93,7 @@
     box-shadow: var(--shadow-shot);
   }
   @media (max-width: 600px) and (orientation: portrait) {
-    .player:not([data-cut='16x9']) {
+    .player[data-cut='9x16'] {
       aspect-ratio: 9 / 16;
       /* Keep the tall cut inside one screen. */
       width: min(100%, calc(66svh * 9 / 16));
