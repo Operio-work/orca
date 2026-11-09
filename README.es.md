@@ -1,5 +1,7 @@
 # Free-ORCA
 
+![Demo de Free-ORCA: la rutina de reservas pregunta dónde sentar a un grupo de ocho, un toque lo responde y sigue trabajando](docs/readme-demo.gif)
+
 Un panel de control gratuito y autoalojado para los agentes de IA que corres en tu propia
 computadora (Claude Code, Codex, opencode y otros), con **rutinas** programadas cuyos
 borradores esperan tu aprobación. Por [Operio](https://make.operio.work). Licencia MIT.

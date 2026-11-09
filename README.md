@@ -1,5 +1,7 @@
 # Free-ORCA
 
+![Free-ORCA demo: the reservations routine asks how to seat a party of eight, one tap answers it, and it carries on](docs/readme-demo.gif)
+
 A free, self-hosted control panel for the AI coding agents you run on your own computer
 (Claude Code, Codex, opencode and others), plus scheduled **routines** whose drafts wait for
 your approval. By [Operio](https://make.operio.work). MIT licensed.
