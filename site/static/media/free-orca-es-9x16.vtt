@@ -4,33 +4,30 @@ WEBVTT
 00:00:00.000 --> 00:00:04.800
 [Música, sin narración]
 Free-ORCA por Operio
-Rutinas de oficina que corren en tu computadora y esperan tu visto bueno.
+Maneja todos tus agentes de IA sin vigilar cada terminal.
 
 2
-00:00:05.100 --> 00:00:09.000
-Demo incluida · restaurante ficticio
-Una noche en un restaurante
+00:00:05.050 --> 00:00:15.837
+Tus agentes se quedan esperando mientras estás en otra ventana
+Te avisa en el celular y respondes con un toque
 
 3
-00:00:09.100 --> 00:00:15.947
-La rutina de reservas preparó cuatro confirmaciones y se detuvo a preguntar dónde sentar a un grupo de ocho.
+00:00:16.167 --> 00:00:23.597
+Cinco agentes, cinco pestañas y no sabes quién está atorado
+Un tablero en vivo con todos tus agentes
 
 4
-00:00:16.047 --> 00:00:21.158
-Lo respondes con un toque.
+00:00:23.927 --> 00:00:30.298
+No puedes despegarte del escritorio mientras corren
+Manéjalos desde tu celular
 
 5
-00:00:21.558 --> 00:00:29.632
-2 · Activa una rutina
-Elige cuándo corre y deja tus archivos en una carpeta: chats de WhatsApp, la lista de reservas, las reseñas nuevas.
+00:00:30.628 --> 00:00:42.096
+Las mismas instrucciones cada mañana y borradores que salen sin revisar
+Rutinas programadas cuyos borradores esperan tu visto bueno
 
 6
-00:00:29.982 --> 00:00:41.945
-3 · Aprueba y envía
-El borrador te espera en la pestaña Rutinas. Léelo, cambia lo que quieras, apruébalo y envíalo tú.
-
-7
-00:00:42.345 --> 00:00:49.545
+00:00:42.476 --> 00:00:49.676
 make.operio.work
 Gratis y de código abierto. Sin cuenta, sin sudo.
 Que Operio lo opere por ti

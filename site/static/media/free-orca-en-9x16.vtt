@@ -4,33 +4,30 @@ WEBVTT
 00:00:00.000 --> 00:00:04.800
 [Music, no narration]
 Free-ORCA by Operio
-Office routines that run on your computer and wait for your OK.
+Run all your AI agents without watching every terminal.
 
 2
-00:00:05.100 --> 00:00:09.000
-Built-in demo · fictional restaurant
-One evening at a restaurant
+00:00:05.050 --> 00:00:15.814
+Agents stall while you are in another window
+Your phone tells you, and one tap answers
 
 3
-00:00:09.100 --> 00:00:15.960
-The reservations routine drafted four confirmations and stopped to ask how to seat a party of eight.
+00:00:16.144 --> 00:00:23.554
+Five agents, five tabs, no idea who is stuck
+One live board for every agent
 
 4
-00:00:16.060 --> 00:00:21.207
-One tap answers it.
+00:00:23.884 --> 00:00:30.255
+You can’t leave the desk while they run
+Run them from your phone
 
 5
-00:00:21.607 --> 00:00:29.690
-2 · Turn on a routine
-Pick when it runs and drop your exports in one folder: WhatsApp chats, the bookings list, new reviews.
+00:00:30.585 --> 00:00:42.051
+The same instructions every morning, and drafts that go out unchecked
+Scheduled routines whose drafts wait for your OK
 
 6
-00:00:30.040 --> 00:00:41.976
-3 · Approve and send
-The draft waits in the Routines tab. Read it, change what you like, approve it and send it yourself.
-
-7
-00:00:42.376 --> 00:00:49.576
+00:00:42.431 --> 00:00:49.631
 make.operio.work
 Free and open source. No account, no sudo.
 Have Operio run it for you
