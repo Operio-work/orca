@@ -39,7 +39,7 @@ if (installerText !== fs.readFileSync(path.join(root, 'build', 'install.sh'), 'u
 // The panel release: rebuild it (reproducible, from the v<version> tag or HEAD), ship it under
 // /releases/, and refuse to build if install.sh pins a different sha256 than what we ship.
 const version = JSON.parse(fs.readFileSync(path.join(root, '..', 'package.json'), 'utf8')).version;
-const tarName = `free-orca-${version}.tar.gz`;
+const tarName = `operio-orca-${version}.tar.gz`;
 try {
   execFileSync('bash', [path.join(root, '..', 'scripts', 'release.sh')], { stdio: 'inherit' });
 } catch {

@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# free-orca — run and manage Free-ORCA (https://make.operio.work)
+# operio-orca — run and manage ORCA (https://make.operio.work)
 #
-#   free-orca start       start the panel (and a herdr server if none is running)
-#   free-orca stop        stop the panel (your agents keep running in herdr)
-#   free-orca restart     stop, then start
-#   free-orca status      is it running, where, which versions
-#   free-orca update      move the panel and herdr together to the versions the installer pins
-#   free-orca demo        a demo with two fictional businesses and scripted agents on
+#   operio-orca start       start the panel (and a herdr server if none is running)
+#   operio-orca stop        stop the panel (your agents keep running in herdr)
+#   operio-orca restart     stop, then start
+#   operio-orca status      is it running, where, which versions
+#   operio-orca update      move the panel and herdr together to the versions the installer pins
+#   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
-#   free-orca uninstall   remove Free-ORCA (keeps ~/.config/free-orca unless --purge)
-#   free-orca run         run the panel in the foreground (what the service runs)
-#   free-orca version     print versions
+#   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
+#   operio-orca run         run the panel in the foreground (what the service runs)
+#   operio-orca version     print versions
 
 set -euo pipefail
 
@@ -23,8 +23,8 @@ while [ -L "$self" ]; do
 done
 APP_DIR="$(cd "$(dirname "$self")/.." && pwd -P)"
 
-PREFIX="${FREE_ORCA_PREFIX:-$(dirname "$APP_DIR")}"
-CONFIG_DIR="${FREE_ORCA_CONFIG_DIR:-$HOME/.config/free-orca}"
+PREFIX="${OPERIO_ORCA_PREFIX:-$(dirname "$APP_DIR")}"
+CONFIG_DIR="${OPERIO_ORCA_CONFIG_DIR:-$HOME/.config/operio-orca}"
 NODE_BIN="$(command -v node || true)"
 HERDR_BIN="$PREFIX/bin/herdr"
 SERVICE=none
@@ -36,23 +36,23 @@ if [ -f "$PREFIX/install.env" ]; then
 fi
 [ -x "$HERDR_BIN" ] || HERDR_BIN="$(command -v herdr || echo "$HERDR_BIN")"
 ENV_FILE="$CONFIG_DIR/env"
-PID_FILE="$CONFIG_DIR/free-orca.pid"
+PID_FILE="$CONFIG_DIR/operio-orca.pid"
 LOG_FILE="$CONFIG_DIR/logs/server.log"
-UNIT=free-orca.service
-LABEL=work.operio.free-orca
-INSTALL_URL="${FREE_ORCA_INSTALL_URL:-https://make.operio.work/install.sh}"
+UNIT=operio-orca.service
+LABEL=work.operio.orca
+INSTALL_URL="${OPERIO_ORCA_INSTALL_URL:-https://make.operio.work/install.sh}"
 
-say() { printf '%s\n' "free-orca: $*"; }
-die() { printf '%s\n' "free-orca: ERROR: $*" >&2; exit 1; }
+say() { printf '%s\n' "operio-orca: $*"; }
+die() { printf '%s\n' "operio-orca: ERROR: $*" >&2; exit 1; }
 
 load_env() {
   if [ -f "$ENV_FILE" ]; then set -a; # shellcheck disable=SC1090
     . "$ENV_FILE"; set +a; fi
-  export FREE_ORCA_CONFIG_DIR="$CONFIG_DIR"
-  export FREE_ORCA_HERDR_BIN="${FREE_ORCA_HERDR_BIN:-$HERDR_BIN}"
+  export OPERIO_ORCA_CONFIG_DIR="$CONFIG_DIR"
+  export OPERIO_ORCA_HERDR_BIN="${OPERIO_ORCA_HERDR_BIN:-$HERDR_BIN}"
 }
-port() { load_env; printf '%s' "${FREE_ORCA_PORT:-7171}"; }
-host() { load_env; printf '%s' "${FREE_ORCA_HOST:-127.0.0.1}"; }
+port() { load_env; printf '%s' "${OPERIO_ORCA_PORT:-7171}"; }
+host() { load_env; printf '%s' "${OPERIO_ORCA_HOST:-127.0.0.1}"; }
 
 healthy() {
   local h; h="$(host)"; case "$h" in 0.0.0.0|::|'[::]') h=127.0.0.1 ;; esac
@@ -65,7 +65,7 @@ healthy() {
 herdr_running() { "$HERDR_BIN" status server 2>/dev/null | grep -q 'status: running'; }
 
 ensure_herdr() {
-  [ "${FREE_ORCA_SKIP_HERDR:-0}" = 1 ] && return 0
+  [ "${OPERIO_ORCA_SKIP_HERDR:-0}" = 1 ] && return 0
   [ -x "$HERDR_BIN" ] || die "herdr not found at $HERDR_BIN (run the installer again)"
   herdr_running && return 0
   say "starting a herdr server"
@@ -77,7 +77,7 @@ ensure_herdr() {
 pid_alive() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; }
 
 use_service() { # true when the installed service should be used
-  [ "${FREE_ORCA_NO_SERVICE:-0}" != 1 ] && [ "$SERVICE_ENABLED" = 1 ] && [ "$SERVICE" != none ]
+  [ "${OPERIO_ORCA_NO_SERVICE:-0}" != 1 ] && [ "$SERVICE_ENABLED" = 1 ] && [ "$SERVICE" != none ]
 }
 
 cmd_run() {
@@ -88,7 +88,7 @@ cmd_run() {
 
 cmd_start() {
   if use_service && [ "$SERVICE" = systemd ]; then
-    systemctl --user start free-orca-herdr.service "$UNIT"
+    systemctl --user start operio-orca-herdr.service "$UNIT"
   elif use_service && [ "$SERVICE" = launchd ]; then
     launchctl kickstart "gui/$(id -u)/$LABEL-herdr" >/dev/null 2>&1 || true
     launchctl kickstart "gui/$(id -u)/$LABEL"
@@ -101,7 +101,7 @@ cmd_start() {
     echo $! > "$PID_FILE"
   fi
   for _ in 1 2 3 4 5 6 7 8 9 10; do healthy && break; sleep 0.5; done
-  if healthy; then say "running at http://127.0.0.1:$(port)"; else die "did not answer on port $(port); see free-orca status"; fi
+  if healthy; then say "running at http://127.0.0.1:$(port)"; else die "did not answer on port $(port); see operio-orca status"; fi
 }
 
 cmd_stop() {
@@ -120,7 +120,7 @@ cmd_status() {
   local panel="stopped"
   healthy && panel="running at http://127.0.0.1:$(port)"
   say "panel:   $panel"
-  if [ "${FREE_ORCA_SKIP_HERDR:-0}" != 1 ] && [ -x "$HERDR_BIN" ]; then
+  if [ "${OPERIO_ORCA_SKIP_HERDR:-0}" != 1 ] && [ -x "$HERDR_BIN" ]; then
     if herdr_running; then say "herdr:   server running ($HERDR_BIN)"; else say "herdr:   no server running"; fi
   fi
   say "service: $SERVICE$( [ "$SERVICE_ENABLED" = 1 ] || printf ' (not enabled)')"
@@ -145,7 +145,7 @@ cmd_update() {
     bash "$src/install.sh" --source "$src" ${flags[@]+"${flags[@]}"}
   else
     # The installer pins one panel release and one herdr release together, with checksums.
-    local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/free-orca-update.XXXXXX")"
+    local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-update.XXXXXX")"
     trap 'rm -rf "$tmp"' EXIT
     say "fetching the installer from $INSTALL_URL"
     curl -fsSL --proto '=https' --tlsv1.2 -o "$tmp/install.sh" "$INSTALL_URL" || die "could not download $INSTALL_URL"
@@ -157,18 +157,18 @@ cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
   # Run a copy: the uninstaller deletes the folder this script lives in.
-  local tmp; tmp="$(mktemp "${TMPDIR:-/tmp}/free-orca-uninstall.XXXXXX")"
+  local tmp; tmp="$(mktemp "${TMPDIR:-/tmp}/operio-orca-uninstall.XXXXXX")"
   cp "$u" "$tmp"
-  FREE_ORCA_PREFIX="$PREFIX" FREE_ORCA_CONFIG_DIR="$CONFIG_DIR" bash "$tmp" "$@"
+  OPERIO_ORCA_PREFIX="$PREFIX" OPERIO_ORCA_CONFIG_DIR="$CONFIG_DIR" bash "$tmp" "$@"
   rm -f "$tmp"
 }
 
 # ── Demo: fictional businesses, scripted agents, no API spend ────────────────
 # Runs a second panel on its own port and folder, with demo/demo-herdr in place of herdr.
 # It never reads your env file, never starts or talks to herdr and never touches
-# ~/.config/free-orca.
-DEMO_ROOT="${FREE_ORCA_DEMO_ROOT:-$HOME/.config/free-orca-demo}"
-DEMO_PORT="${FREE_ORCA_DEMO_PORT:-7172}"
+# ~/.config/operio-orca.
+DEMO_ROOT="${OPERIO_ORCA_DEMO_ROOT:-$HOME/.config/operio-orca-demo}"
+DEMO_PORT="${OPERIO_ORCA_DEMO_PORT:-7172}"
 DEMO_PID="$DEMO_ROOT/server.pid"
 demo_alive() { [ -f "$DEMO_PID" ] && kill -0 "$(cat "$DEMO_PID")" 2>/dev/null; }
 demo_healthy() {
@@ -185,11 +185,11 @@ demo_stop() {
 
 demo_help() {
   printf '%s\n' \
-    'free-orca demo             start the demo (agents start from the top) and print its URL' \
-    'free-orca demo --reset     wipe the demo folder and start fresh (routines, drafts, history)' \
-    'free-orca demo --speed N   play the agents'"'"' timeline N times faster (0.25 to 20)' \
-    'free-orca demo --lang es   play the demo in Spanish (en or es; stays until changed, --reset keeps it)' \
-    'free-orca demo --stop      stop the demo'
+    'operio-orca demo             start the demo (agents start from the top) and print its URL' \
+    'operio-orca demo --reset     wipe the demo folder and start fresh (routines, drafts, history)' \
+    'operio-orca demo --speed N   play the agents'"'"' timeline N times faster (0.25 to 20)' \
+    'operio-orca demo --lang es   play the demo in Spanish (en or es; stays until changed, --reset keeps it)' \
+    'operio-orca demo --stop      stop the demo'
 }
 
 cmd_demo() {
@@ -213,7 +213,7 @@ cmd_demo() {
     if [ "$reset" = 1 ] || [ -n "$speed" ] || [ -n "$lang" ]; then demo_stop
     else say "demo already running at http://127.0.0.1:$DEMO_PORT (--reset to start over, --stop to stop)"; return 0; fi
   fi
-  if demo_healthy; then die "port $DEMO_PORT is already in use (set FREE_ORCA_DEMO_PORT to use another)"; fi
+  if demo_healthy; then die "port $DEMO_PORT is already in use (set OPERIO_ORCA_DEMO_PORT to use another)"; fi
 
   local args=(--root "$DEMO_ROOT" --restart --paths)
   [ "$reset" = 1 ] && args+=(--reset)
@@ -227,23 +227,23 @@ cmd_demo() {
   demo_lang="$(printf '%s\n' "$paths" | sed -n 's/^DEMO_LANG=//p')"
   [ -n "$demo_home" ] && [ -n "$demo_config" ] || die "demo setup failed"
 
-  # A clean environment: nothing from your shell or ~/.config/free-orca/env leaks in.
+  # A clean environment: nothing from your shell or ~/.config/operio-orca/env leaks in.
   env -i PATH="$PATH" ${TZ:+TZ="$TZ"} ${LANG:+LANG="$LANG"} HOME="$demo_home" \
-    FREE_ORCA_DEMO=1 FREE_ORCA_DEMO_DIR="$DEMO_ROOT" FREE_ORCA_CONFIG_DIR="$demo_config" \
-    FREE_ORCA_HERDR_BIN="$APP_DIR/demo/demo-herdr" FREE_ORCA_HOST=127.0.0.1 FREE_ORCA_PORT="$DEMO_PORT" \
-    FREE_ORCA_AGENT_SOCK="${TMPDIR:-/tmp}/free-orca-demo-$(id -u)/agents.sock" \
-    FREE_ORCA_POLL_MS=1500 FREE_ORCA_MIN_WORK_SEC=5 FREE_ORCA_FOLDERS="~" \
+    OPERIO_ORCA_DEMO=1 OPERIO_ORCA_DEMO_DIR="$DEMO_ROOT" OPERIO_ORCA_CONFIG_DIR="$demo_config" \
+    OPERIO_ORCA_HERDR_BIN="$APP_DIR/demo/demo-herdr" OPERIO_ORCA_HOST=127.0.0.1 OPERIO_ORCA_PORT="$DEMO_PORT" \
+    OPERIO_ORCA_AGENT_SOCK="${TMPDIR:-/tmp}/operio-orca-demo-$(id -u)/agents.sock" \
+    OPERIO_ORCA_POLL_MS=1500 OPERIO_ORCA_MIN_WORK_SEC=5 OPERIO_ORCA_FOLDERS="~" \
     nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$DEMO_ROOT/server.log" 2>&1 &
   echo $! > "$DEMO_PID"
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do demo_healthy && break; sleep 0.5; done
   demo_healthy || die "the demo did not start; see $DEMO_ROOT/server.log"
   say "demo running at http://127.0.0.1:$DEMO_PORT (speed ${demo_speed:-1}x, ${demo_lang:-en}; fictional data in $DEMO_ROOT)"
-  say "stop it with: free-orca demo --stop"
+  say "stop it with: operio-orca demo --stop"
 }
 
 cmd_version() {
   [ -n "$NODE_BIN" ] || die "node not found"
-  "$NODE_BIN" -p "'free-orca ' + require('$APP_DIR/package.json').version"
+  "$NODE_BIN" -p "'operio-orca ' + require('$APP_DIR/package.json').version"
   if [ -f "$PREFIX/manifest.json" ]; then
     "$NODE_BIN" -p "const m=require('$PREFIX/manifest.json'); 'herdr ' + m.herdr + ' (' + m.herdrAsset + ', sha256 ' + m.herdrSha256 + ')'"
   fi
@@ -260,5 +260,5 @@ case "${1:-help}" in
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
   help|-h|--help) sed -n '2,14p' "$self" | sed 's/^# \{0,1\}//' ;;
-  *) die "unknown command: $1 (try: free-orca help)" ;;
+  *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

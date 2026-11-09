@@ -1,8 +1,8 @@
 # Third-party notices
 
-Free-ORCA is MIT-licensed (see `LICENSE`). It runs on, and its installer downloads, software
+ORCA is MIT-licensed (see `LICENSE`). It runs on, and its installer downloads, software
 made by other people. Their licenses and notices are below. None of these projects made or
-endorse Free-ORCA.
+endorse ORCA.
 
 Contents: herdr and what its binary contains · files shipped with the panel · npm packages ·
 license texts · herdr's Rust crates (generated list with full license texts).
@@ -11,10 +11,10 @@ license texts · herdr's Rust crates (generated list with full license texts).
 
 - Project: herdr — https://github.com/herdrdev/herdr (https://herdr.dev), by Can Celik and contributors
 - Version: 0.9.5, the official release binary for your platform, downloaded from herdr's
-  GitHub release and verified by sha256. Free-ORCA does not redistribute or modify it.
+  GitHub release and verified by sha256. ORCA does not redistribute or modify it.
 - License: Apache License 2.0 (full text below)
 - herdr's repository has no NOTICE file at v0.9.5.
-- "herdr" is the name of that project. Free-ORCA uses it only to say what it runs on and
+- "herdr" is the name of that project. ORCA uses it only to say what it runs on and
   claims no right to the name or logo (Apache-2.0 §6).
 
 herdr's binary includes code under other licenses:
@@ -72,7 +72,7 @@ is in its folder under `node_modules/`.
 | web-push | 3.6.7 | MPL-2.0 | https://github.com/web-push-libs/web-push |
 <!-- npm:end -->
 
-web-push is under the Mozilla Public License 2.0, a file-level copyleft license. Free-ORCA
+web-push is under the Mozilla Public License 2.0, a file-level copyleft license. ORCA
 uses it unmodified, as installed from npm; its source is at the address above.
 
 ---

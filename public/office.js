@@ -1,5 +1,5 @@
 'use strict';
-// Free-ORCA — 8-bit office view, the second way to see the map. Same live data: every
+// ORCA — 8-bit office view, the second way to see the map. Same live data: every
 // workspace is a floor, every tab a room, every pane a desk, every agent a little worker.
 // Drawn at low resolution on one canvas and scaled up with hard pixels. Colours are the
 // Operio v3 tokens (tokens.css), read at runtime so the scene follows light/dark. No

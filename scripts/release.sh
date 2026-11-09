@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the panel release tarball, byte-for-byte reproducible:
 #
-#   scripts/release.sh            write dist/free-orca-<version>.tar.gz and its .sha256
+#   scripts/release.sh            write dist/operio-orca-<version>.tar.gz and its .sha256
 #   scripts/release.sh --check    also fail unless the sha256 equals PANEL_SHA256 in install.sh
 #   scripts/release.sh --ref REF  build from another commit or tag
 #
@@ -30,7 +30,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# What the installer copies into ~/.local/share/free-orca/app.
+# What the installer copies into ~/.local/share/operio-orca/app.
 INCLUDE=(
   LICENSE THIRD_PARTY_NOTICES.md README.md README.es.md CHANGELOG.md
   package.json package-lock.json server.js chips.js uninstall.sh
@@ -45,7 +45,7 @@ fi
 command -v git >/dev/null || { echo "git is required" >&2; exit 1; }
 
 VERSION="$(node -p "require('./package.json').version")"
-NAME="free-orca-${VERSION}"
+NAME="operio-orca-${VERSION}"
 
 if [ -z "$REF" ]; then
   if git rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then REF="v${VERSION}"; else REF="HEAD"; fi
@@ -65,7 +65,7 @@ if [ "$REF" = HEAD ] && [ -n "$(git status --porcelain -- "${INCLUDE[@]}")" ]; t
   echo "warning: uncommitted changes in released files are NOT in the tarball (built from HEAD ${COMMIT:0:7})" >&2
 fi
 
-STAGE="$(mktemp -d "${TMPDIR:-/tmp}/free-orca-release.XXXXXX")"
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-release.XXXXXX")"
 trap 'rm -rf "$STAGE"' EXIT
 umask 022
 mkdir -p "$STAGE/$NAME"

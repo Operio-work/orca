@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 'use strict';
-// A stand-in for the herdr CLI used by `free-orca demo`: answers the same commands with the
+// A stand-in for the herdr CLI used by `operio-orca demo`: answers the same commands with the
 // same JSON shapes, from the scripted timeline in demo/timeline.js. It never starts a process,
-// never talks to a real herdr and only writes inside $FREE_ORCA_DEMO_DIR.
+// never talks to a real herdr and only writes inside $OPERIO_ORCA_DEMO_DIR.
 const path = require('path');
 const os = require('os');
 const tl = require('./timeline');
 
-const DIR = process.env.FREE_ORCA_DEMO_DIR;
-if (!DIR) { process.stderr.write('demo-herdr: FREE_ORCA_DEMO_DIR is not set\n'); process.exit(2); }
+const DIR = process.env.OPERIO_ORCA_DEMO_DIR;
+if (!DIR) { process.stderr.write('demo-herdr: OPERIO_ORCA_DEMO_DIR is not set\n'); process.exit(2); }
 const HOME = process.env.HOME || os.homedir();
 const now = Date.now();
 let st = tl.loadState(DIR);

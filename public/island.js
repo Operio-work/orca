@@ -1,5 +1,5 @@
 'use strict';
-// Free-ORCA — Islands view: the workspace as a cartoon 90s sim. Every workspace is an
+// ORCA — Islands view: the workspace as a cartoon 90s sim. Every workspace is an
 // island in the sea, every tab an office building on its lot, every agent a little character
 // at the door: pacing with a box while working, dozing on a bench while idle, waving under a
 // "!" balloon when it needs you, cheering when done. Smooth vector shapes with ink outlines,

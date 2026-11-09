@@ -100,8 +100,8 @@
         "Google Business Profile"
       ],
       "upgrade": {
-        "en": "Managed by Operio: new reviews arrive on their own and, once you trust the replies, 4 and 5-star answers can post automatically.",
-        "es": "Operado por Operio: las reseñas nuevas llegan solas y, cuando ya confías en las respuestas, las de 4 y 5 estrellas pueden publicarse automáticamente."
+        "en": "ORCA Managed by Operio: new reviews arrive on their own and, once you trust the replies, 4 and 5-star answers can post automatically.",
+        "es": "ORCA Gestionado por Operio: las reseñas nuevas llegan solas y, cuando ya confías en las respuestas, las de 4 y 5 estrellas pueden publicarse automáticamente."
       },
       "pack": "review-reply-desk"
     },
@@ -153,8 +153,8 @@
         "WhatsApp"
       ],
       "upgrade": {
-        "en": "Managed by Operio: the numbers come straight from your point of sale, payments, booking tool and Google profile, with no exports.",
-        "es": "Operado por Operio: los números llegan directo de tu punto de venta, tus cobros, tu sistema de reservas y tu perfil de Google, sin exportar nada."
+        "en": "ORCA Managed by Operio: the numbers come straight from your point of sale, payments, booking tool and Google profile, with no exports.",
+        "es": "ORCA Gestionado por Operio: los números llegan directo de tu punto de venta, tus cobros, tu sistema de reservas y tu perfil de Google, sin exportar nada."
       },
       "pack": "weekly-owner-report"
     },
@@ -256,8 +256,8 @@
         "Google Business Profile"
       ],
       "upgrade": {
-        "en": "Managed by Operio: visits are picked up from your booking tool or point of sale and thank-yous go out on their own, with templates you approve once.",
-        "es": "Operado por Operio: las visitas se toman de tu sistema de reservas o punto de venta y los agradecimientos salen solos, con plantillas que apruebas una vez."
+        "en": "ORCA Managed by Operio: visits are picked up from your booking tool or point of sale and thank-yous go out on their own, with templates you approve once.",
+        "es": "ORCA Gestionado por Operio: las visitas se toman de tu sistema de reservas o punto de venta y los agradecimientos salen solos, con plantillas que apruebas una vez."
       },
       "pack": "post-visit-thank-you"
     },

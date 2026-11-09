@@ -10,7 +10,7 @@
     <div class="brand">
       <a class="mark" href={href(lang, '/')}>
         <img src="/favicon.svg" alt="" width="36" height="36" />
-        <span class="wordmark">Free-ORCA</span>
+        <span class="wordmark">ORCA</span>
       </a>
       <p class="tagline">{t.footer.tagline}</p>
     </div>

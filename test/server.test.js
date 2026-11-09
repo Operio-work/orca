@@ -11,8 +11,8 @@ const http = require('http');
 const { spawn } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'free-orca-home-'));
-const CFG = path.join(HOME, '.config', 'free-orca');
+const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'operio-orca-home-'));
+const CFG = path.join(HOME, '.config', 'operio-orca');
 const FAKE = path.join(HOME, 'fake-herdr');
 const PORT = 20000 + Math.floor(Math.random() * 20000);
 const BASE = `127.0.0.1:${PORT}`;
@@ -42,7 +42,7 @@ test.before(async () => {
   fs.mkdirSync(path.join(CFG, 'routines'), { recursive: true });
   fs.cpSync(path.join(ROOT, 'routines', 'review-reply-desk'), path.join(CFG, 'routines', 'review-reply-desk'), { recursive: true });
   child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
-    env: { PATH: process.env.PATH, HOME, FREE_ORCA_PORT: String(PORT), FREE_ORCA_HERDR_BIN: path.join(__dirname, 'fixtures', 'fake-herdr'), FAKE_HERDR_DIR: FAKE, FREE_ORCA_POLL_MS: '200' },
+    env: { PATH: process.env.PATH, HOME, OPERIO_ORCA_PORT: String(PORT), OPERIO_ORCA_HERDR_BIN: path.join(__dirname, 'fixtures', 'fake-herdr'), FAKE_HERDR_DIR: FAKE, OPERIO_ORCA_POLL_MS: '200' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   await new Promise((resolve, reject) => {
@@ -59,7 +59,7 @@ test('serves the page on localhost names only', async () => {
   assert.equal((await req('GET', '/', { host: 'evil.example' })).status, 421);
   assert.equal((await req('GET', '/api/routines', { host: `rebound.evil.example:${PORT}` })).status, 421);
   const page = (await req('GET', '/')).text;
-  assert.match(page, /Free-ORCA/);
+  assert.match(page, /ORCA/);
   assert.match(page, /https:\/\/make\.operio\.work/);
 });
 

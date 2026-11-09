@@ -1,9 +1,9 @@
 {
-  "name": "free-orca-site",
+  "name": "operio-orca-site",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "make.operio.work: the Free-ORCA landing page, routine catalog and install guide.",
+  "description": "make.operio.work: the ORCA landing page, routine catalog and install guide.",
   "imports": {
     "#lib/*": "./src/lib/*"
   },

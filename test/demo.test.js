@@ -1,5 +1,5 @@
 'use strict';
-// `free-orca demo`: the scripted timeline, the demo herdr stand-in, the seeded folder and
+// `operio-orca demo`: the scripted timeline, the demo herdr stand-in, the seeded folder and
 // the panel in demo mode. Everything runs in throwaway folders.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -19,7 +19,7 @@ const bistro = CLIENTS.find(c => c.id === 'harbor-street-bistro');
 const resv = bistro.agents.find(a => a.name === 'reservations');
 const text = v => v.lines.map(l => l.text).join('\n');
 const made = [];
-const tmp = name => { const d = fs.mkdtempSync(path.join(os.tmpdir(), `free-orca-${name}-`)); made.push(d); return d; };
+const tmp = name => { const d = fs.mkdtempSync(path.join(os.tmpdir(), `operio-orca-${name}-`)); made.push(d); return d; };
 test.after(() => { for (const d of made) fs.rmSync(d, { recursive: true, force: true }); });
 
 // When the reservations agent asks its question at speed 1 (delay + last work line + 1.2 s).
@@ -99,7 +99,7 @@ test('timeline: --speed scales the script, auto agents answer themselves', () =>
 
 function herdr(dir, home, ...args) {
   try {
-    return execFileSync(path.join(ROOT, 'demo', 'demo-herdr'), args, { env: { PATH: process.env.PATH, HOME: home, FREE_ORCA_DEMO_DIR: dir }, encoding: 'utf8' });
+    return execFileSync(path.join(ROOT, 'demo', 'demo-herdr'), args, { env: { PATH: process.env.PATH, HOME: home, OPERIO_ORCA_DEMO_DIR: dir }, encoding: 'utf8' });
   } catch (e) { return e.stdout; }
 }
 
@@ -190,9 +190,9 @@ test('the panel in demo mode: client switch, per-client routines, answers change
   const st = tl.loadState(root); st.epoch = Date.now() - ASK_AT - 2000; tl.saveState(root, st);
   const child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
     env: {
-      PATH: process.env.PATH, HOME: L.home, FREE_ORCA_DEMO: '1', FREE_ORCA_DEMO_DIR: root, FREE_ORCA_CONFIG_DIR: L.config,
-      FREE_ORCA_HERDR_BIN: path.join(ROOT, 'demo', 'demo-herdr'), FREE_ORCA_PORT: String(PORT), FREE_ORCA_POLL_MS: '300',
-      FREE_ORCA_AGENT_SOCK: path.join(root, 'agents.sock'),
+      PATH: process.env.PATH, HOME: L.home, OPERIO_ORCA_DEMO: '1', OPERIO_ORCA_DEMO_DIR: root, OPERIO_ORCA_CONFIG_DIR: L.config,
+      OPERIO_ORCA_HERDR_BIN: path.join(ROOT, 'demo', 'demo-herdr'), OPERIO_ORCA_PORT: String(PORT), OPERIO_ORCA_POLL_MS: '300',
+      OPERIO_ORCA_AGENT_SOCK: path.join(root, 'agents.sock'),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -207,14 +207,14 @@ test('the panel in demo mode: client switch, per-client routines, answers change
   assert.equal(demo.demo, true);
   assert.equal(demo.active, 'harbor-street-bistro');
   assert.match((await req('GET', '/demo.js')).text, /demo-badge/);
-  assert.match((await req('GET', '/cron.js')).text, /FreeOrcaCron/);
+  assert.match((await req('GET', '/cron.js')).text, /OperioOrcaCron/);
 
   const agents = (await req('GET', '/api/agents')).json;
   assert.deepEqual(agents.workspaces.map(w => w.label), ['Harbor Street Bistro']);
   const r1 = (await req('GET', '/api/routines')).json;
   assert.ok(r1.routines.some(r => r.id === 'reservation-confirmations'));
   assert.equal(r1.runs.filter(r => r.state === 'ready').length, 1);
-  assert.match(r1.dir, /^~\/\.config\/free-orca\/clients\/harbor-street-bistro\/routines$/);
+  assert.match(r1.dir, /^~\/\.config\/operio-orca\/clients\/harbor-street-bistro\/routines$/);
 
   // Needs you: the panel reads the menu off the screen, the answer goes in as a key.
   const reply = (await req('GET', '/api/agents/w1%3Ap1/reply')).json;
@@ -253,7 +253,7 @@ test('the panel in demo mode: client switch, per-client routines, answers change
   assert.ok(fs.readFileSync(run.json.output, 'utf8').includes('Recall list'));
 });
 
-// ── `free-orca demo --lang es` ────────────────────────────────────────────────
+// ── `operio-orca demo --lang es` ────────────────────────────────────────────────
 const { forLang } = require('../demo/clients');
 const EN = forLang('en');
 const ES = forLang('es');
@@ -392,9 +392,9 @@ test('es: the panel starts in Spanish and reads the Spanish menu', async t => {
   const st = tl.loadState(root); st.epoch = Date.now() - ASK_AT - 2000; tl.saveState(root, st);
   const child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
     env: {
-      PATH: process.env.PATH, HOME: L.home, FREE_ORCA_DEMO: '1', FREE_ORCA_DEMO_DIR: root, FREE_ORCA_CONFIG_DIR: L.config,
-      FREE_ORCA_HERDR_BIN: path.join(ROOT, 'demo', 'demo-herdr'), FREE_ORCA_PORT: String(port), FREE_ORCA_POLL_MS: '300',
-      FREE_ORCA_AGENT_SOCK: path.join(root, 'agents.sock'),
+      PATH: process.env.PATH, HOME: L.home, OPERIO_ORCA_DEMO: '1', OPERIO_ORCA_DEMO_DIR: root, OPERIO_ORCA_CONFIG_DIR: L.config,
+      OPERIO_ORCA_HERDR_BIN: path.join(ROOT, 'demo', 'demo-herdr'), OPERIO_ORCA_PORT: String(port), OPERIO_ORCA_POLL_MS: '300',
+      OPERIO_ORCA_AGENT_SOCK: path.join(root, 'agents.sock'),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

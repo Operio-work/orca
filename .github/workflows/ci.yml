@@ -22,7 +22,7 @@ jobs:
           npm ci --no-audit --no-fund
           npm test
       - name: Shellcheck
-        run: shellcheck -S warning install.sh uninstall.sh bin/free-orca scripts/release.sh site/scripts/deploy.sh
+        run: shellcheck -S warning install.sh uninstall.sh bin/operio-orca scripts/release.sh site/scripts/deploy.sh
       - name: Release tarball matches the sha256 pinned in install.sh
         run: scripts/release.sh --check
       - name: Website build (fails if the shipped tarball differs from the pin)

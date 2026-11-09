@@ -1,4 +1,4 @@
-// The routine catalog. catalog/catalog.json in the Free-ORCA repo is the single source:
+// The routine catalog. catalog/catalog.json in the ORCA repo is the single source:
 // every name, problem, outcome and step on the site is read from it at build time.
 import catalog from '../../../catalog/catalog.json';
 
@@ -35,7 +35,7 @@ export const VERTICALS = ['any', 'restaurant', 'clinic', 'real-estate', 'tourism
 export const getEntry = (id) => entries.find((e) => e.id === id);
 
 /**
- * Folders under ~/free-orca-desk/ that a free pack reads, taken from its routine.json prompt.
+ * Folders under ~/orca-desk/ that a free pack reads, taken from its routine.json prompt.
  * @param {string | undefined} pack
  * @returns {string[]}
  */
@@ -44,7 +44,7 @@ export function deskFolders(pack) {
   const key = Object.keys(packs).find((k) => k.endsWith(`/routines/${pack}/routine.json`));
   if (!key) return [];
   const prompt = String(/** @type {any} */ (packs[key]).prompt || '');
-  const found = [...prompt.matchAll(/~\/free-orca-desk\/[a-z0-9-]+/g)].map((m) => m[0] + '/');
+  const found = [...prompt.matchAll(/~\/orca-desk\/[a-z0-9-]+/g)].map((m) => m[0] + '/');
   // Keep top-level inputs only (skip "…/replied", "…/thanked" archives).
   return [...new Set(found)].filter((f) => f.split('/').length === 4);
 }

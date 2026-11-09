@@ -1,6 +1,6 @@
-// Free-ORCA service worker: caches the app shell, shows phone alerts and
+// ORCA service worker: caches the app shell, shows phone alerts and
 // opens the right agent when one is tapped. /api/* is always live, never cached.
-const CACHE = 'free-orca-shell-v2';
+const CACHE = 'operio-orca-shell-v2';
 const SHELL = ['/', '/index.html', '/tokens.css', '/style.css', '/theme-boot.js', '/sound.js', '/app.js', '/cron.js', '/routines.js', '/demo.js', '/manifest.webmanifest',
   '/fonts/inter-latin-400-normal.woff2', '/fonts/inter-latin-600-normal.woff2',
   '/fonts/jetbrains-mono-latin-400-normal.woff2', '/fonts/jetbrains-mono-latin-600-normal.woff2',
@@ -35,9 +35,9 @@ self.addEventListener('fetch', e => {
 self.addEventListener('push', e => {
   let data = {};
   try { data = e.data ? e.data.json() : {}; } catch { data = { title: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(data.title || 'Free-ORCA', {
+  e.waitUntil(self.registration.showNotification(data.title || 'ORCA', {
     body: data.body || '',
-    tag: data.tag || 'free-orca',          // one alert per pane: a newer one replaces the older
+    tag: data.tag || 'operio-orca',          // one alert per pane: a newer one replaces the older
     renotify: true,
     requireInteraction: data.kind === 'blocked',
     icon: '/icons/icon-192.png',

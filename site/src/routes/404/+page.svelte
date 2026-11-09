@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head>
-  <title>404 · Free-ORCA</title>
+  <title>404 · ORCA</title>
   <meta name="robots" content="noindex" />
 </svelte:head>
 
@@ -20,7 +20,7 @@
   <p class="muted">{en.notFound.body}</p>
   <p class="muted" lang="es-MX">{es.notFound.title}. {es.notFound.body}</p>
   <p class="actions">
-    <a class="btn btn-primary" href="/">Free-ORCA</a>
+    <a class="btn btn-primary" href="/">ORCA</a>
     <a class="btn btn-ghost" href="/catalog">{en.nav.catalog}</a>
     <a class="btn btn-ghost" href="/es" lang="es-MX">Español</a>
   </p>

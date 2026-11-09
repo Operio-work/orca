@@ -17,7 +17,7 @@ const good = () => ({
   cwd: '~',
 });
 
-const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'free-orca-test-'));
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'operio-orca-test-'));
 const writePack = (dir, folder, obj) => {
   fs.mkdirSync(path.join(dir, folder), { recursive: true });
   fs.writeFileSync(path.join(dir, folder, 'routine.json'), typeof obj === 'string' ? obj : JSON.stringify(obj));

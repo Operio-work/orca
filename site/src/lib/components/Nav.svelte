@@ -27,7 +27,7 @@
     dark = !dark;
     const next = dark ? 'dark' : 'light';
     document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('free-orca-theme', next); } catch { /* private mode */ }
+    try { localStorage.setItem('operio-orca-theme', next); } catch { /* private mode */ }
   }
 </script>
 
@@ -36,7 +36,7 @@
   <nav class="container inner" aria-label="Main">
     <a class="brand" href={href(lang, '/')} aria-label={t.nav.home}>
       <img src="/favicon.svg" alt="" width="30" height="30" />
-      <span class="wordmark">Free-ORCA</span>
+      <span class="wordmark">ORCA</span>
       <span class="by">{t.byOperio}</span>
     </a>
     <ul class="links">

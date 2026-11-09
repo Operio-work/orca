@@ -19,7 +19,7 @@
     ['uninstall', i.uninstallTitle]
   ]);
   const READ_FIRST = 'curl -fsSLo install.sh https://make.operio.work/install.sh\nless install.sh\nbash install.sh';
-  const FROM_GIT = `git clone ${GITHUB_URL}\ncd free-orca && bash install.sh`;
+  const FROM_GIT = `git clone ${GITHUB_URL}\ncd orca && bash install.sh`;
 </script>
 
 <Seo title={i.metaTitle} description={i.description} {lang} ogLocale={t.ogLocale} />
@@ -82,13 +82,13 @@
         <li>
           <div class="step-body">
             <span>{i.tailscaleSteps[1]}</span>
-            <CopyCommand cmd="FREE_ORCA_ALLOWED_HOSTS=<machine>.<tailnet>.ts.net" strings={t.copy} prompt={false} />
+            <CopyCommand cmd="OPERIO_ORCA_ALLOWED_HOSTS=<machine>.<tailnet>.ts.net" strings={t.copy} prompt={false} />
           </div>
         </li>
         <li>
           <div class="step-body">
             <span>{i.tailscaleSteps[2]}</span>
-            <CopyCommand cmd="free-orca restart" strings={t.copy} />
+            <CopyCommand cmd="operio-orca restart" strings={t.copy} />
           </div>
         </li>
       </ol>
@@ -106,11 +106,12 @@
           <div><dt><code>{cmd}</code></dt><dd>{what}</dd></div>
         {/each}
       </dl>
+      <p class="note"><strong>{i.commandsWhyQ}</strong> {i.commandsWhyA}</p>
     </section>
 
     <section id="update">
       <h2>{i.updateTitle}</h2>
-      <CopyCommand cmd="free-orca update" strings={t.copy} />
+      <CopyCommand cmd="operio-orca update" strings={t.copy} />
       <p>{i.updateBody}</p>
     </section>
 
@@ -126,7 +127,7 @@
 
     <section id="uninstall">
       <h2>{i.uninstallTitle}</h2>
-      <CopyCommand cmd="free-orca uninstall" strings={t.copy} />
+      <CopyCommand cmd="operio-orca uninstall" strings={t.copy} />
       <p>{i.uninstallBody}</p>
     </section>
 

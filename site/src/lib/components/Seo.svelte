@@ -20,7 +20,7 @@
   <link rel="alternate" hreflang="es-MX" href={esUrl} />
   <link rel="alternate" hreflang="x-default" href={enUrl} />
   <meta property="og:type" content={type} />
-  <meta property="og:site_name" content="Free-ORCA by Operio" />
+  <meta property="og:site_name" content="ORCA by Operio" />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={canonical} />
@@ -28,7 +28,7 @@
   <meta property="og:image" content={ogImage} />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Free-ORCA by Operio" />
+  <meta property="og:image:alt" content="ORCA by Operio" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />

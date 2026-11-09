@@ -76,7 +76,7 @@ case "$type" in text/plain*) ;; *) fail=1 ;; esac
 # The live panel tarball must match the sha256 the live install.sh pins.
 pinned="$(curl -fsS --max-time 15 "$SITE_URL/install.sh" | sed -n 's/^PANEL_SHA256="\([0-9a-f]*\)".*/\1/p' | head -1 || true)"
 pver="$(sed -n 's/^PANEL_VERSION="\([^"]*\)".*/\1/p' build/install.sh | head -1)"
-live="$(curl -fsS --max-time 60 "$SITE_URL/releases/free-orca-$pver.tar.gz" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print $1}' || true)"
+live="$(curl -fsS --max-time 60 "$SITE_URL/releases/operio-orca-$pver.tar.gz" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print $1}' || true)"
 printf '  panel tarball: %s (pinned %s)\n' "${live:-?}" "${pinned:-?}"
 [ -n "$pinned" ] && [ "$live" = "$pinned" ] || fail=1
 

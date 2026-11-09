@@ -1,5 +1,5 @@
 'use strict';
-// Free-ORCA — Holo view: the workspace as a holographic command table in 3D (three.js,
+// ORCA — Holo view: the workspace as a holographic command table in 3D (three.js,
 // vendored in /vendor/three, loaded only when this view opens). Every workspace is a floating
 // hex platform, every tab a glowing tower, every agent a light core orbiting its tower:
 // orange with rising data while working, slow green breathing when idle, a red light column

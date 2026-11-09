@@ -88,7 +88,7 @@ ssh deploy@box1 'rsync -a --delete ~/backups/make.operio.work/<timestamp>/ /var/
 
 - Open https://make.operio.work and https://make.operio.work/es and check both themes.
 - `curl -fsSL https://make.operio.work/install.sh | head` must print the installer.
-- The panel tarball is served at `/releases/free-orca-<version>.tar.gz` (+ `.sha256`). The build
+- The panel tarball is served at `/releases/operio-orca-<version>.tar.gz` (+ `.sha256`). The build
   rebuilds it with `scripts/release.sh` and fails unless its sha256 equals `PANEL_SHA256` in
   `install.sh`; `deploy.sh` checks the live tarball against the live `install.sh` pin.
   The GitHub release carries the same file as a mirror (the installer falls back to it).

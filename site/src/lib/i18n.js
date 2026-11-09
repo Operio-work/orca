@@ -5,7 +5,7 @@ const en = {
   htmlLang: 'en',
   ogLocale: 'en_US',
   skip: 'Skip to content',
-  nav: { catalog: 'Catalog', install: 'Install', github: 'Free-ORCA on GitHub', home: 'Free-ORCA home' },
+  nav: { catalog: 'Catalog', install: 'Install', github: 'ORCA on GitHub', home: 'ORCA home' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   byOperio: 'by Operio',
@@ -13,12 +13,19 @@ const en = {
   copy: { copy: 'Copy', copied: 'Copied', label: 'Copy the command', done: 'Command copied' },
 
   home: {
-    title: 'Free-ORCA by Operio: one board for all your AI agents',
+    title: 'ORCA by Operio: one board for all your AI agents',
     description:
-      'Free-ORCA is a free, open-source control panel for the AI agents on your own computer: one live board, phone alerts when an agent needs you, one-tap answers, and scheduled routines whose drafts wait for your OK.',
+      'ORCA is a free, open-source control panel for the AI agents on your own computer: one live board, phone alerts when an agent needs you, one-tap answers, and scheduled routines whose drafts wait for your OK.',
     headline: 'All your AI agents on one board, and\u00a0in your pocket.',
     lead:
-      'Free-ORCA shows what every agent is doing at a glance, alerts your phone when one needs you, and lets you answer with a tap. Free, open source, on your own computer.',
+      'ORCA shows what every agent is doing at a glance, alerts your phone when one needs you, and lets you answer with a tap. Free, open source, on your own computer.',
+    acronymLabel: 'What ORCA stands for',
+    acronym: [
+      ['Orchestrate', 'your agents on one board'],
+      ['Reply', 'from your phone'],
+      ['Check', 'every status at a glance'],
+      ['Approve', 'drafts before they go out']
+    ],
     proofLead: 'Built by Operio.',
     proofBody: 'Our own team runs its agents on it every day: from the desk and from the phone.',
     installLabel: 'Install on Linux or macOS',
@@ -29,18 +36,18 @@ const en = {
     video: {
       play: 'Watch the demo',
       length: '0:50',
-      playLabel: 'Play the Free-ORCA demo video, 50 seconds, music only with no narration',
-      label: 'Free-ORCA demo video. Music only, no narration. Captions repeat the text shown on screen.',
+      playLabel: 'Play the ORCA demo video, 50 seconds, music only with no narration',
+      label: 'ORCA demo video. Music only, no narration. Captions repeat the text shown on screen.',
       close: 'Close the video',
       captions: 'English',
       posterAlt:
-        'Free-ORCA demo: an agent stops to ask how to seat a party of eight, with three answers to tap.'
+        'ORCA demo: an agent stops to ask how to seat a party of eight, with three answers to tap.'
     },
 
     painsTitle: 'Several agents should not mean babysitting them',
-    painsLead: 'Four things that slow you down once more than one agent is running, and what Free-ORCA does about each.',
+    painsLead: 'Four things that slow you down once more than one agent is running, and what ORCA does about each.',
     painLabel: 'The problem',
-    fixLabel: 'With Free-ORCA',
+    fixLabel: 'With ORCA',
     pains: [
       {
         id: 'needs-you',
@@ -67,7 +74,7 @@ const en = {
         fix: 'Run them from your phone',
         fixBody:
           'Read the output, reply, and start new agents from anywhere, over a private connection to your own computer.',
-        alt: 'Free-ORCA on a phone: the New button, the status counts and the agent tiles.'
+        alt: 'ORCA on a phone: the New button, the status counts and the agent tiles.'
       },
       {
         id: 'approve',
@@ -98,18 +105,18 @@ const en = {
 
     bizTitle: 'Run a business?',
     bizBody:
-      'Free-ORCA also runs office routines on a schedule: a morning brief, review replies, a weekly report. They read the files you give them and write a report or a draft. Nothing reaches your customers until you send it.',
+      'ORCA also runs office routines on a schedule: a morning brief, review replies, a weekly report. They read the files you give them and write a report or a draft. Nothing reaches your customers until you send it.',
     freeTitle: 'Five routines, free',
     freeOutput: { report: 'Report', draft: 'Draft you send' },
     managedTitle: 'Want it to run on its own?',
     managedBody:
-      'Operio runs 18 more routines for you. They connect to WhatsApp, your Google Business Profile and your booking tools, and send with the approvals you set.',
+      'ORCA Managed by Operio runs 18 more routines for you. They connect to WhatsApp, your Google Business Profile and your booking tools, and send with the approvals you set.',
     managedAll: 'See the full catalog',
     partnerBody: 'Agencies and consultants: offer managed routines to your clients and earn 25%.',
     partnerCta: 'Partner program',
 
     compareTitle: 'Free or managed',
-    compareHead: { topic: 'What you get', free: 'Free-ORCA', managed: 'Managed by Operio' },
+    compareHead: { topic: 'What you get', free: 'ORCA', managed: 'ORCA Managed by Operio' },
     compareRows: [
       ['Where it runs', 'Your own computer', 'Operio runs it for you'],
       ['Sending to customers', 'Never. You copy, paste and send', 'Yes, behind the approvals you set'],
@@ -142,12 +149,16 @@ const en = {
     faqTitle: 'Questions',
     faq: [
       {
+        q: 'What does ORCA stand for?',
+        a: 'Orchestrate, Reply, Check, Approve. Orchestrate your agents on one board, reply to them from your phone, check every status at a glance, and approve drafts before they go out.'
+      },
+      {
         q: 'Is it really free?',
-        a: 'Yes. Free-ORCA is open source under the MIT license, with no account and no trial period. The only cost is the AI assistant you already use.'
+        a: 'Yes. ORCA is open source under the MIT license, with no account and no trial period. The only cost is the AI assistant you already use.'
       },
       {
         q: 'Which AI agents does it work with?',
-        a: 'Claude Code, Codex, opencode and other agents that run in a terminal. Install and sign in to them as usual; Free-ORCA shows them, starts them and passes on your answers.'
+        a: 'Claude Code, Codex, opencode and other agents that run in a terminal. Install and sign in to them as usual; ORCA shows them, starts them and passes on your answers.'
       },
       {
         q: 'What do I need?',
@@ -159,11 +170,11 @@ const en = {
       },
       {
         q: 'Will it message my customers?',
-        a: 'No. Free routines only write reports and drafts, and you send them yourself. Sending on its own, with approvals, is what the managed version does.'
+        a: 'No. Free routines only write reports and drafts, and you send them yourself. Sending on its own, with approvals, is what ORCA Managed by Operio does.'
       },
       {
         q: 'How can I see it before I set anything up?',
-        a: 'Run free-orca demo. It opens a second panel with two fictional businesses whose agents work, ask you questions and finish, with no real data and no cost.'
+        a: 'Run operio-orca demo. It opens a second panel with two fictional businesses whose agents work, ask you questions and finish, with no real data and no cost.'
       }
     ],
 
@@ -173,11 +184,11 @@ const en = {
 
   catalog: {
     title: 'Routine catalog',
-    metaTitle: 'Routine catalog: 23 routines for local businesses | Free-ORCA',
+    metaTitle: 'Routine catalog: 23 routines for local businesses | ORCA',
     description:
-      '23 routines for restaurants, clinics, real estate, tourism and local shops. Five run free in Free-ORCA on your computer; Operio runs the rest for you.',
+      '23 routines for restaurants, clinics, real estate, tourism and local shops. Five run free in ORCA on your computer; Operio runs the rest for you.',
     lead:
-      'Routines for restaurants, clinics, real estate, tourism and local shops. Free ones run in Free-ORCA on your computer. Managed ones Operio runs for you.',
+      'Routines for restaurants, clinics, real estate, tourism and local shops. Free ones run in ORCA on your computer. Managed ones run in ORCA Managed by Operio.',
     filterVertical: 'Business type',
     filterTier: 'Who runs it',
     all: 'All',
@@ -186,7 +197,7 @@ const en = {
     reset: 'Show all'
   },
 
-  tier: { free: 'Free', managed: 'Managed', freeLong: 'Free in Free-ORCA', managedLong: 'Managed by Operio' },
+  tier: { free: 'Free', managed: 'Managed', freeLong: 'Free in ORCA', managedLong: 'ORCA Managed by Operio' },
   verticals: {
     any: 'Any business',
     restaurant: 'Restaurants',
@@ -199,7 +210,7 @@ const en = {
 
   routine: {
     backToCatalog: 'Catalog',
-    metaSuffix: 'Free-ORCA routine',
+    metaSuffix: 'ORCA routine',
     outcome: 'What you get',
     how: 'How it works',
     when: 'When it runs',
@@ -210,7 +221,7 @@ const en = {
     upgradeTitle: 'Want it to run on its own?',
     installTitle: 'Run it free',
     installSteps: [
-      'Install Free-ORCA with this line:',
+      'Install ORCA with this line:',
       'Open 127.0.0.1:7171, go to Routines and turn on',
       'Drop your files in'
     ],
@@ -218,16 +229,16 @@ const en = {
     installGuide: 'Full install guide',
     managedTitle: 'Operio runs this one for you',
     managedBody:
-      'This routine sends on your behalf or connects several of your tools, so Operio sets it up with you, runs it and keeps an eye on it.',
+      'This routine sends on your behalf or connects several of your tools, so it runs in ORCA Managed by Operio: Operio sets it up with you, runs it and keeps an eye on it.',
     managedFree: 'Or start with a free routine',
     related: 'Related routines'
   },
 
   install: {
-    title: 'Install Free-ORCA',
-    metaTitle: 'Install Free-ORCA: one line, Linux or macOS',
+    title: 'Install ORCA',
+    metaTitle: 'Install ORCA: one line, Linux or macOS',
     description:
-      'Install Free-ORCA with one line on Linux or macOS. Phone access, updates, the demo and uninstalling.',
+      'Install ORCA with one line on Linux or macOS. Phone access, updates, the demo and uninstalling.',
     lead: 'One line on Linux or macOS. It is safe to run again, and it never needs sudo.',
     toc: 'On this page',
     reqTitle: 'What you need',
@@ -242,18 +253,18 @@ const en = {
     installWhat: 'What the installer does',
     installSteps: [
       'Downloads the panel and herdr 0.9.5, the open-source terminal workspace it runs on, and checks the download against a fixed checksum.',
-      'Installs to ~/.local/share/free-orca and puts the free-orca command in ~/.local/bin.',
+      'Installs to ~/.local/share/operio-orca and puts the operio-orca command in ~/.local/bin.',
       'Starts it with your computer: a systemd user service on Linux, a launchd agent on macOS. Add --no-service to skip that.',
       'Adds the five free routines, turned off until you switch them on.'
     ],
     sourceTitle: 'Prefer to read it first?',
     sourceBody: 'Download the script, read it, then run it. Or clone the repository and run it from there.',
     phoneTitle: 'Use it from your phone',
-    phoneBody: 'Free-ORCA listens on 127.0.0.1 only. Keep it that way and reach it through one of these.',
+    phoneBody: 'ORCA listens on 127.0.0.1 only. Keep it that way and reach it through one of these.',
     tailscaleTitle: 'Tailscale (private network, HTTPS)',
     tailscaleSteps: [
       'Share the panel inside your private network:',
-      'Add the name it prints to ~/.config/free-orca/env:',
+      'Add the name it prints to ~/.config/operio-orca/env:',
       'Restart, then open that name on your phone:'
     ],
     tailscaleNote: 'Phone alerts need HTTPS, so this is the way to get them.',
@@ -262,30 +273,32 @@ const en = {
     phoneWarn: 'Never expose it to the internet: no port forwarding, no public links. There is no login, so anyone who can reach it can use it.',
     commandsTitle: 'Everyday commands',
     commands: [
-      ['free-orca status', 'Is it running, and where'],
-      ['free-orca restart', 'Restart after changing settings'],
-      ['free-orca stop', 'Stop it until you start it again'],
-      ['free-orca start', 'Start it again']
+      ['operio-orca status', 'Is it running, and where'],
+      ['operio-orca restart', 'Restart after changing settings'],
+      ['operio-orca stop', 'Stop it until you start it again'],
+      ['operio-orca start', 'Start it again']
     ],
+    commandsWhyQ: 'Why operio-orca and not just orca?',
+    commandsWhyA: 'Ubuntu and many Linux desktops already ship a program called orca: the GNOME screen reader. A distinct name keeps the two apart.',
     updateTitle: 'Update',
     updateBody: 'Updates the panel and herdr together, to versions that are tested with each other. Use this instead of updating herdr on its own.',
     demoTitle: 'Try the demo',
     demoBody: 'A second panel on port 7172 with two fictional businesses, Harbor Street Bistro and Brightside Dental. No real data, no cost, and it never touches your own setup.',
     demoCmds: [
-      ['free-orca demo', 'Start it'],
-      ['free-orca demo --lang es', 'Play it in Spanish'],
-      ['free-orca demo --reset', 'Start over'],
-      ['free-orca demo --stop', 'Stop it']
+      ['operio-orca demo', 'Start it'],
+      ['operio-orca demo --lang es', 'Play it in Spanish'],
+      ['operio-orca demo --reset', 'Start over'],
+      ['operio-orca demo --stop', 'Stop it']
     ],
     uninstallTitle: 'Uninstall',
-    uninstallBody: 'Removes the panel and its service. Add --purge to also delete your settings, drafts and logs in ~/.config/free-orca. Your AI assistants and their work are left alone.',
+    uninstallBody: 'Removes the panel and its service. Add --purge to also delete your settings, drafts and logs in ~/.config/operio-orca. Your AI assistants and their work are left alone.',
     helpTitle: 'Rather not run it yourself?',
     helpBody: 'Operio runs the routines for you, connected to your real tools and watched so they keep working.'
   },
 
   footer: {
     tagline: 'One board for all your AI agents, on your own computer. Free and open source.',
-    product: 'Free-ORCA',
+    product: 'ORCA',
     operio: 'Operio',
     talk: 'Talk to Operio',
     partners: 'Partner program',
@@ -303,7 +316,7 @@ const es = {
   htmlLang: 'es-MX',
   ogLocale: 'es_MX',
   skip: 'Ir al contenido',
-  nav: { catalog: 'Catálogo', install: 'Instalar', github: 'Free-ORCA en GitHub', home: 'Inicio de Free-ORCA' },
+  nav: { catalog: 'Catálogo', install: 'Instalar', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
   byOperio: 'por Operio',
@@ -311,12 +324,19 @@ const es = {
   copy: { copy: 'Copiar', copied: 'Copiado', label: 'Copiar el comando', done: 'Comando copiado' },
 
   home: {
-    title: 'Free-ORCA por Operio: un tablero para todos tus agentes de IA',
+    title: 'ORCA por Operio: un tablero para todos tus agentes de IA',
     description:
-      'Free-ORCA es un panel gratuito y de código abierto para los agentes de IA de tu propia computadora: un tablero en vivo, avisos en el celular cuando un agente te necesita, respuestas con un toque y rutinas programadas cuyos borradores esperan tu visto bueno.',
+      'ORCA es un panel gratuito y de código abierto para los agentes de IA de tu propia computadora: un tablero en vivo, avisos en el celular cuando un agente te necesita, respuestas con un toque y rutinas programadas cuyos borradores esperan tu visto bueno.',
     headline: 'Todos tus agentes de IA en un tablero, y en tu bolsillo.',
     lead:
-      'Free-ORCA te muestra de un vistazo qué hace cada agente, te avisa en el celular cuando uno te necesita y lo respondes con un toque. Gratis, de código abierto y en tu propia computadora.',
+      'ORCA te muestra de un vistazo qué hace cada agente, te avisa en el celular cuando uno te necesita y lo respondes con un toque. Gratis, de código abierto y en tu propia computadora.',
+    acronymLabel: 'Qué significa ORCA',
+    acronym: [
+      ['Orquesta', 'tus agentes en un tablero'],
+      ['Responde', 'desde tu celular'],
+      ['Controla', 'cada estado de un vistazo'],
+      ['Aprueba', 'los borradores antes de salir']
+    ],
     proofLead: 'Hecho por Operio.',
     proofBody: 'Nuestro equipo maneja sus propios agentes con esto todos los días: desde el escritorio y desde el celular.',
     installLabel: 'Instala en Linux o macOS',
@@ -327,18 +347,18 @@ const es = {
     video: {
       play: 'Ver la demo',
       length: '0:50',
-      playLabel: 'Reproducir el video de la demo de Free-ORCA, 50 segundos, solo música y sin narración',
-      label: 'Video de la demo de Free-ORCA. Solo música, sin narración. Los subtítulos repiten el texto que aparece en pantalla.',
+      playLabel: 'Reproducir el video de la demo de ORCA, 50 segundos, solo música y sin narración',
+      label: 'Video de la demo de ORCA. Solo música, sin narración. Los subtítulos repiten el texto que aparece en pantalla.',
       close: 'Cerrar el video',
       captions: 'Español',
       posterAlt:
-        'Demo de Free-ORCA: un agente se detiene a preguntar dónde sentar a un grupo de ocho, con tres respuestas para tocar.'
+        'Demo de ORCA: un agente se detiene a preguntar dónde sentar a un grupo de ocho, con tres respuestas para tocar.'
     },
 
     painsTitle: 'Tener varios agentes no debería significar cuidarlos todo el día',
-    painsLead: 'Cuatro cosas que te frenan en cuanto corre más de un agente, y lo que Free-ORCA hace con cada una.',
+    painsLead: 'Cuatro cosas que te frenan en cuanto corre más de un agente, y lo que ORCA hace con cada una.',
     painLabel: 'El problema',
-    fixLabel: 'Con Free-ORCA',
+    fixLabel: 'Con ORCA',
     pains: [
       {
         id: 'needs-you',
@@ -365,7 +385,7 @@ const es = {
         fix: 'Manéjalos desde tu celular',
         fixBody:
           'Lee lo que hacen, respóndeles y arranca agentes nuevos desde donde estés, con una conexión privada a tu propia computadora.',
-        alt: 'Free-ORCA en un celular: el botón Nuevo, los contadores de estado y los recuadros de los agentes.'
+        alt: 'ORCA en un celular: el botón Nuevo, los contadores de estado y los recuadros de los agentes.'
       },
       {
         id: 'approve',
@@ -396,18 +416,18 @@ const es = {
 
     bizTitle: '¿Tienes un negocio?',
     bizBody:
-      'Free-ORCA también corre rutinas de oficina a la hora que elijas: un resumen matutino, respuestas a reseñas, un reporte semanal. Leen los archivos que les das y escriben un reporte o un borrador. Nada les llega a tus clientes hasta que tú lo envías.',
+      'ORCA también corre rutinas de oficina a la hora que elijas: un resumen matutino, respuestas a reseñas, un reporte semanal. Leen los archivos que les das y escriben un reporte o un borrador. Nada les llega a tus clientes hasta que tú lo envías.',
     freeTitle: 'Cinco rutinas, gratis',
     freeOutput: { report: 'Reporte', draft: 'Borrador que tú envías' },
     managedTitle: '¿Quieres que corra sola?',
     managedBody:
-      'Operio opera 18 rutinas más por ti. Se conectan a WhatsApp, a tu Perfil de Negocio de Google y a tus herramientas de reservas, y envían con las aprobaciones que tú pones.',
+      'ORCA Gestionado por Operio opera 18 rutinas más por ti. Se conectan a WhatsApp, a tu Perfil de Negocio de Google y a tus herramientas de reservas, y envían con las aprobaciones que tú pones.',
     managedAll: 'Ver el catálogo completo',
-    partnerBody: 'Agencias y consultores: ofrece rutinas operadas a tus clientes y gana el 25%.',
+    partnerBody: 'Agencias y consultores: ofrece rutinas gestionadas a tus clientes y gana el 25%.',
     partnerCta: 'Programa de socios',
 
-    compareTitle: 'Gratis u operado',
-    compareHead: { topic: 'Qué obtienes', free: 'Free-ORCA', managed: 'Operado por Operio' },
+    compareTitle: 'Gratis o gestionado',
+    compareHead: { topic: 'Qué obtienes', free: 'ORCA', managed: 'ORCA Gestionado por Operio' },
     compareRows: [
       ['Dónde corre', 'En tu propia computadora', 'Operio lo opera por ti'],
       ['Envíos a clientes', 'Nunca. Tú copias, pegas y envías', 'Sí, con las aprobaciones que tú pones'],
@@ -440,12 +460,16 @@ const es = {
     faqTitle: 'Preguntas',
     faq: [
       {
+        q: '¿Qué significa ORCA?',
+        a: 'Orquesta, Responde, Controla, Aprueba. Orquesta tus agentes en un solo tablero, respóndeles desde tu celular, controla cada estado de un vistazo y aprueba los borradores antes de que salgan.'
+      },
+      {
         q: '¿De verdad es gratis?',
-        a: 'Sí. Free-ORCA es de código abierto con licencia MIT, sin cuenta y sin periodo de prueba. Lo único que pagas es el asistente de IA que ya usas.'
+        a: 'Sí. ORCA es de código abierto con licencia MIT, sin cuenta y sin periodo de prueba. Lo único que pagas es el asistente de IA que ya usas.'
       },
       {
         q: '¿Con qué agentes de IA funciona?',
-        a: 'Con Claude Code, Codex, opencode y otros agentes que corren en una terminal. Los instalas e inicias sesión como siempre; Free-ORCA los muestra, los arranca y les pasa tus respuestas.'
+        a: 'Con Claude Code, Codex, opencode y otros agentes que corren en una terminal. Los instalas e inicias sesión como siempre; ORCA los muestra, los arranca y les pasa tus respuestas.'
       },
       {
         q: '¿Qué necesito?',
@@ -457,11 +481,11 @@ const es = {
       },
       {
         q: '¿Les va a escribir a mis clientes?',
-        a: 'No. Las rutinas gratis solo escriben reportes y borradores, y tú los envías. Enviar por su cuenta, con aprobaciones, es lo que hace la versión operada.'
+        a: 'No. Las rutinas gratis solo escriben reportes y borradores, y tú los envías. Enviar por su cuenta, con aprobaciones, es lo que hace ORCA Gestionado por Operio.'
       },
       {
         q: '¿Cómo lo veo antes de configurar algo?',
-        a: 'Corre free-orca demo. Abre un segundo panel con dos negocios ficticios cuyos agentes trabajan, te hacen preguntas y terminan, sin datos reales y sin costo.'
+        a: 'Corre operio-orca demo. Abre un segundo panel con dos negocios ficticios cuyos agentes trabajan, te hacen preguntas y terminan, sin datos reales y sin costo.'
       }
     ],
 
@@ -471,11 +495,11 @@ const es = {
 
   catalog: {
     title: 'Catálogo de rutinas',
-    metaTitle: 'Catálogo de rutinas: 23 rutinas para negocios locales | Free-ORCA',
+    metaTitle: 'Catálogo de rutinas: 23 rutinas para negocios locales | ORCA',
     description:
-      '23 rutinas para restaurantes, clínicas, bienes raíces, turismo y tiendas. Cinco corren gratis en Free-ORCA en tu computadora; Operio opera las demás por ti.',
+      '23 rutinas para restaurantes, clínicas, bienes raíces, turismo y tiendas. Cinco corren gratis en ORCA en tu computadora; Operio opera las demás por ti.',
     lead:
-      'Rutinas para restaurantes, clínicas, bienes raíces, turismo y tiendas. Las gratis corren en Free-ORCA en tu computadora. Las operadas las corre Operio por ti.',
+      'Rutinas para restaurantes, clínicas, bienes raíces, turismo y tiendas. Las gratis corren en ORCA en tu computadora. Las gestionadas corren en ORCA Gestionado por Operio.',
     filterVertical: 'Tipo de negocio',
     filterTier: 'Quién la opera',
     all: 'Todas',
@@ -484,7 +508,7 @@ const es = {
     reset: 'Ver todas'
   },
 
-  tier: { free: 'Gratis', managed: 'Operada', freeLong: 'Gratis en Free-ORCA', managedLong: 'Operada por Operio' },
+  tier: { free: 'Gratis', managed: 'Gestionada', freeLong: 'Gratis en ORCA', managedLong: 'ORCA Gestionado por Operio' },
   verticals: {
     any: 'Cualquier negocio',
     restaurant: 'Restaurantes',
@@ -497,7 +521,7 @@ const es = {
 
   routine: {
     backToCatalog: 'Catálogo',
-    metaSuffix: 'rutina de Free-ORCA',
+    metaSuffix: 'rutina de ORCA',
     outcome: 'Qué obtienes',
     how: 'Cómo funciona',
     when: 'Cuándo corre',
@@ -508,7 +532,7 @@ const es = {
     upgradeTitle: '¿Quieres que corra sola?',
     installTitle: 'Córrela gratis',
     installSteps: [
-      'Instala Free-ORCA con esta línea:',
+      'Instala ORCA con esta línea:',
       'Abre 127.0.0.1:7171, ve a Rutinas y activa',
       'Deja tus archivos en'
     ],
@@ -516,16 +540,16 @@ const es = {
     installGuide: 'Guía de instalación completa',
     managedTitle: 'Esta la opera Operio por ti',
     managedBody:
-      'Esta rutina envía en tu nombre o conecta varias de tus herramientas, así que Operio la configura contigo, la corre y la vigila.',
+      'Esta rutina envía en tu nombre o conecta varias de tus herramientas, así que corre en ORCA Gestionado por Operio: Operio la configura contigo, la corre y la vigila.',
     managedFree: 'O empieza con una rutina gratis',
     related: 'Rutinas relacionadas'
   },
 
   install: {
-    title: 'Instala Free-ORCA',
-    metaTitle: 'Instala Free-ORCA: una línea, Linux o macOS',
+    title: 'Instala ORCA',
+    metaTitle: 'Instala ORCA: una línea, Linux o macOS',
     description:
-      'Instala Free-ORCA con una línea en Linux o macOS. Acceso desde el celular, actualizaciones, la demo y cómo desinstalar.',
+      'Instala ORCA con una línea en Linux o macOS. Acceso desde el celular, actualizaciones, la demo y cómo desinstalar.',
     lead: 'Una línea en Linux o macOS. Puedes correrla de nuevo sin problema y nunca necesita sudo.',
     toc: 'En esta página',
     reqTitle: 'Qué necesitas',
@@ -540,18 +564,18 @@ const es = {
     installWhat: 'Qué hace el instalador',
     installSteps: [
       'Descarga el panel y herdr 0.9.5, el espacio de trabajo de terminal de código abierto sobre el que corre, y revisa la descarga contra una suma de verificación fija.',
-      'Instala en ~/.local/share/free-orca y deja el comando free-orca en ~/.local/bin.',
+      'Instala en ~/.local/share/operio-orca y deja el comando operio-orca en ~/.local/bin.',
       'Lo arranca con tu computadora: un servicio de usuario de systemd en Linux, un agente de launchd en macOS. Agrega --no-service para omitirlo.',
       'Agrega las cinco rutinas gratis, apagadas hasta que las actives.'
     ],
     sourceTitle: '¿Prefieres leerlo antes?',
     sourceBody: 'Descarga el script, léelo y luego córrelo. O clona el repositorio y córrelo desde ahí.',
     phoneTitle: 'Úsalo desde tu celular',
-    phoneBody: 'Free-ORCA escucha solo en 127.0.0.1. Déjalo así y entra con una de estas opciones.',
+    phoneBody: 'ORCA escucha solo en 127.0.0.1. Déjalo así y entra con una de estas opciones.',
     tailscaleTitle: 'Tailscale (red privada, HTTPS)',
     tailscaleSteps: [
       'Comparte el panel dentro de tu red privada:',
-      'Agrega el nombre que muestra a ~/.config/free-orca/env:',
+      'Agrega el nombre que muestra a ~/.config/operio-orca/env:',
       'Reinicia y abre ese nombre en tu celular:'
     ],
     tailscaleNote: 'Las alertas en el celular necesitan HTTPS, así que esta es la forma de tenerlas.',
@@ -560,30 +584,32 @@ const es = {
     phoneWarn: 'Nunca lo expongas a internet: sin reenvío de puertos, sin enlaces públicos. No tiene inicio de sesión, así que quien lo alcance lo puede usar.',
     commandsTitle: 'Comandos del día a día',
     commands: [
-      ['free-orca status', 'Si está corriendo, y dónde'],
-      ['free-orca restart', 'Reinicia después de cambiar la configuración'],
-      ['free-orca stop', 'Lo detiene hasta que lo inicies de nuevo'],
-      ['free-orca start', 'Lo inicia de nuevo']
+      ['operio-orca status', 'Si está corriendo, y dónde'],
+      ['operio-orca restart', 'Reinicia después de cambiar la configuración'],
+      ['operio-orca stop', 'Lo detiene hasta que lo inicies de nuevo'],
+      ['operio-orca start', 'Lo inicia de nuevo']
     ],
+    commandsWhyQ: '¿Por qué operio-orca y no solo orca?',
+    commandsWhyA: 'Ubuntu y muchos escritorios Linux ya traen un programa llamado orca: el lector de pantalla de GNOME. Un nombre distinto evita que se confundan.',
     updateTitle: 'Actualizar',
     updateBody: 'Actualiza el panel y herdr juntos, a versiones probadas entre sí. Úsalo en lugar de actualizar herdr por separado.',
     demoTitle: 'Prueba la demo',
     demoBody: 'Un segundo panel en el puerto 7172 con dos negocios ficticios, Harbor Street Bistro y Brightside Dental. Sin datos reales, sin costo, y nunca toca tu propia configuración.',
     demoCmds: [
-      ['free-orca demo', 'La inicia'],
-      ['free-orca demo --lang es', 'La reproduce en español'],
-      ['free-orca demo --reset', 'Empieza desde cero'],
-      ['free-orca demo --stop', 'La detiene']
+      ['operio-orca demo', 'La inicia'],
+      ['operio-orca demo --lang es', 'La reproduce en español'],
+      ['operio-orca demo --reset', 'Empieza desde cero'],
+      ['operio-orca demo --stop', 'La detiene']
     ],
     uninstallTitle: 'Desinstalar',
-    uninstallBody: 'Quita el panel y su servicio. Agrega --purge para borrar también tu configuración, borradores y registros en ~/.config/free-orca. Tus asistentes de IA y su trabajo no se tocan.',
+    uninstallBody: 'Quita el panel y su servicio. Agrega --purge para borrar también tu configuración, borradores y registros en ~/.config/operio-orca. Tus asistentes de IA y su trabajo no se tocan.',
     helpTitle: '¿Prefieres no correrlo tú?',
     helpBody: 'Operio opera las rutinas por ti, conectadas a tus herramientas reales y vigiladas para que sigan funcionando.'
   },
 
   footer: {
     tagline: 'Un tablero para todos tus agentes de IA, en tu propia computadora. Gratis y de código abierto.',
-    product: 'Free-ORCA',
+    product: 'ORCA',
     operio: 'Operio',
     talk: 'Habla con Operio',
     partners: 'Programa de socios',

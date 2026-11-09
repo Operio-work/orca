@@ -26,6 +26,18 @@
       <h1>{h.headline}</h1>
       <p class="lead hero-lead">{h.lead}</p>
 
+      <div class="acro">
+        <p class="visually-hidden">{h.acronymLabel}:</p>
+        <ul>
+          {#each h.acronym as [word, what]}
+            <li>
+              <span class="acro-word"><span class="acro-i">{word[0]}</span>{word.slice(1)}</span>
+              <span class="acro-what">{what}</span>
+            </li>
+          {/each}
+        </ul>
+      </div>
+
       <div class="install">
         <p class="label">{h.installLabel}</p>
         <CopyCommand cmd={INSTALL_CMD} strings={t.copy} size="lg" />
@@ -235,6 +247,22 @@
     line-height: 1.08;
   }
   .hero-lead { margin-top: 20px; }
+
+  /* The name, spelled out: four verbs whose initials read O-R-C-A down the line. */
+  .acro { margin-top: 24px; }
+  .acro ul {
+    list-style: none;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 20px;
+    border-top: 1px solid var(--color-border);
+    padding-top: 14px;
+  }
+  .acro li { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .acro-word {
+    font-family: var(--font-mono); font-size: var(--text-sm); font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-primary);
+  }
+  .acro-i { color: var(--color-orange-ink); font-weight: 700; }
+  .acro-what { font-size: 0.86rem; line-height: 1.4; color: var(--text-secondary); text-wrap: pretty; }
   .install { margin-top: 32px; }
   .install .label { margin-bottom: 10px; }
   .install-note { margin-top: 12px; font-size: 0.9rem; color: var(--text-secondary); }
@@ -464,6 +492,9 @@
     .hero-grid { gap: 32px; }
     h1 { font-size: clamp(2rem, 8.6vw, 2.6rem); }
     .hero-lead { margin-top: 14px; }
+    .acro { margin-top: 18px; }
+    .acro ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; padding-top: 12px; }
+    .acro-what { font-size: 0.82rem; }
     .install { margin-top: 24px; }
     .hero-secondary { margin-top: 16px; }
 

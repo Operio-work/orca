@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://make.operio.work/catalog/schema.json",
-  "title": "Free-ORCA routine catalog",
+  "title": "ORCA routine catalog",
   "description": "The single source the make.operio.work site renders: free packs that ship in routines/ and the routines Operio runs for you. No prices.",
   "type": "object",
   "additionalProperties": false,

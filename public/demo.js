@@ -1,6 +1,6 @@
 'use strict';
 
-// Free-ORCA — demo mode (`free-orca demo` only). Adds a "Demo" badge and a switch between
+// ORCA — demo mode (`operio-orca demo` only). Adds a "Demo" badge and a switch between
 // the two fictional businesses. In a normal install /api/demo answers { demo: false } and
 // this file does nothing. Uses app.js's globals (T, t, lang, call, post, toast, errText, refresh).
 
@@ -38,7 +38,7 @@
   async function init() {
     try { info = await call('/api/demo'); } catch { return; }
     if (!info?.demo) return;
-    // The panel starts in the demo's language (`free-orca demo --lang es`). Only when that
+    // The panel starts in the demo's language (`operio-orca demo --lang es`). Only when that
     // language changes: a viewer who switches with the EN/ES button keeps their choice.
     const seen = (() => { try { return localStorage.getItem('orca-demo-lang'); } catch { return null; } })();
     if (info.lang && info.lang !== seen) {
@@ -46,7 +46,7 @@
       if (info.lang !== lang && T[info.lang]) document.getElementById('lang')?.click();
     }
     document.documentElement.classList.add('is-demo');
-    document.title = 'Free-ORCA · Demo';
+    document.title = 'ORCA · Demo';
     badge = document.createElement('span');
     badge.className = 'demo-badge';
     document.querySelector('.wordmark .wm')?.append(badge);
@@ -67,6 +67,6 @@
     label();
   }
 
-  document.addEventListener('free-orca:lang', label);
+  document.addEventListener('operio-orca:lang', label);
   init();
 })();

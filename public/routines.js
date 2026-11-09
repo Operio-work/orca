@@ -1,8 +1,8 @@
 'use strict';
 
-// Free-ORCA — Routines tab. Lists the routine packs in ~/.config/free-orca/routines, lets you
+// ORCA — Routines tab. Lists the routine packs in ~/.config/operio-orca/routines, lets you
 // turn each on or off, change its schedule, run it now, and approve or reject the drafts the
-// draft-approval routines leave behind. Approving only marks the draft approved: Free-ORCA
+// draft-approval routines leave behind. Approving only marks the draft approved: ORCA
 // never sends anything anywhere. Uses app.js's globals (T, t, lang, call, post, toast, errText).
 
 (() => {
@@ -69,7 +69,7 @@
 
   // ── Schedule picker: plain choices on top, the cron line underneath ("Advanced").
   // Unsaved choices survive the 10 s refresh in `pending` (routine id -> picker value).
-  const Cron = window.FreeOrcaCron;
+  const Cron = window.OperioOrcaCron;
   const pending = new Map();
   const pad2 = n => String(n).padStart(2, '0');
   const labelled = (text, control) => { const l = mk('label', 'rt-field'); l.append(mk('span', 'rt-field-l', text), control); return l; };
@@ -222,7 +222,7 @@
   $('#rt-back').addEventListener('click', close);
   $('#rt-reload').addEventListener('click', load);
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && !view.hidden) { e.stopPropagation(); close(); } }, true);
-  document.addEventListener('free-orca:lang', () => { labelStatic(); render(); });
+  document.addEventListener('operio-orca:lang', () => { labelStatic(); render(); });
   labelStatic();
   if (location.hash === '#routines') open();
 })();

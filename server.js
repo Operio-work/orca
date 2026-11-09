@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Free-ORCA by Operio — a self-hosted control panel for the AI agents running in herdr
+// ORCA by Operio — a self-hosted control panel for the AI agents running in herdr
 // panes: see, name, tag, reply to and start agents, run scheduled routines, and get phone
 // alerts when an agent finishes or needs you. Runs on herdr (Apache-2.0, herdr.dev); the
 // server shells out to the `herdr` CLI (execFile, no shell). One dependency (web-push).
@@ -102,12 +102,12 @@ function send(res, status, body, type = 'application/json') {
 }
 
 // ─── People: single user ──────────────────────────────────────────────────────
-// Free-ORCA has no login system. Everyone who reaches the page is "you"; the shared
+// ORCA has no login system. Everyone who reaches the page is "you"; the shared
 // "Team" claim is kept so an agent can be marked as company-wide work.
 const loginOf = () => 'local';
 const TEAM = 'team:all';
-const TEAM_NAME = process.env.FREE_ORCA_TEAM || 'Team';
-const YOU_NAME = process.env.FREE_ORCA_NAME || 'You';
+const TEAM_NAME = process.env.OPERIO_ORCA_TEAM || 'Team';
+const YOU_NAME = process.env.OPERIO_ORCA_NAME || 'You';
 function person(login) {
   if (login === TEAM) return { id: 'team', name: TEAM_NAME, initial: TEAM_NAME[0].toUpperCase(), slot: 0, team: true };
   return { id: 'local', name: YOU_NAME, initial: YOU_NAME[0].toUpperCase(), slot: 0 };
@@ -187,8 +187,8 @@ webpush.setVapidDetails(CFG.VAPID_SUBJECT, vapid.publicKey, vapid.privateKey);
 
 // Alert copy per subscriber language (EN/ES), no emoji.
 const PUSH = {
-  en: { blocked: n => `${n} needs you`, done: n => `${n} finished`, taken: n => `${n} was taken over`, assigned: n => `${n} is yours now`, handoff: n => `${n} finished — hand off?`, chatty: n => `${n}: link paused`, test: () => 'Free-ORCA alerts are on', testBody: 'You’ll hear when an agent finishes or needs you.' },
-  es: { blocked: n => `${n} te necesita`, done: n => `${n} terminó`, taken: n => `${n} fue tomado`, assigned: n => `${n} ahora es tuyo`, handoff: n => `${n} terminó — ¿pasar el relevo?`, chatty: n => `${n}: enlace en pausa`, test: () => 'Alertas de Free-ORCA activas', testBody: 'Te avisaremos cuando un agente termine o te necesite.' },
+  en: { blocked: n => `${n} needs you`, done: n => `${n} finished`, taken: n => `${n} was taken over`, assigned: n => `${n} is yours now`, handoff: n => `${n} finished — hand off?`, chatty: n => `${n}: link paused`, test: () => 'ORCA alerts are on', testBody: 'You’ll hear when an agent finishes or needs you.' },
+  es: { blocked: n => `${n} te necesita`, done: n => `${n} terminó`, taken: n => `${n} fue tomado`, assigned: n => `${n} ahora es tuyo`, handoff: n => `${n} terminó — ¿pasar el relevo?`, chatty: n => `${n}: enlace en pausa`, test: () => 'Alertas de ORCA activas', testBody: 'Te avisaremos cuando un agente termine o te necesite.' },
 };
 function pushPayload(p, lang) {
   const L = PUSH[lang] || PUSH.en;
@@ -660,7 +660,7 @@ async function memory() {
 // Kept by terminal id (follows moves; a recycled pane id never inherits a link).
 //   depends: `to` waits on `from`. When `from` finishes a job, ORCA offers a hand-off and
 //            nothing reaches `to` until a person taps Send (approval gate).
-//   talk:    either side may message the other with `free-orca-send` (bin/free-orca-send).
+//   talk:    either side may message the other with `operio-orca-send` (bin/operio-orca-send).
 // Any link lets the two agents message each other; no link, no delivery. Messages queue
 // until the receiver is idle, then arrive as a prompt. Text lives only in the state file
 // (0600), never in the log. A link that passes LINK_HOURLY messages an hour is paused and
@@ -720,7 +720,7 @@ function queueMsg({ from, to, text, via }, byTerminal) {
 
 function deliveryText(m, from, to) {
   const sender = nameOf(from);
-  if (m.via === 'agent') return `[Free-ORCA] Message from agent ${sender}:\n${m.text}\n\n(Reply only if it helps the work: free-orca-send ${sender} "…" — your links: free-orca-send --list)`;
+  if (m.via === 'agent') return `[ORCA] Message from agent ${sender}:\n${m.text}\n\n(Reply only if it helps the work: operio-orca-send ${sender} "…" — your links: operio-orca-send --list)`;
   return m.text; // hand-offs and intros are written in full when queued
 }
 
@@ -779,18 +779,18 @@ function offerHandoffs(a, job) {
 
 function handoffText(up, down, h, note, who) {
   return [
-    `[Free-ORCA] ${nameOf(up)} finished a job you depend on. ${who} approved handing it to you.`,
+    `[ORCA] ${nameOf(up)} finished a job you depend on. ${who} approved handing it to you.`,
     h.ask ? `It was asked: ${h.ask}` : '',
     h.said ? `Its result: ${h.said}` : '',
     note ? `Note from ${who}: ${note}` : '',
-    `Full output: free-orca-send --last ${nameOf(up)} · ask it something: free-orca-send ${nameOf(up)} "…"`,
+    `Full output: operio-orca-send --last ${nameOf(up)} · ask it something: operio-orca-send ${nameOf(up)} "…"`,
     'Continue your work with this.',
   ].filter(Boolean).join('\n');
 }
 
 function introText(me, other, relation) {
   const rel = { upstream: `${nameOf(other)} depends on your work: when you finish a job, a person may hand your result to it.`, downstream: `You depend on ${nameOf(other)}: when it finishes a job, a person may hand its result to you.`, talk: `You and ${nameOf(other)} can message each other.` }[relation];
-  return `[Free-ORCA] You are now linked with agent ${nameOf(other)}. ${rel}\nMessage it: free-orca-send ${nameOf(other)} "…" · its latest output: free-orca-send --last ${nameOf(other)} · your links: free-orca-send --list\nOnly message it when it helps the work — never just to acknowledge. No reply needed to this note.`;
+  return `[ORCA] You are now linked with agent ${nameOf(other)}. ${rel}\nMessage it: operio-orca-send ${nameOf(other)} "…" · its latest output: operio-orca-send --last ${nameOf(other)} · your links: operio-orca-send --list\nOnly message it when it helps the work — never just to acknowledge. No reply needed to this note.`;
 }
 
 // For the page: links between live agents (by pane), open hand-offs, message counts.
@@ -832,7 +832,7 @@ setInterval(async () => {
   if (state.links.length !== before) { saveState(); log('links.pruned', { removed: before - state.links.length }); }
 }, 10 * 60e3);
 
-// ─── Agent socket: what `free-orca-send` talks to ─────────────────────────────────
+// ─── Agent socket: what `operio-orca-send` talks to ─────────────────────────────────
 // A unix socket in the state dir (0600, same user only), never on the network. The caller
 // sends its pid; ORCA walks up its process tree to find which agent it runs inside, and
 // only delivers along that agent's links. Same-user processes could already drive herdr
@@ -1454,10 +1454,10 @@ let rstate = routinesLib.readState(CFG.ROUTINES_STATE);
 const saveRstate = () => routinesLib.writeState(CFG.ROUTINES_STATE, rstate);
 const RUNS_KEEP = 200;
 
-// ─── Demo mode (`free-orca demo`) ─────────────────────────────────────────────
+// ─── Demo mode (`operio-orca demo`) ─────────────────────────────────────────────
 // Two fictional businesses played by demo/demo-herdr. Each client has its own routines,
 // drafts and run log under CONFIG_DIR/clients/<id>/; switching client swaps them.
-const DEMO = process.env.FREE_ORCA_DEMO === '1' && !!process.env.FREE_ORCA_DEMO_DIR;
+const DEMO = process.env.OPERIO_ORCA_DEMO === '1' && !!process.env.OPERIO_ORCA_DEMO_DIR;
 const demoTl = DEMO ? require('./demo/timeline') : null;
 const DEMO_CLIENTS = DEMO ? require('./demo/clients').CLIENTS.map(c => ({ id: c.id, name: c.name, short: c.short })) : [];
 function useDemoClient(id) {
@@ -1470,11 +1470,11 @@ function useDemoClient(id) {
   rstate = routinesLib.readState(CFG.ROUTINES_STATE);
   layoutCache.at = 0;
 }
-if (DEMO) useDemoClient(demoTl.loadState(process.env.FREE_ORCA_DEMO_DIR).client);
+if (DEMO) useDemoClient(demoTl.loadState(process.env.OPERIO_ORCA_DEMO_DIR).client);
 
 async function demoApi(req, res, pathname) {
   if (!DEMO) return send(res, 200, { demo: false });
-  const dir = process.env.FREE_ORCA_DEMO_DIR;
+  const dir = process.env.OPERIO_ORCA_DEMO_DIR;
   if (req.method === 'GET' && pathname === '/api/demo') {
     const st = demoTl.loadState(dir);
     return send(res, 200, { demo: true, clients: DEMO_CLIENTS, active: st.client, speed: st.speed, lang: st.lang || 'en' });
@@ -1662,7 +1662,7 @@ const server = http.createServer(async (req, res) => {
 if (!guard.isLoopbackBind(HOST)) {
   const bar = '!'.repeat(78);
   for (const line of [bar,
-    `WARNING: Free-ORCA is listening on ${HOST}, not 127.0.0.1.`,
+    `WARNING: ORCA is listening on ${HOST}, not 127.0.0.1.`,
     'There is NO login. Anyone who can reach this address and port can type into your agents',
     'and open shells on this computer as you. Only do this on a network you fully trust,',
     'and prefer `tailscale serve` or `ssh -L` to a localhost bind instead.',

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 'use strict';
-// Prepares the folder `free-orca demo` runs from. Never touches the real config:
+// Prepares the folder `operio-orca demo` runs from. Never touches the real config:
 //
-//   <root>/                       default ~/.config/free-orca-demo (marked with .free-orca-demo)
+//   <root>/                       default ~/.config/operio-orca-demo (marked with .operio-orca-demo)
 //     herdr-state.json            the scripted timeline (demo/timeline.js)
 //     home/                       HOME for the demo panel: the businesses' folders, and
-//       .config/free-orca/        its config dir (state, VAPID keys, per-client routines)
+//       .config/operio-orca/        its config dir (state, VAPID keys, per-client routines)
 //
 //   node demo/setup.js --root <dir> [--reset] [--restart] [--speed N] [--lang en|es] [--paths]
 //     --reset    wipe and seed everything again (routines, history, drafts, timeline); keeps the language
@@ -24,10 +24,10 @@ const cron = require('../lib/cron');
 const { CLIENTS, ROUTINE_CHOICES, HISTORY, LANGS, forLang } = require('./clients');
 
 const APP = path.join(__dirname, '..');
-const MARK = '.free-orca-demo';
+const MARK = '.operio-orca-demo';
 
 function parseArgs(argv) {
-  const o = { root: path.join(os.homedir(), '.config', 'free-orca-demo'), reset: false, restart: false, speed: null, lang: null, paths: false };
+  const o = { root: path.join(os.homedir(), '.config', 'operio-orca-demo'), reset: false, restart: false, speed: null, lang: null, paths: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--root') o.root = path.resolve(argv[++i]);
@@ -50,7 +50,7 @@ function parseArgs(argv) {
 
 const layout = root => {
   const home = path.join(root, 'home');
-  return { root, home, config: path.join(home, '.config', 'free-orca') };
+  return { root, home, config: path.join(home, '.config', 'operio-orca') };
 };
 
 const pad = n => String(n).padStart(2, '0');
@@ -115,8 +115,8 @@ function seedClient(L, c, now, lang) {
 function seed(L, { speed = 1, lang = 'en' } = {}) {
   const now = Date.now();
   fs.mkdirSync(L.root, { recursive: true, mode: 0o700 });
-  fs.writeFileSync(path.join(L.root, MARK), 'Free-ORCA demo folder: fictional data only. Safe to delete.\n');
-  fs.mkdirSync(path.join(L.home, 'free-orca-desk'), { recursive: true });
+  fs.writeFileSync(path.join(L.root, MARK), 'ORCA demo folder: fictional data only. Safe to delete.\n');
+  fs.mkdirSync(path.join(L.home, 'orca-desk'), { recursive: true });
   for (const c of CLIENTS) seedClient(L, c, now, lang);
   tl.saveState(L.root, tl.freshState({ speed, lang, now }));
 }
@@ -126,7 +126,7 @@ function main() {
   const L = layout(o.root);
   const exists = fs.existsSync(L.root);
   if (exists && !fs.existsSync(path.join(L.root, MARK)) && fs.readdirSync(L.root).length) {
-    throw new Error(`${L.root} exists and is not a Free-ORCA demo folder; refusing to touch it`);
+    throw new Error(`${L.root} exists and is not an ORCA demo folder; refusing to touch it`);
   }
   const marked = fs.existsSync(path.join(L.root, MARK));
   const was = marked ? tl.loadState(L.root) : null;
@@ -145,7 +145,7 @@ function main() {
 }
 
 if (require.main === module) {
-  try { main(); } catch (e) { process.stderr.write(`free-orca demo: ${e.message}\n`); process.exit(1); }
+  try { main(); } catch (e) { process.stderr.write(`operio-orca demo: ${e.message}\n`); process.exit(1); }
 }
 
 module.exports = { layout, seed, parseArgs, MARK };

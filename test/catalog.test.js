@@ -82,7 +82,9 @@ test('copy rules: one-sentence problems, no prices, no jargon, Pulse and factura
   };
   collect(catalog, '$');
   const banned = /\b(llm|prompt|hallucinat\w*|alucinaci\w*|few-shot|latent|token|herdr|claude|codex|opencode|orca)\b|[$€]\s?\d|\b\d+\s?(mxn|usd|pesos|dollars|d[oó]lares)\b|\bprice:\s?\d/i;
-  for (const [at, s] of all) assert.doesNotMatch(s, banned, at);
+  // The paid tier's product name is the one place the catalog may say ORCA.
+  const tierName = /ORCA (Managed by|Gestionado por) Operio/g;
+  for (const [at, s] of all) assert.doesNotMatch(s.replace(tierName, ''), banned, at);
   for (const e of entries) for (const l of ['en', 'es']) {
     assert.match(e.problem[l], /[.!?]$/, `${e.id} problem.${l} ends a sentence`);
     assert.doesNotMatch(e.problem[l].slice(0, -1), /[.!?]\s/, `${e.id} problem.${l} is one sentence`);

@@ -1,5 +1,5 @@
 'use strict';
-// Free-ORCA — sounds, synthesised with Web Audio (no audio files). Off by default; the
+// ORCA — sounds, synthesised with Web Audio (no audio files). Off by default; the
 // choice is remembered per device (orca-sound). Short and quiet: a chime when an agent needs
 // you, a soft arpeggio when one finishes, ticks and sweeps for selecting, sending and showing.
 (() => {

@@ -1,6 +1,6 @@
 'use strict';
 
-// Free-ORCA by Operio — the workspace drawn as a live map (or as the 8-bit office, office.js, or the islands, island.js). Every tab is a block, every pane a
+// ORCA by Operio — the workspace drawn as a live map (or as the 8-bit office, office.js, or the islands, island.js). Every tab is a block, every pane a
 // tile at its real position and size, painted by status. Selecting a tile opens the
 // sheet (bottom on phones, side panel on desktop) to read, answer and reply.
 // Nodes are kept and updated in place, so typing is never wiped by the 3 s refresh.
@@ -26,14 +26,14 @@ const T = {
     linksTitle: 'Links', relWaitsOn: 'Depends on', relFeeds: 'Feeds', relTalk: 'Talks with', linkAdd: 'Link', linkRemove: 'Remove link with {0}', linkPick: 'Pick an agent', linkNone: 'No links yet', linkAdded: 'Linked with {0}', linkRemoved: 'Link removed', linksN: '{0} linked',
     linkHint: 'Linked agents can message each other (orca-send). When an agent it depends on finishes, you approve the hand-off — nothing is sent without you.',
     handTitle: '{0} finished', handTo: 'Hand its result to {0}?', handNote: 'Note for {0} (optional)', handSend: 'Send to {0}', handDismiss: 'Not now', handSent: 'Handed to {0}', handQueued: 'Queued for {0} — it gets it when idle', handBadge: 'Hand-off', tHand: 'hand off', tWaits: 'waits on {0}', tMsgs: '{0} messages in 24h',
-    msgsTitle: 'Messages', msgNone: 'No messages yet', msgIntro: 'Free-ORCA note', msgHandoff: 'Hand-off', msgQueued: 'queued', msgFailed: 'not delivered',
+    msgsTitle: 'Messages', msgNone: 'No messages yet', msgIntro: 'ORCA note', msgHandoff: 'Hand-off', msgQueued: 'queued', msgFailed: 'not delivered',
     e_link_exists: 'Those two are already linked that way.', e_link_cycle: 'That would make them wait on each other.', e_link_self: 'Pick another agent.',
     memHint: 'RAM each agent uses, counting everything it started (tools, MCP servers, dev servers). Shared memory is split fairly, so the rows add up to the agents total. Updates every 15 s.',
     replyPlaceholder: 'Message this agent…', suggest: 'Name it “{0}”',
     st_working: 'working', st_idle: 'idle', st_blocked: 'needs you', st_done: 'done', st_unknown: 'starting',
     c_blocked: 'needs you', c_working: 'working', c_idle: 'idle', all: 'All', unnamedOnly: 'Unnamed', mineOnly: 'Mine', claimBtn: 'Claim', claimYou: 'You', claimRelease: 'Release', claimTake: 'Take over', claimTakeSure: 'Take from {0}?', claimTip: '{0} is on it (since {1} ago). Anyone can still act on it.', claimFree: 'Nobody is on it — tap to claim it', claimMine: 'You are on it — tap to release', claimedToast: 'You’re on {0}', releasedToast: 'Released {0}', takenToast: '{1} took over {0}', claimedBy: 'with {0}', claimMe: 'Claim it (me)', claimTakeMe: 'Take it over (me)', assignTo: 'Assign to {0}', assignTeam: 'Assign to {0} (everyone)', teamAssigned: '{1} made {0} an {2} task — it’s with everyone', assignedToast: '{0} is now with {1}', assignedYou: '{1} assigned you {0}', reassigned: '{2} gave {0} to {1}',
     tab: 'Tab {0}', none: 'No agents in the workspace yet. Start one with New.',
-    offline: 'Can’t reach Free-ORCA — retrying…', focused: '{0} is now in front on the desktop', saved: 'Named {0}',
+    offline: 'Can’t reach ORCA — retrying…', focused: '{0} is now in front on the desktop', saved: 'Named {0}',
     cleared: 'Name cleared', empty: '(no output yet)', sent: 'Sent to {0}', keySent: '{0} sent',
     armCtrlC: 'Tap ⌃C again to stop {0}', addTag: '+ tag', tagPrompt: 'tag, tag', removeTag: 'Remove tag {0}',
     newTitle: 'Start a new agent', name: 'Name', kind: 'Agent', folder: 'Folder', where: 'Where',
@@ -90,14 +90,14 @@ const T = {
     linksTitle: 'Enlaces', relWaitsOn: 'Depende de', relFeeds: 'Alimenta a', relTalk: 'Habla con', linkAdd: 'Enlazar', linkRemove: 'Quitar enlace con {0}', linkPick: 'Elige un agente', linkNone: 'Sin enlaces', linkAdded: 'Enlazado con {0}', linkRemoved: 'Enlace quitado', linksN: '{0} enlazados',
     linkHint: 'Los agentes enlazados pueden escribirse (orca-send). Cuando termina un agente del que depende, tú apruebas el relevo — nada se envía sin ti.',
     handTitle: '{0} terminó', handTo: '¿Pasar su resultado a {0}?', handNote: 'Nota para {0} (opcional)', handSend: 'Enviar a {0}', handDismiss: 'Ahora no', handSent: 'Pasado a {0}', handQueued: 'En cola para {0} — lo recibe al quedar libre', handBadge: 'Relevo', tHand: 'relevo', tWaits: 'espera a {0}', tMsgs: '{0} mensajes en 24 h',
-    msgsTitle: 'Mensajes', msgNone: 'Sin mensajes', msgIntro: 'Nota de Free-ORCA', msgHandoff: 'Relevo', msgQueued: 'en cola', msgFailed: 'no entregado',
+    msgsTitle: 'Mensajes', msgNone: 'Sin mensajes', msgIntro: 'Nota de ORCA', msgHandoff: 'Relevo', msgQueued: 'en cola', msgFailed: 'no entregado',
     e_link_exists: 'Esos dos ya están enlazados así.', e_link_cycle: 'Así se esperarían el uno al otro.', e_link_self: 'Elige otro agente.',
     memHint: 'RAM que usa cada agente, contando todo lo que inició (herramientas, servidores MCP, servidores de desarrollo). La memoria compartida se reparte, así que las filas suman el total de agentes. Se actualiza cada 15 s.',
     replyPlaceholder: 'Mensaje para este agente…', suggest: 'Nombrar “{0}”',
     st_working: 'trabajando', st_idle: 'inactivo', st_blocked: 'te necesita', st_done: 'terminado', st_unknown: 'iniciando',
     c_blocked: 'te necesitan', c_working: 'trabajando', c_idle: 'inactivos', all: 'Todos', unnamedOnly: 'Sin nombre', mineOnly: 'Míos', claimBtn: 'Tomar', claimYou: 'Tú', claimRelease: 'Soltar', claimTake: 'Tomar control', claimTakeSure: '¿Quitárselo a {0}?', claimTip: '{0} está en esto (desde hace {1}). Cualquiera puede actuar igual.', claimFree: 'Nadie lo lleva — toca para tomarlo', claimMine: 'Lo llevas tú — toca para soltarlo', claimedToast: 'Llevas {0}', releasedToast: 'Soltaste {0}', takenToast: '{1} tomó {0}', claimedBy: 'con {0}', claimMe: 'Tomarlo (yo)', claimTakeMe: 'Quitárselo (yo)', assignTo: 'Asignar a {0}', assignTeam: 'Asignar a {0} (todos)', teamAssigned: '{1} hizo de {0} una tarea de {2} — la llevan todos', assignedToast: '{0} ahora lo lleva {1}', assignedYou: '{1} te asignó {0}', reassigned: '{2} le dio {0} a {1}',
     tab: 'Pestaña {0}', none: 'Aún no hay agentes en el espacio de trabajo. Inicia uno con Nuevo.',
-    offline: 'No se puede contactar Free-ORCA — reintentando…', focused: '{0} está al frente en el escritorio', saved: 'Nombrado {0}',
+    offline: 'No se puede contactar ORCA — reintentando…', focused: '{0} está al frente en el escritorio', saved: 'Nombrado {0}',
     cleared: 'Nombre quitado', empty: '(aún sin salida)', sent: 'Enviado a {0}', keySent: '{0} enviado',
     armCtrlC: 'Toca ⌃C otra vez para detener {0}', addTag: '+ etiqueta', tagPrompt: 'etiqueta, etiqueta', removeTag: 'Quitar etiqueta {0}',
     newTitle: 'Iniciar un agente', name: 'Nombre', kind: 'Agente', folder: 'Carpeta', where: 'Dónde',
@@ -2080,7 +2080,7 @@ function applyLang() {
   renderCheats();
   renderMemory();
   render();
-  document.dispatchEvent(new Event('free-orca:lang'));
+  document.dispatchEvent(new Event('operio-orca:lang'));
 }
 $('#lang').addEventListener('click', async () => {
   lang = lang === 'en' ? 'es' : 'en';

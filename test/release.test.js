@@ -14,9 +14,9 @@ const pin = (k) => (installer.match(new RegExp(`^${k}="([^"]*)"`, 'm')) || [])[1
 test('install.sh pins this version, a sha256 and HTTPS URLs', () => {
   assert.equal(pin('PANEL_VERSION'), pkg.version);
   assert.match(pin('PANEL_SHA256'), /^[0-9a-f]{64}$/);
-  assert.equal(pin('PANEL_URL'), 'https://make.operio.work/releases/free-orca-${PANEL_VERSION}.tar.gz');
-  assert.match(pin('PANEL_MIRROR_URL'), /^https:\/\/github\.com\/operio-work\/free-orca\/releases\/download\//);
-  assert.doesNotMatch(installer, /FREE_ORCA_PANEL_SHA256/, 'the sha256 must not be overridable');
+  assert.equal(pin('PANEL_URL'), 'https://make.operio.work/releases/operio-orca-${PANEL_VERSION}.tar.gz');
+  assert.match(pin('PANEL_MIRROR_URL'), /^https:\/\/github\.com\/operio-work\/orca\/releases\/download\//);
+  assert.doesNotMatch(installer, /OPERIO_ORCA_PANEL_SHA256/, 'the sha256 must not be overridable');
 });
 
 test('CHANGELOG.md has a dated entry for this version', () => {

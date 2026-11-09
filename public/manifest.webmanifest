@@ -1,7 +1,7 @@
 {
-  "name": "Free-ORCA",
-  "short_name": "Free-ORCA",
-  "description": "Free-ORCA by Operio — see, answer and start your AI agents",
+  "name": "ORCA",
+  "short_name": "ORCA",
+  "description": "ORCA by Operio — see, answer and start your AI agents",
   "id": "/",
   "start_url": "/",
   "scope": "/",

@@ -6,13 +6,13 @@
   const t = $derived(tr(lang));
 </script>
 
-<svelte:head><title>{page.status} · Free-ORCA</title></svelte:head>
+<svelte:head><title>{page.status} · ORCA</title></svelte:head>
 <main class="container err">
   <p class="label">{page.status}</p>
   <h1>{t.notFound.title}</h1>
   <p class="muted">{t.notFound.body}</p>
   <p class="actions">
-    <a class="btn btn-primary" href={href(lang, '/')}>Free-ORCA</a>
+    <a class="btn btn-primary" href={href(lang, '/')}>ORCA</a>
     <a class="btn btn-ghost" href={href(lang, '/catalog')}>{t.nav.catalog}</a>
   </p>
 </main>

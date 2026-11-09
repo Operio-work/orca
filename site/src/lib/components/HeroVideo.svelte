@@ -9,7 +9,7 @@
   let { lang, s } = $props();
 
   const PORTRAIT = '(max-width: 600px) and (orientation: portrait)';
-  const base = $derived(`/media/free-orca-${lang}`);
+  const base = $derived(`/media/operio-orca-${lang}`);
 
   let playing = $state(false);
   let cut = $state('16x9');

@@ -5,7 +5,7 @@
 // agent's script is at that moment. The only things stored are the start time, the speed,
 // the active client, what the viewer typed or pressed, and the agents the viewer started.
 //
-// State ($FREE_ORCA_DEMO_DIR/herdr-state.json):
+// State ($OPERIO_ORCA_DEMO_DIR/herdr-state.json):
 //   { epoch, speed, client, lang, inputs: { <pane>: [{ at, kind: 'key'|'text', value }] },
 //     dyn: [{ pane, tab, client, name, kind, cwd, created, prompts: [{ at, text }] }], nextDyn }
 
@@ -113,7 +113,7 @@ function scriptedView(a, st, now) {
 }
 
 // ── Agents the viewer starts (New, or a routine's Run now) ────────────────────
-const ROUTINE_RE = /^\[Free-ORCA routine: ([^\]]+)\]/;
+const ROUTINE_RE = /^\[ORCA routine: ([^\]]+)\]/;
 const OUT_RE = /write your result as Markdown to this file \(create the folder if needed\): (\S+\.md)/;
 
 function dynTurn(p, speed, U) {
@@ -124,7 +124,7 @@ function dynTurn(p, speed, U) {
     const shown = out.replace(/^.*\/\.config\//, '~/.config/');
     return {
       rows: [
-        [0, `❯ [Free-ORCA ${U.routine}: ${U.routineName(r[1])}] …`],
+        [0, `❯ [ORCA ${U.routine}: ${U.routineName(r[1])}] …`],
         [1.2, U.routineRead],
         [2.8, U.routineFiles],
         [4.4, U.routineWriting],

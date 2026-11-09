@@ -15,6 +15,6 @@ export default defineConfig({
       }
     })
   ],
-  // catalog.json and install.sh live one level up, in the Free-ORCA repo.
+  // catalog.json and install.sh live one level up, in the ORCA repo.
   server: { fs: { allow: ['..'] } }
 });

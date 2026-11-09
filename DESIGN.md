@@ -1,5 +1,5 @@
 ---
-name: Free-ORCA by Operio
+name: ORCA by Operio
 description: Operational Remote Company Agents — the agent workspace drawn as a live map, on Operio v3 tokens.
 colors:
   brand-orange: "#F5A623"
@@ -171,7 +171,7 @@ components:
     padding: "8px 16px 16px"
 ---
 
-# Design System: Free-ORCA by Operio
+# Design System: ORCA by Operio
 
 ## Overview
 

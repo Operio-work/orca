@@ -1,6 +1,6 @@
 'use strict';
 
-// The two fictional businesses of `free-orca demo`. Everything here is made up: no real
+// The two fictional businesses of `operio-orca demo`. Everything here is made up: no real
 // people, businesses, phone numbers or addresses (555 numbers, example.com addresses).
 //
 // Each agent plays one scripted turn, over and over:
@@ -10,7 +10,7 @@
 //   → done (held for `hold` seconds) → the next turn starts.
 // `delay` staggers the agents so they are never all in the same state. `auto` answers the
 // question by itself after that many seconds (keeps an unattended loop moving).
-// Seconds are at speed 1; `free-orca demo --speed 2` plays everything twice as fast.
+// Seconds are at speed 1; `operio-orca demo --speed 2` plays everything twice as fast.
 
 const CLIENTS = [
   {
@@ -569,7 +569,7 @@ Draft: Thank you, Lee! We're so glad your visit felt relaxed. See you at your ne
 `,
 };
 
-// ── Languages: `free-orca demo --lang es` ─────────────────────────────────────
+// ── Languages: `operio-orca demo --lang es` ─────────────────────────────────────
 // English is the script; another language only swaps the words. Every second mark comes from
 // the English lines, so a Spanish take lines up with an English one beat for beat.
 const LANGS = ['en', 'es'];
@@ -590,7 +590,7 @@ const UI_EN = {
   routineWriting: '● Writing the draft',
   routineWrote: '● Wrote',
   routineDone: '● Done. It waits in Routines for your approval — nothing was sent.',
-  dynScripted: '● This is the Free-ORCA demo: its agents are scripted, so I can’t act on that.',
+  dynScripted: '● This is the ORCA demo: its agents are scripted, so I can’t act on that.',
   dynTry: '  Try answering an agent that needs you.',
   fallbackDraft: name => `# ${name}\n\nDemo draft written by a scripted agent. Nothing was sent.\n`,
   fallbackReport: name => `# ${name}\n\nDemo output. Nothing was sent.\n`,
