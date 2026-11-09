@@ -12,8 +12,8 @@ const TERMS = [
   ['bw', 'rap'], ['paper', 'clip'], ['/home', '/sam'], ['gm', 'ail'],
 ].map(p => p.join(''));
 // site/build and site/.svelte-kit are generated from files this test already reads.
-const SKIP_DIRS = new Set(['.git', 'node_modules', 'build', '.svelte-kit']);
-const BINARY = /\.(png|webp|woff2|ico|jpg|gif)$/i;
+const SKIP_DIRS = new Set(['.git', 'node_modules', 'build', '.svelte-kit', 'dist']);
+const BINARY = /\.(png|webp|woff2|ico|jpg|gif|gz)$/i;
 
 function* files(dir) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -24,10 +24,17 @@ function* files(dir) {
   }
 }
 
+// Third-party copyright lines that must be kept verbatim (license terms) and happen to match.
+const KEEP_VERBATIM = new Map([
+  ['THIRD_PARTY_NOTICES.md', ['Copyright (c) 2016 Titus Wormer <tituswormer@' + 'gm' + 'ail.com>']],
+]);
+
 test('no private strings anywhere in the repository', () => {
   const hits = [];
   for (const f of files(ROOT)) {
-    const text = fs.readFileSync(f, 'utf8').toLowerCase();
+    let text = fs.readFileSync(f, 'utf8');
+    for (const line of KEEP_VERBATIM.get(path.relative(ROOT, f)) || []) text = text.split(line).join('');
+    text = text.toLowerCase();
     for (const term of TERMS) if (text.includes(term)) hits.push(`${path.relative(ROOT, f)}: ${term}`);
   }
   assert.deepEqual(hits, []);

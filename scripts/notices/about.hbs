@@ -1,0 +1,19 @@
+| Crate | Version | License (as declared) |
+|---|---|---|
+{{#each crates}}| {{{this.package.name}}} | {{{this.package.version}}} | {{{this.license}}} |
+{{/each}}
+
+Licenses in use: {{#each overview}}{{{name}}} ({{count}} crates){{#unless @last}}, {{/unless}}{{/each}}.
+
+Each distinct license text follows once, with the crates it covers, as found in each crate.
+Where a crate offers a choice, the first accepted license in `scripts/notices/about.toml` is shown.
+{{#each licenses}}
+
+#### {{{name}}} ({{{id}}})
+
+Used by: {{#each used_by}}{{{crate.name}}} {{{crate.version}}}{{#unless @last}}, {{/unless}}{{/each}}
+
+```
+{{{text}}}
+```
+{{/each}}
