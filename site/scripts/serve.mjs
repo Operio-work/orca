@@ -12,7 +12,8 @@ const port = Number(process.argv[2] || 4173);
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.woff2': 'font/woff2',
-  '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.sh': 'text/plain; charset=utf-8'
+  '.xml': 'application/xml; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.sh': 'text/plain; charset=utf-8',
+  '.gz': 'application/gzip', '.sha256': 'text/plain; charset=utf-8'
 };
 
 const isFile = (p) => { try { return fs.statSync(p).isFile(); } catch { return false; } };

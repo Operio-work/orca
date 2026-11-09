@@ -22,14 +22,23 @@ PANEL_VERSION="0.1.0"
 HERDR_VERSION="0.9.5"
 HERDR_BASE_URL="https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}"
 # sha256 of each release asset, from the GitHub release v0.9.5 (published 2026-10-14).
+# Read indirectly below as HERDR_SHA256_<platform>_<arch>.
+# shellcheck disable=SC2034
 HERDR_SHA256_linux_x86_64="14d9e8bc8b4a9e0118d77c32266f76d461f09b40342eb23752960bd89f59929d"
+# shellcheck disable=SC2034
 HERDR_SHA256_linux_aarch64="17d7536f2da50859523680ef279dffcac8e4a235f4e46fe8da6c2ec44141897c"
+# shellcheck disable=SC2034
 HERDR_SHA256_macos_x86_64="5fb0a908ec7f6745e3e245738b06bfad56c46391c391ab3c0955fbead01f1369"
+# shellcheck disable=SC2034
 HERDR_SHA256_macos_aarch64="fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0290157c3a7e2"
-# The panel release tarball. Filled in when a release is published; until then install
-# from a checkout with --source (or run this script from inside the checkout).
-PANEL_URL="${FREE_ORCA_PANEL_URL:-}"
-PANEL_SHA256="${FREE_ORCA_PANEL_SHA256:-}"
+# The panel release tarball (built by scripts/release.sh; install.sh itself is not in it).
+# Served by make.operio.work, with the GitHub release as a mirror. Same file, same sha256.
+PANEL_URL="https://make.operio.work/releases/free-orca-${PANEL_VERSION}.tar.gz"
+PANEL_MIRROR_URL="https://github.com/operio-work/free-orca/releases/download/v${PANEL_VERSION}/free-orca-${PANEL_VERSION}.tar.gz"
+PANEL_SHA256="b68b18a19aea3ecde64a27ba0fb7e0a5998801bb6925f6524f1488a23906d2fe"
+# For testing only: fetch the tarball from another URL (e.g. a local copy of the site).
+# The sha256 above is still enforced; there is no way to override it.
+if [ -n "${FREE_ORCA_PANEL_URL:-}" ]; then PANEL_URL="$FREE_ORCA_PANEL_URL"; PANEL_MIRROR_URL=""; fi
 NODE_MIN_MAJOR=20
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
@@ -57,6 +66,9 @@ Options:
   --no-service        write the service files but do not enable or start them
   --no-herdr-config   do not add the "no self-update" block to ~/.config/herdr/config.toml
   -h, --help          this help
+
+For testing only: FREE_ORCA_PANEL_URL=<url> fetches the panel tarball from another place
+(plain http is allowed for 127.0.0.1 and localhost). The pinned sha256 is still enforced.
 EOF
 }
 
@@ -101,9 +113,11 @@ sha256_of() {
   fi
 }
 
-download() { # url dest
-  if have curl; then curl -fsSL --proto '=https' --tlsv1.2 --retry 2 -o "$2" "$1"
-  elif have wget; then wget -q --https-only -O "$2" "$1"
+download() { # url dest — HTTPS only, except plain http to this computer (testing)
+  local proto="=https" wget_opts=(--https-only)
+  case "$1" in http://127.0.0.1[:/]*|http://localhost[:/]*) proto="=http,https"; wget_opts=() ;; esac
+  if have curl; then curl -fsSL --proto "$proto" --tlsv1.2 --retry 2 -o "$2" "$1"
+  elif have wget; then wget -q ${wget_opts[@]+"${wget_opts[@]}"} -O "$2" "$1"
   else die "need curl or wget to download herdr"
   fi
 }
@@ -120,9 +134,6 @@ NPM_BIN="$(command -v npm || true)"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/free-orca.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
-mkdir -p "$PREFIX/bin" "$BIN_DIR" "$CONFIG_DIR"
-chmod 700 "$CONFIG_DIR"
-
 SCRIPT_DIR=""
 case "${BASH_SOURCE[0]:-}" in
   ""|bash|-bash|/dev/*|/proc/*) ;;
@@ -132,9 +143,22 @@ if [ -z "$SOURCE" ] && [ -n "$SCRIPT_DIR" ] && [ -f "$SCRIPT_DIR/server.js" ] &&
   SOURCE="$SCRIPT_DIR"
 fi
 
-if [ -z "$SOURCE" ] && { [ -z "$PANEL_URL" ] || [ -z "$PANEL_SHA256" ]; }; then
-  die "no Free-ORCA release is pinned in this script yet. Clone the repository and run: bash install.sh --source <checkout>"
+# ─── 0. the panel release: download and verify before anything is installed ──
+if [ -z "$SOURCE" ]; then
+  [ "${FREE_ORCA_PANEL_URL:-}" = "" ] || warn "testing override: panel from ${PANEL_URL} (the pinned sha256 still applies)"
+  say "downloading the panel ${PANEL_VERSION}"
+  if ! download "$PANEL_URL" "$TMP/panel.tar.gz"; then
+    [ -n "$PANEL_MIRROR_URL" ] || die "could not download ${PANEL_URL}. Nothing was installed."
+    warn "could not download ${PANEL_URL}; trying the GitHub mirror"
+    download "$PANEL_MIRROR_URL" "$TMP/panel.tar.gz" || die "could not download the panel. Nothing was installed."
+  fi
+  GOT="$(sha256_of "$TMP/panel.tar.gz")"
+  [ "$GOT" = "$PANEL_SHA256" ] || die "panel checksum mismatch: expected ${PANEL_SHA256}, got ${GOT}. Nothing was installed."
+  say "panel ${PANEL_VERSION} verified (sha256 ${PANEL_SHA256})"
 fi
+
+mkdir -p "$PREFIX/bin" "$BIN_DIR" "$CONFIG_DIR"
+chmod 700 "$CONFIG_DIR"
 
 # ─── 1. herdr (pinned + verified) ─────────────────────────────────────────────
 HERDR_BIN="$PREFIX/bin/herdr"
@@ -162,13 +186,8 @@ if [ -n "$SOURCE" ]; then
   say "installing the panel from ${SOURCE}"
   mkdir -p "$SRC_DIR"
   # Copy without git history, local deps, tests, the demo screenshots or the website.
-  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots --exclude=./site . ) | (cd "$SRC_DIR" && tar -xf -)
+  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots --exclude=./site --exclude=./dist . ) | (cd "$SRC_DIR" && tar -xf -)
 else
-  [ -n "$PANEL_URL" ] && [ -n "$PANEL_SHA256" ] || die "no Free-ORCA release is pinned in this script yet. Clone the repository and run: bash install.sh --source <checkout>"
-  say "downloading the panel ${PANEL_VERSION}"
-  download "$PANEL_URL" "$TMP/panel.tar.gz"
-  GOT="$(sha256_of "$TMP/panel.tar.gz")"
-  [ "$GOT" = "$PANEL_SHA256" ] || die "panel checksum mismatch: expected ${PANEL_SHA256}, got ${GOT}. Nothing was installed."
   mkdir -p "$SRC_DIR"
   tar -xzf "$TMP/panel.tar.gz" -C "$SRC_DIR" --strip-components=1
 fi

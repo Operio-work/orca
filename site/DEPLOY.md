@@ -66,11 +66,13 @@ scripts/deploy.sh              # build, back up the live site, upload, check the
 
 What `deploy.sh` does:
 
-1. `npm ci` and `npm run build` (the build fails on any prerender error or missing page).
+1. `npm ci` and `npm run build` (the build fails on any prerender error, a missing page, or a
+   panel tarball whose sha256 differs from the pin in `install.sh`).
 2. Copies the live site to `~deploy/backups/make.operio.work/<UTC timestamp>/` and keeps the last 10.
 3. Uploads `_app/` first, then the pages, then removes files that are gone.
 4. Fetches `/`, `/es`, `/catalog`, `/install`, `/install.sh` and `/sitemap.xml` from the live
-   site and checks that `install.sh` is served as `text/plain`. On a failure it prints the
+   site, checks that `install.sh` is served as `text/plain` and that the live panel tarball
+   matches the sha256 the live `install.sh` pins. On a failure it prints the
    rollback command.
 
 Overrides: `DEPLOY_TARGET` (default `deploy@box1`), `DEPLOY_DIR`, `DEPLOY_KEEP`, `SITE_URL`.
@@ -86,8 +88,8 @@ ssh deploy@box1 'rsync -a --delete ~/backups/make.operio.work/<timestamp>/ /var/
 
 - Open https://make.operio.work and https://make.operio.work/es and check both themes.
 - `curl -fsSL https://make.operio.work/install.sh | head` must print the installer.
-  Until a panel release is pinned in `install.sh` (`PANEL_URL` and `PANEL_SHA256`), the
-  one-liner stops with "no Free-ORCA release is pinned" and asks for a checkout. Publish the
-  `operio-work/free-orca` v0.1.0 release, pin it, rebuild and redeploy the site so
-  `/install.sh` carries the pinned version.
+- The panel tarball is served at `/releases/free-orca-<version>.tar.gz` (+ `.sha256`). The build
+  rebuilds it with `scripts/release.sh` and fails unless its sha256 equals `PANEL_SHA256` in
+  `install.sh`; `deploy.sh` checks the live tarball against the live `install.sh` pin.
+  The GitHub release carries the same file as a mirror (the installer falls back to it).
 - Add make.operio.work to monitoring (HTTPS and certificate expiry).

@@ -37,7 +37,9 @@ if [ "$BUILD" = 1 ]; then
   npm ci --no-audit --no-fund
   npm run build
 fi
-[ -f build/index.html ] && [ -f build/install.sh ] || { echo "build/ is incomplete; run npm run build" >&2; exit 1; }
+if [ ! -f build/index.html ] || [ ! -f build/install.sh ] || ! ls build/releases/*.tar.gz >/dev/null 2>&1; then
+  echo "build/ is incomplete; run npm run build" >&2; exit 1
+fi
 
 RSYNC=(rsync -az --human-readable --itemize-changes)
 [ "$DRY" = 1 ] && RSYNC+=(--dry-run)
@@ -71,6 +73,12 @@ done
 type="$(curl -sI --max-time 15 "$SITE_URL/install.sh" | tr -d '\r' | awk -F': ' 'tolower($1)=="content-type"{print $2}')"
 printf '  install.sh type: %s\n' "${type:-?}"
 case "$type" in text/plain*) ;; *) fail=1 ;; esac
+# The live panel tarball must match the sha256 the live install.sh pins.
+pinned="$(curl -fsS --max-time 15 "$SITE_URL/install.sh" | sed -n 's/^PANEL_SHA256="\([0-9a-f]*\)".*/\1/p' | head -1 || true)"
+pver="$(sed -n 's/^PANEL_VERSION="\([^"]*\)".*/\1/p' build/install.sh | head -1)"
+live="$(curl -fsS --max-time 60 "$SITE_URL/releases/free-orca-$pver.tar.gz" | { sha256sum 2>/dev/null || shasum -a 256; } | awk '{print $1}' || true)"
+printf '  panel tarball: %s (pinned %s)\n' "${live:-?}" "${pinned:-?}"
+[ -n "$pinned" ] && [ "$live" = "$pinned" ] || fail=1
 
 if [ "$fail" = 1 ]; then
   echo "Live check failed. Roll back with:" >&2

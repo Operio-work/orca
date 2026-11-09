@@ -12,7 +12,8 @@ const TERMS = [
   ['bw', 'rap'], ['paper', 'clip'], ['/home', '/sam'], ['gm', 'ail'],
 ].map(p => p.join(''));
 // site/build and site/.svelte-kit are generated from files this test already reads.
-const SKIP_DIRS = new Set(['.git', 'node_modules', 'build', '.svelte-kit', 'dist']);
+// .claude holds other checkouts (git worktrees); each one runs its own tests.
+const SKIP_DIRS = new Set(['.git', 'node_modules', 'build', '.svelte-kit', 'dist', '.claude']);
 const BINARY = /\.(png|webp|woff2|ico|jpg|gif|gz)$/i;
 
 function* files(dir) {
