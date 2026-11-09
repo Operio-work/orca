@@ -5,7 +5,7 @@ const en = {
   htmlLang: 'en',
   ogLocale: 'en_US',
   skip: 'Skip to content',
-  nav: { catalog: 'Catalog', install: 'Install', github: 'ORCA on GitHub', home: 'ORCA home' },
+  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', github: 'ORCA on GitHub', home: 'ORCA home' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   byOperio: 'by Operio',
@@ -28,7 +28,7 @@ const en = {
     ],
     proofLead: 'Built by Operio.',
     proofBody: 'Our own team runs its agents on it every day: from the desk and from the phone.',
-    installLabel: 'Install on Linux or macOS',
+    installLabel: 'Install on Linux, macOS or Windows (WSL2)',
     installNote: 'Node.js 20 or newer. No account, no sudo.',
     installMore: 'Install guide',
     secondary: 'Have Operio run it for you',
@@ -86,6 +86,14 @@ const en = {
         alt: 'The Routines tab on a phone: a review-reply draft marked “needs approval”, with Approve and Reject buttons.'
       }
     ],
+
+    vsTitle: 'How ORCA compares',
+    vsLines: [
+      'herdr runs the terminals. ORCA adds the phone, the alerts, the routines and the approvals.',
+      'Claude Code, Codex and opencode on one board, with a phone alert and one-tap answers, free on your own computer.',
+      'Want it always on, without your computer? ORCA Managed by Operio runs it for you.'
+    ],
+    vsMore: 'Compare ORCA with five other tools',
 
     howTitle: 'How it works',
     steps: [
@@ -162,7 +170,7 @@ const en = {
       },
       {
         q: 'What do I need?',
-        a: 'A Linux or macOS computer, Node.js 20 or newer, and at least one AI agent installed and signed in. For routines, the computer has to be on when they are scheduled.'
+        a: 'A computer with Linux, macOS or Windows (WSL2), Node.js 20 or newer, and at least one AI agent installed and signed in. For routines, the computer has to be on when they are scheduled.'
       },
       {
         q: 'Can I use it from my phone?',
@@ -236,14 +244,14 @@ const en = {
 
   install: {
     title: 'Install ORCA',
-    metaTitle: 'Install ORCA: one line, Linux or macOS',
+    metaTitle: 'Install ORCA: one line, Linux, macOS or Windows (WSL2)',
     description:
-      'Install ORCA with one line on Linux or macOS. Phone access, updates, the demo and uninstalling.',
-    lead: 'One line on Linux or macOS. It is safe to run again, and it never needs sudo.',
+      'Install ORCA with one line on Linux, macOS or Windows (WSL2). Phone access, updates, the demo and uninstalling.',
+    lead: 'One line on Linux, macOS or Windows (WSL2). It is safe to run again, and it never needs sudo.',
     toc: 'On this page',
     reqTitle: 'What you need',
     req: [
-      'Linux (x86_64 or arm64) or macOS (Apple silicon or Intel).',
+      'Linux (x86_64 or arm64), macOS (Apple silicon or Intel), or Windows through WSL2.',
       'Node.js 20 or newer.',
       'An AI assistant installed and signed in: Claude Code, Codex or opencode.',
       'A computer that is on when your routines are scheduled.'
@@ -259,6 +267,15 @@ const en = {
     ],
     sourceTitle: 'Prefer to read it first?',
     sourceBody: 'Download the script, read it, then run it. Or clone the repository and run it from there.',
+    wslTitle: 'Windows (WSL2)',
+    wslBody: 'On Windows, ORCA runs inside WSL2, the Linux system built into Windows. Set it up once, then use the same one-line install.',
+    wslSteps: [
+      'Open PowerShell as administrator, install WSL2 with Ubuntu, and restart if Windows asks:',
+      'Open Ubuntu from the Start menu and create your user. Inside Ubuntu, install Node.js 20 or newer and your AI assistant.',
+      'Run the same one-line install inside Ubuntu:'
+    ],
+    wslNote: 'WSL2 support is new. If something does not work,',
+    wslIssue: 'tell us on GitHub.',
     phoneTitle: 'Use it from your phone',
     phoneBody: 'ORCA listens on 127.0.0.1 only. Keep it that way and reach it through one of these.',
     tailscaleTitle: 'Tailscale (private network, HTTPS)',
@@ -316,7 +333,7 @@ const es = {
   htmlLang: 'es-MX',
   ogLocale: 'es_MX',
   skip: 'Ir al contenido',
-  nav: { catalog: 'Catálogo', install: 'Instalar', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
+  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
   byOperio: 'por Operio',
@@ -339,7 +356,7 @@ const es = {
     ],
     proofLead: 'Hecho por Operio.',
     proofBody: 'Nuestro equipo maneja sus propios agentes con esto todos los días: desde el escritorio y desde el celular.',
-    installLabel: 'Instala en Linux o macOS',
+    installLabel: 'Instala en Linux, macOS o Windows (WSL2)',
     installNote: 'Node.js 20 o más reciente. Sin cuenta, sin sudo.',
     installMore: 'Guía de instalación',
     secondary: 'Que Operio lo opere por ti',
@@ -397,6 +414,14 @@ const es = {
         alt: 'La pestaña Rutinas en un celular: un borrador de respuestas a reseñas marcado “por aprobar”, con los botones Aprobar y Rechazar.'
       }
     ],
+
+vsTitle: 'Cómo se compara ORCA',
+    vsLines: [
+      'herdr corre las terminales. ORCA le suma el celular, los avisos, las rutinas y las aprobaciones.',
+      'Claude Code, Codex y opencode en un tablero, con aviso al celular y respuestas con un toque, gratis en tu propia computadora.',
+      '¿Lo quieres siempre prendido, sin tu computadora? ORCA Gestionado por Operio lo opera por ti.'
+    ],
+    vsMore: 'Compara ORCA con otras cinco herramientas',
 
     howTitle: 'Cómo funciona',
     steps: [
@@ -473,7 +498,7 @@ const es = {
       },
       {
         q: '¿Qué necesito?',
-        a: 'Una computadora con Linux o macOS, Node.js 20 o más reciente y al menos un agente de IA instalado y con sesión iniciada. Para las rutinas, la computadora tiene que estar prendida a la hora programada.'
+        a: 'Una computadora con Linux, macOS o Windows (WSL2), Node.js 20 o más reciente y al menos un agente de IA instalado y con sesión iniciada. Para las rutinas, la computadora tiene que estar prendida a la hora programada.'
       },
       {
         q: '¿Lo puedo usar desde mi celular?',
@@ -547,14 +572,14 @@ const es = {
 
   install: {
     title: 'Instala ORCA',
-    metaTitle: 'Instala ORCA: una línea, Linux o macOS',
+    metaTitle: 'Instala ORCA: una línea, Linux, macOS o Windows (WSL2)',
     description:
-      'Instala ORCA con una línea en Linux o macOS. Acceso desde el celular, actualizaciones, la demo y cómo desinstalar.',
-    lead: 'Una línea en Linux o macOS. Puedes correrla de nuevo sin problema y nunca necesita sudo.',
+      'Instala ORCA con una línea en Linux, macOS o Windows (WSL2). Acceso desde el celular, actualizaciones, la demo y cómo desinstalar.',
+    lead: 'Una línea en Linux, macOS o Windows (WSL2). Puedes correrla de nuevo sin problema y nunca necesita sudo.',
     toc: 'En esta página',
     reqTitle: 'Qué necesitas',
     req: [
-      'Linux (x86_64 o arm64) o macOS (Apple silicon o Intel).',
+      'Linux (x86_64 o arm64), macOS (Apple silicon o Intel), o Windows con WSL2.',
       'Node.js 20 o más reciente.',
       'Un asistente de IA instalado y con sesión iniciada: Claude Code, Codex u opencode.',
       'Una computadora que esté prendida a la hora de tus rutinas.'
@@ -570,6 +595,15 @@ const es = {
     ],
     sourceTitle: '¿Prefieres leerlo antes?',
     sourceBody: 'Descarga el script, léelo y luego córrelo. O clona el repositorio y córrelo desde ahí.',
+    wslTitle: 'Windows (WSL2)',
+    wslBody: 'En Windows, ORCA corre dentro de WSL2, el sistema Linux que viene con Windows. Lo configuras una vez y luego usas la misma instalación de una línea.',
+    wslSteps: [
+      'Abre PowerShell como administrador, instala WSL2 con Ubuntu y reinicia si Windows te lo pide:',
+      'Abre Ubuntu desde el menú Inicio y crea tu usuario. Dentro de Ubuntu, instala Node.js 20 o más reciente y tu asistente de IA.',
+      'Corre la misma instalación de una línea dentro de Ubuntu:'
+    ],
+    wslNote: 'El soporte para WSL2 es nuevo. Si algo no funciona,',
+    wslIssue: 'cuéntanos en GitHub.',
     phoneTitle: 'Úsalo desde tu celular',
     phoneBody: 'ORCA escucha solo en 127.0.0.1. Déjalo así y entra con una de estas opciones.',
     tailscaleTitle: 'Tailscale (red privada, HTTPS)',

@@ -8,7 +8,7 @@
 
   const other = $derived(lang === 'es' ? 'en' : 'es');
   const here = $derived(basePath(page.url.pathname));
-  const section = $derived(here.startsWith('/catalog') ? 'catalog' : here === '/install' ? 'install' : '');
+  const section = $derived(here.startsWith('/catalog') ? 'catalog' : here === '/install' ? 'install' : here === '/compare' ? 'compare' : '');
 
   let scrolled = $state(false);
   /** Current effective theme, known only after mount. */
@@ -42,6 +42,7 @@
     <ul class="links">
       <li><a href={href(lang, '/catalog')} aria-current={section === 'catalog' ? 'page' : undefined}>{t.nav.catalog}</a></li>
       <li><a href={href(lang, '/install')} aria-current={section === 'install' ? 'page' : undefined}>{t.nav.install}</a></li>
+      <li><a href={href(lang, '/compare')} aria-current={section === 'compare' ? 'page' : undefined}>{t.nav.compare}</a></li>
     </ul>
     <div class="tools">
       <a class="lang" href={altHref ?? href(other, here)} hreflang={other === 'es' ? 'es-MX' : 'en'} lang={other === 'es' ? 'es-MX' : 'en'} aria-label={t.langSwitch.aria}>
@@ -137,10 +138,12 @@
     .gh { display: none; }
     .tools { gap: 4px; }
     .links { gap: 0; justify-content: flex-end; }
-    /* "Catálogo / Instalar" plus two 40px tools must fit 390px with the 16px gutters. */
+    /* "Catálogo / Instalar / Comparar" plus two 40px tools must fit 390px with the 16px gutters. */
     .links a { padding: 0 6px; font-size: 0.86rem; }
   }
-  @media (max-width: 380px) {
+  @media (max-width: 440px) {
+    /* Three links need the room: the logo alone carries the brand on phones. */
     .wordmark { display: none; }
+    .links a { padding: 0 5px; font-size: 0.84rem; }
   }
 </style>
