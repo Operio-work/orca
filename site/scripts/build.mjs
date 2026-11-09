@@ -28,7 +28,7 @@ const files = pages.flatMap((p) => [
   p === '/' ? 'index.html' : `${p.slice(1)}.html`,
   p === '/' ? 'es.html' : `es${p}.html`
 ]);
-files.push('404.html', 'install.sh', 'sitemap.xml', 'robots.txt', 'og.png', 'favicon.svg');
+files.push('404.html', 'install.sh', 'sitemap.xml', 'robots.txt', 'og.png', 'og-es.png', 'favicon.svg');
 for (const f of files) if (!fs.existsSync(path.join(root, 'build', f))) problems.push(`missing build/${f}`);
 
 const installer = path.join(root, '..', 'install.sh');
