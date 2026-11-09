@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # tags: scripts/release.sh builds from v<version>
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Panel tests
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+      - name: Shellcheck
+        run: shellcheck -S warning install.sh uninstall.sh bin/free-orca scripts/release.sh site/scripts/deploy.sh
+      - name: Release tarball matches the sha256 pinned in install.sh
+        run: scripts/release.sh --check
+      - name: Website build (fails if the shipped tarball differs from the pin)
+        working-directory: site
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
