@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="color-scheme" content="dark light">
+  <title>Free-ORCA</title>
+  <meta name="description" content="Free-ORCA by Operio — see, answer and start your AI agents, and run routines">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jetbrains-mono-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/vendor/xterm/xterm.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/theme-boot.js"></script>
+  <script src="/vendor/xterm/xterm.js" defer></script>
+  <script src="/sound.js" defer></script>
+  <script src="/app.js" defer></script>
+  <script src="/routines.js" defer></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-focus" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-enter" viewBox="0 0 24 24"><path d="M20 4v7a4 4 0 0 1-4 4H4"/><path d="m9 10-5 5 5 5"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24"><path d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></symbol>
+    <symbol id="i-office" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M8 2h8v2H8zM6 4h2v2H6zm10 0h2v2h-2zM6 6h12v4H6zm2 1v2h2V7zm6 0v2h2V7zM8 10h8v2H8zM4 12h16v6H4zm2 6h4v4H6zm8 0h4v4h-4z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></symbol>
+    <symbol id="i-island" viewBox="0 0 24 24"><path d="M2 18c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 6 0"/><path d="M5 15h11"/><path d="M11 15c0-4 .5-7 2-9"/><path d="M13 6c-2-1.5-5-1-6 1M13 6c2-1.2 5-.8 6 1.5M13 6c-.5-2 .5-3.5 2-4"/></symbol>
+    <symbol id="b-working" viewBox="0 0 24 24"><path d="M13 2 4 14h8l-1 8 9-12h-8l1-8z"/></symbol>
+    <symbol id="b-idle" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+    <symbol id="b-done" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="b-blocked" viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v2M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></symbol>
+    <symbol id="b-unknown" viewBox="0 0 24 24"><path d="M5 22h14M5 2h14M17 22v-4.2a2 2 0 0 0-.6-1.4L12 12l-4.4 4.4a2 2 0 0 0-.6 1.4V22M7 2v4.2a2 2 0 0 0 .6 1.4L12 12l4.4-4.4a2 2 0 0 0 .6-1.4V2"/></symbol>
+    <symbol id="i-holo" viewBox="0 0 24 24"><path d="M12 2 21 7v10l-9 5-9-5V7z"/><path d="M12 22V12M21 7l-9 5-9-5"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  </svg>
+
+  <div class="shell">
+    <header class="bar">
+      <div class="brand">
+        <h1 class="wordmark"><img class="mark" src="/icons/icon.svg" alt="" width="40" height="40"><span class="wm">Free-ORCA<small><a href="https://make.operio.work" target="_blank" rel="noopener">by Operio</a></small></span></h1>
+      </div>
+      <div class="actions">
+        <button id="new" class="chip primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="new">New</span></button>
+        <button id="routines-btn" class="chip" type="button"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-i18n="routines">Routines</span></button>
+        <div class="viewpick">
+          <button id="view-btn" class="chip view-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="views" data-i18n-title="views"><svg class="ic cur" aria-hidden="true"><use href="#i-map"/></svg><svg class="ic caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
+          <div id="views" class="view-menu" role="group" hidden>
+            <button type="button" data-view="map" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span data-i18n="mapView">Map</span><kbd>M</kbd></button>
+            <button type="button" data-view="office" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-office"/></svg><span data-i18n="officeView">Office</span><kbd>O</kbd></button>
+            <button type="button" data-view="island" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-island"/></svg><span data-i18n="islandView">Islands</span><kbd>I</kbd></button>
+            <button type="button" data-view="holo" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-holo"/></svg><span data-i18n="holoView">Holo</span><kbd>3</kbd></button>
+          </div>
+        </div>
+        <button id="bell" class="chip icon" type="button" aria-pressed="false" data-i18n-title="alerts"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></button>
+        <button id="theme" class="chip icon" type="button" data-i18n-title="themeToggle"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
+        <button id="lang" class="chip icon lang" type="button" aria-label="Español / English">ES</button>
+      </div>
+    </header>
+
+    <nav id="queue" class="queue" aria-label="Agents by priority"></nav>
+
+    <div class="cheats-row">
+      <p id="cheats" class="cheats" aria-label="Keyboard shortcuts"></p>
+      <button id="cheats-show" class="cheats-show" type="button" hidden><kbd>?</kbd> <span data-i18n="showKeys">Keys</span></button>
+    </div>
+    <nav class="status-bar" aria-label="Status">
+      <div id="counts" class="counts"></div>
+      <div id="filters" class="filters"></div>
+      <button id="sound" class="sound-btn" type="button" aria-pressed="false" data-i18n-title="sounds"><svg class="ic" aria-hidden="true"><use href="#i-mute"/></svg></button>
+    </nav>
+
+    <div class="work">
+      <svg id="link-lines" class="link-lines" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z"/></marker><marker id="arrow-hand" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z"/></marker></defs><g></g></svg>
+      <main id="map" class="map" aria-label="Workspace"></main>
+      <section id="holo" class="office holo" aria-labelledby="holo-title" hidden>
+        <h2 id="holo-title" class="sr-only" data-i18n="holoView">Holo table</h2>
+        <div id="holo-stage" class="holo-stage">
+          <div id="holo-labels" class="holo-labels" aria-hidden="true"></div>
+          <div class="holo-hud" aria-hidden="true">
+            <span class="holo-title">ORCA // HOLO TABLE</span>
+            <span id="holo-clock" class="holo-clock"></span>
+          </div>
+          <p id="holo-info" class="holo-info" aria-live="polite"></p>
+          <p id="holo-hint" class="holo-hint"></p>
+          <div class="holo-scan" aria-hidden="true"></div>
+          <div id="holo-card" class="holo-card" hidden>
+            <p class="hc-name"></p>
+            <p class="hc-state"></p>
+            <p class="hc-title"></p>
+            <div class="hc-actions">
+              <button type="button" class="hc-open"><span>Open</span><kbd>⏎</kbd></button>
+              <button type="button" class="hc-show"><span>Show</span><kbd>D</kbd></button>
+              <button type="button" class="hc-show hc-zoom"><span>Zoom</span><kbd>Z</kbd></button>
+            </div>
+          </div>
+        </div>
+        <ul id="holo-roster" class="roster"></ul>
+      </section>
+      <section id="island" class="office island" aria-labelledby="island-title" hidden>
+        <h2 id="island-title" class="sr-only" data-i18n="islandView">Islands</h2>
+        <canvas id="isle" aria-hidden="true"></canvas>
+        <ul id="isle-roster" class="roster"></ul>
+      </section>
+      <section id="office" class="office" aria-labelledby="office-title" hidden>
+        <h2 id="office-title" class="sr-only" data-i18n="officeView">Office view</h2>
+        <canvas id="world" aria-hidden="true"></canvas>
+        <ul id="roster" class="roster"></ul>
+      </section>
+
+      <div id="scrim" class="scrim" hidden></div>
+      <aside id="sheet" class="sheet" aria-labelledby="sheet-name" hidden>
+        <div id="claim-menu" class="claim-menu" role="menu" hidden></div>
+        <header class="sheet-head">
+          <button id="sheet-close" class="icon-btn close" type="button" data-i18n-title="close"><svg class="ic back" aria-hidden="true"><use href="#i-back"/></svg><svg class="ic x" aria-hidden="true"><use href="#i-x"/></svg></button>
+          <span id="sheet-badge" class="badge" role="img"><svg class="ic" aria-hidden="true"><use href="#b-idle"/></svg></span>
+          <div class="who">
+            <form class="name-form" id="name-form">
+              <input id="sheet-name" class="name" name="name" maxlength="40" autocomplete="off" spellcheck="false" enterkeyhint="done">
+              <button class="save" type="submit" hidden data-i18n="save">Save</button>
+            </form>
+            <p class="state-line"><button id="sheet-claim" class="claim" type="button"></button><span id="sheet-tagline" class="tagline"></span><span id="sheet-state" class="state"></span><span id="sheet-where" class="where"></span></p>
+          </div>
+          <span id="sheet-ctx" class="ctx" role="img" hidden>
+            <svg class="ctx-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="ctx-track" cx="18" cy="18" r="14"/><circle class="ctx-fill" cx="18" cy="18" r="14" pathLength="100" stroke-dasharray="0 100"/></svg>
+            <span class="ctx-txt"><b class="ctx-pct"></b><small class="ctx-of"></small></span>
+          </span>
+          <button id="sheet-focus" class="beam" type="button" data-i18n-title="focusKey">
+            <svg class="ic mon" viewBox="0 0 24 24" aria-hidden="true"><rect class="scr" x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/><path class="ok" d="m8.5 10 2.5 2.5 4.5-5"/></svg>
+            <span class="bl" data-i18n="show" aria-live="polite">Show</span>
+          </button>
+          <button id="sheet-zoom" class="beam zoomb" type="button" data-i18n-title="zoomKey">
+            <svg class="ic mon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><rect class="scr" x="7.5" y="7.5" width="9" height="9" rx="1.5"/><path class="ok" d="m9.5 12 2 2 3.5-4"/></svg>
+            <span class="bl" data-i18n="zoom" aria-live="polite">Zoom</span>
+          </button>
+          <button id="sheet-more" class="icon-btn" type="button" aria-expanded="false" aria-controls="sheet-extra" data-i18n-title="more"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></button>
+        </header>
+        <div id="crew" class="crew" hidden>
+          <span class="crew-label" data-i18n="crewTitle">Name it</span>
+          <div class="crew-chips"></div>
+        </div>
+        <div id="sheet-extra" class="extra" hidden>
+          <div class="crew-manage">
+            <span class="crew-label" data-i18n="crewMore">Crew</span>
+            <div id="crew-manage" class="crew-chips"></div>
+          </div>
+          <p id="sheet-meta" class="meta"></p>
+          <div id="sheet-tags" class="tags"></div>
+          <div class="sheet-actions">
+            <button id="sheet-suggest" class="btn suggest" type="button" hidden></button>
+            <button id="sheet-move" class="btn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-move"/></svg><span data-i18n="move">Move</span></button>
+            <button id="sheet-clear" class="btn danger" type="button" data-i18n="clear">Clear name</button>
+          </div>
+        </div>
+        <p id="sheet-title" class="title"></p>
+        <div id="sheet-recap" class="recap" hidden>
+          <p class="r-sum"><b class="r-lab" data-i18n="recapLabel">Recap</b><span class="r-text"></span></p>
+          <p class="r-next" hidden><b class="r-lab" data-i18n="recapNext">Next</b><span class="r-text"></span></p>
+        </div>
+        <details id="sheet-jobs" class="jobs" hidden>
+          <summary><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4 4 10-10"/></svg><span class="jhead" data-i18n="jobsTitle">Latest jobs</span><span class="jlast"></span><span class="jcount"></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
+          <ol class="jlist"></ol>
+        </details>
+        <details id="sheet-links" class="links">
+          <summary><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg><span class="lhead" data-i18n="linksTitle">Links</span><span class="lsum"></span><span class="lhand" hidden></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
+          <div class="lbody">
+            <div id="handoff-box" class="handoff-box"></div>
+            <ul id="link-list" class="link-list"></ul>
+            <form id="link-add" class="link-add">
+              <select name="rel" aria-label="Relation"><option value="waitsOn" data-i18n="relWaitsOn">Depends on</option><option value="feeds" data-i18n="relFeeds">Feeds</option><option value="talk" data-i18n="relTalk">Talks with</option></select>
+              <select name="other" aria-label="Agent"></select>
+              <button class="btn small" type="submit" data-i18n="linkAdd">Link</button>
+            </form>
+            <p class="lhint" data-i18n="linkHint"></p>
+            <details id="link-msgs" class="link-msgs">
+              <summary><span data-i18n="msgsTitle">Messages</span><span class="mcount"></span></summary>
+              <ol class="mlist"></ol>
+            </details>
+          </div>
+        </details>
+        <div class="term">
+          <pre id="sheet-output" class="output" tabindex="0"></pre>
+          <button id="term-theme" class="term-theme" type="button"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
+        </div>
+        <div class="dock">
+          <p id="sheet-needs" class="needs" hidden data-i18n="needsYou">Needs you — answer with a key</p>
+          <div id="answers" class="answers" hidden></div>
+          <div id="sheet-keys" class="keys"></div>
+          <div id="chips" class="chips" hidden></div>
+          <form id="prompt-form" class="prompt-form">
+            <textarea id="prompt" name="text" rows="1" maxlength="4000" enterkeyhint="send"></textarea>
+            <button class="btn primary send" type="submit" data-i18n-title="send"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button>
+          </form>
+        </div>
+      </aside>
+    </div>
+
+    <details id="mem" class="mem">
+      <summary class="mem-sum">
+        <svg class="ic mem-chev" aria-hidden="true"><use href="#i-chev"/></svg>
+        <span class="mem-label" data-i18n="memTitle">Memory</span>
+        <span id="mem-figs" class="mem-figs"></span>
+        <span class="mem-meter" aria-hidden="true"><i id="mem-agents-bar"></i><i id="mem-other-bar"></i></span>
+      </summary>
+      <div class="mem-body">
+        <ul id="mem-list" class="mem-list"></ul>
+        <p class="mem-hint" data-i18n="memHint"></p>
+      </div>
+    </details>
+  </div>
+
+  <p id="toast" class="toast" role="status" hidden></p>
+  <section id="finished" class="finished" aria-live="polite"></section>
+
+  <dialog id="new-dialog">
+    <form id="new-form" method="dialog">
+      <h2 data-i18n="newTitle">Start a new agent</h2>
+      <label><span data-i18n="name">Name</span>
+        <input name="name" required maxlength="32" pattern="[a-z][a-z0-9_\-]{0,31}" autocomplete="off" spellcheck="false" autocapitalize="none">
+      </label>
+      <div id="new-crew" class="crew-chips new-crew"></div>
+      <label><span data-i18n="kind">Agent</span><select name="kind"></select></label>
+      <label><span data-i18n="folder">Folder</span>
+        <input name="folder" list="folders" required autocomplete="off" spellcheck="false" value="~">
+        <datalist id="folders"></datalist>
+      </label>
+      <label><span data-i18n="where">Where</span><select name="tab"></select></label>
+      <p class="hint" data-i18n="newHint">Opens a pane in the workspace and starts the agent there. Takes up to a minute.</p>
+      <div class="dialog-row">
+        <button type="button" class="btn" value="cancel" data-i18n="cancel">Cancel</button>
+        <button type="submit" class="btn primary" data-i18n="start">Start</button>
+      </div>
+    </form>
+  </dialog>
+  <dialog id="move-dialog" aria-labelledby="move-title">
+    <form id="move-form" method="dialog">
+      <h2 id="move-title">Move</h2>
+      <label><span data-i18n="moveTo">To</span><select name="to"></select></label>
+      <label id="move-label"><span data-i18n="wsName">Workspace name</span>
+        <input name="label" maxlength="40" autocomplete="off" spellcheck="false">
+      </label>
+      <p class="hint" data-i18n="moveHint">The agent keeps running — only its place on the desktop changes.</p>
+      <p id="move-last" class="hint warn" hidden></p>
+      <div class="dialog-row">
+        <button type="button" class="btn" value="cancel" data-i18n="cancel">Cancel</button>
+        <button type="submit" class="btn primary" data-i18n="move">Move</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Full-screen terminal for a shell pane (xterm mirror) -->
+  <div id="term-view" class="term-view" hidden>
+    <header class="term-bar">
+      <button id="term-back" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+      <span class="term-dot" aria-hidden="true"></span>
+      <span id="term-name" class="term-name"></span>
+      <span id="term-where" class="term-where"></span>
+      <span class="term-spacer"></span>
+      <button id="term-lock" class="chip small" type="button" data-i18n="lockNow">Lock</button>
+      <button id="term-show" class="chip small" type="button" data-i18n="show">Show</button>
+    </header>
+    <div id="term-host" class="term-host"></div>
+    <p class="term-foot" data-i18n="termFoot">Mirrors the pane — keys you type go straight to the shell.</p>
+  </div>
+
+  <!-- Confirmation before any shell -->
+  <dialog id="shell-dialog" class="shell-dialog" aria-labelledby="shell-title">
+    <h2 id="shell-title" class="shell-title">Open a real shell?</h2>
+    <p id="shell-sub" class="shell-sub"></p>
+    <p id="shell-msg" class="shell-msg" role="alert"></p>
+    <div class="dialog-row">
+      <button id="shell-cancel" type="button" class="btn" data-i18n="cancel">Cancel</button>
+      <button id="shell-go" type="button" class="btn primary">Open shell</button>
+    </div>
+  </dialog>
+
+  <!-- Routines: scheduled agent runs, with drafts waiting for approval -->
+  <div id="routines-view" class="rt-view" hidden>
+    <header class="term-bar">
+      <button id="rt-back" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
+      <span class="term-name" data-i18n="routines">Routines</span>
+      <span class="term-spacer"></span>
+      <button id="rt-reload" class="chip small" type="button" data-i18n="rtReload">Reload</button>
+    </header>
+    <div id="rt-body" class="rt-body"></div>
+  </div>
+</body>
+</html>
