@@ -144,7 +144,7 @@
       item(t('rtAgent'), r.agent), item(t('rtFolder'), r.cwd), mk('span', null, t(r.approval === 'draft' ? 'rtDraftGate' : 'rtNoGate')));
     c.append(meta, schedulePicker(r));
 
-    const det = mk('details', 'rt-prompt');    const det = mk('details', 'rt-prompt');
+    const det = mk('details', 'rt-prompt');
     det.append(mk('summary', null, t('rtPrompt')), mk('pre', null, r.prompt));
     c.append(det);
     return c;
