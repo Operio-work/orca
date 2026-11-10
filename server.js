@@ -1431,11 +1431,19 @@ async function api(req, res, url) {
     if (!m) return send(res, 404, { error: 'not found' });
     const pane = decodeURIComponent(m[1]);
     if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
-    const lines = Math.min(Math.max(Number(url.searchParams.get('lines')) || 40, 5), 200);
+    const lines = Math.min(Math.max(Number(url.searchParams.get('lines')) || 40, 5), 2000);
     // Full-screen agents (alternate screen) can't have their history read while they work or
     // wait on a question; show what is on their screen instead of an error.
     let text;
-    try { text = await herdr(['agent', 'read', pane, '--source', 'recent', '--lines', String(lines), '--format', 'text']); }
+    // herdr now and then answers a deep read with only the screen; retry and keep the longest.
+    try {
+      const read = () => herdr(['agent', 'read', pane, '--source', 'recent', '--lines', String(lines), '--format', 'text']);
+      text = await read();
+      for (let i = 0; i < 2 && lines > 120 && text.split('\n').length < Math.min(lines, 120); i++) {
+        const again = await read();
+        if (again.length > text.length) text = again;
+      }
+    }
     catch (err) {
       if (!/alternate-screen|not idle|while .* is (working|blocked)/i.test(err.detail || err.message || '')) throw err;
       text = await herdr(['agent', 'read', pane, '--source', 'visible', '--format', 'text']);
