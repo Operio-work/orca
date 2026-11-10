@@ -15,6 +15,16 @@ const scrim = $('#scrim'); // desktop: blurred workspace behind the agent window
 // ─── i18n (EN / ES) ───────────────────────────────────────────────────────────
 const T = {
   en: {
+    journal: 'Journal — activity and daily review', journalN: 'Journal — {0} days to review',
+    stop: 'Stop', stopHint: 'interrupts the job, the agent stays', stopped: '{0} stopped', stopExited: '{0} stopped — and exited', stopStill: '{0} is still working — try Esc or ⌃C',
+    endAgent: 'End agent', endTitle: 'End {0}?', endConfirm: 'End agent', ending: 'Ending…', endChecking: 'Checking what it would lose…',
+    endHint: 'It is asked to quit, then its pane closes. Its last output is saved in the Journal. Its folder, files and worktree are not touched.',
+    endWorking: 'It is working right now — the job stops halfway.', endBlocked: 'It is waiting for an answer.',
+    endDirty: '{0} changed files not committed in its folder (they stay there).', endWorktree: 'Worktree {0} stays — remove it later with git worktree remove.',
+    endLinked: 'Linked with {0}: the links are removed and they get a note.', endLastWs: 'It is the last pane of {0}, so that workspace closes too.',
+    endHolder: '{0} is on it — they get an alert.', endMem: 'Frees about {0} of memory.', endRan: 'Running for {0}.', endNothing: 'Nothing else is lost.',
+    endedClean: '{0} ended', endedForced: '{0} ended — it did not quit by itself, its pane was closed', e_end_failed: 'It could not be ended. Check the desktop.', e_not_final: 'Today is not over yet — review it tomorrow.',
+    histTitle: 'History', histEmpty: 'Nothing recorded for this agent yet.', histOpen: 'Open in the Journal', histN: '{0} in 7 days',
     new: 'New', save: 'Save', close: 'Close', send: 'Send', focus: 'Show on desktop', clear: 'Clear name',
     needsYou: 'Needs you — answer with a key',
     placeholder: 'name this agent', unnamed: 'unnamed', shell: 'shell',
@@ -76,9 +86,19 @@ const T = {
     e_same_place: 'It’s already there. Pick another place.',
     e_ws_gone: 'That workspace was closed. Pick another place.',
     e_move_failed: 'The move didn’t finish. Check the desktop and try again.',
-    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kHide: 'hide keys', kClose: 'close', showKeys: 'Keys', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: name, tags, move',
+    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', rdReader: 'Reader', rdTerm: 'Terminal', rdYou: 'You', rdSteps: '{0} steps', rdCopied: 'Copied {0}', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kHide: 'hide keys', kClose: 'close', showKeys: 'Keys', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: links, history, name, tags, move',
   },
   es: {
+    journal: 'Bitácora — actividad y revisión diaria', journalN: 'Bitácora — {0} días por revisar',
+    stop: 'Detener', stopHint: 'interrumpe el trabajo, el agente sigue', stopped: '{0} detenido', stopExited: '{0} detenido — y se cerró', stopStill: '{0} sigue trabajando — prueba Esc o ⌃C',
+    endAgent: 'Terminar agente', endTitle: '¿Terminar {0}?', endConfirm: 'Terminar agente', ending: 'Terminando…', endChecking: 'Revisando qué se perdería…',
+    endHint: 'Se le pide que salga y luego se cierra su panel. Su última salida queda guardada en la Bitácora. Su carpeta, archivos y worktree no se tocan.',
+    endWorking: 'Está trabajando ahora — el trabajo se corta a la mitad.', endBlocked: 'Está esperando una respuesta.',
+    endDirty: '{0} archivos cambiados sin commit en su carpeta (se quedan ahí).', endWorktree: 'El worktree {0} se queda — quítalo después con git worktree remove.',
+    endLinked: 'Enlazado con {0}: se quitan los enlaces y reciben un aviso.', endLastWs: 'Es el último panel de {0}, así que ese espacio también se cierra.',
+    endHolder: '{0} lo tiene — recibirá una alerta.', endMem: 'Libera cerca de {0} de memoria.', endRan: 'Lleva {0} corriendo.', endNothing: 'No se pierde nada más.',
+    endedClean: '{0} terminado', endedForced: '{0} terminado — no salió solo, se cerró su panel', e_end_failed: 'No se pudo terminar. Revisa el escritorio.', e_not_final: 'El día aún no termina — revísalo mañana.',
+    histTitle: 'Historial', histEmpty: 'Aún no hay nada registrado de este agente.', histOpen: 'Abrir en la Bitácora', histN: '{0} en 7 días',
     new: 'Nuevo', save: 'Guardar', close: 'Cerrar', send: 'Enviar', focus: 'Mostrar en el escritorio', clear: 'Quitar nombre',
     needsYou: 'Te necesita — responde con una tecla',
     placeholder: 'nombra este agente', unnamed: 'sin nombre', shell: 'terminal',
@@ -140,7 +160,7 @@ const T = {
     e_same_place: 'Ya está ahí. Elige otro lugar.',
     e_ws_gone: 'Ese espacio de trabajo se cerró. Elige otro lugar.',
     e_move_failed: 'No se completó el movimiento. Revisa el escritorio e inténtalo de nuevo.',
-    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: nombre, etiquetas, mover',
+    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdYou: 'Tú', rdSteps: '{0} pasos', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
   },
 };
 // Server errors arrive as short codes; this turns them into the visitor's language.
@@ -493,6 +513,7 @@ function select(pane) {
   markSeen(pane);
   if (selected && selected !== pane) drafts.set(selected, promptEl.value);
   const changed = selected !== pane;
+  if (changed || !sheetOpen) outToBottom();
   selected = pane;
   if (changed) {
     sfx('select');
@@ -591,6 +612,8 @@ function renderSheet() {
   renderCtx();
   renderCrew();
   renderLinks(a);
+  $('#sheet-stop').hidden = a.status !== 'working';
+  if (histFor.terminal !== a.terminal || (a.jobs?.last || 0) !== histFor.last) loadHistory(a);
   if ((a.jobs?.last || 0) !== jobsFor.last || jobsFor.pane !== a.pane || (a.status === 'working') !== !!jobsFor.running) loadJobs();
   else renderJobs();
 }
@@ -670,6 +693,132 @@ function noticeTakeovers(list) {
 }
 
 // ─── Latest jobs: each finished turn (what you asked → the agent's last reply) ──
+// ─── Stop / End ───────────────────────────────────────────────────────────────
+// Stop interrupts the job (the agent stays). End shows what would be lost, then asks the
+// agent to quit and closes its pane; the server saves its last output to the Journal.
+$('#sheet-stop').addEventListener('click', async () => {
+  const pane = selected, a = byPane.get(pane);
+  if (!a) return;
+  const btn = $('#sheet-stop');
+  btn.disabled = true;
+  try {
+    const r = await post(`/api/agents/${enc(pane)}/stop`);
+    toast(t(r.status === 'exited' ? 'stopExited' : r.status === 'working' ? 'stopStill' : 'stopped', label(a)), r.status === 'working');
+    setTimeout(() => loadOutput(true), 400);
+    refresh();
+  } catch (err) { toast(errText(err), true); }
+  finally { btn.disabled = false; }
+});
+
+const endDialog = $('#end-dialog');
+const endForm = $('#end-form');
+let endPane = null;
+function endLine(text, warn) { const li = document.createElement('li'); li.textContent = text; if (warn) li.className = 'warn'; return li; }
+$('#sheet-end').addEventListener('click', async () => {
+  const a = byPane.get(selected);
+  if (!a) return;
+  endPane = a.pane;
+  $('#end-title').textContent = t('endTitle', label(a));
+  const list = $('#end-warn');
+  list.replaceChildren(endLine(t('endChecking')));
+  const go = endForm.querySelector('.end-go');
+  go.disabled = true;
+  go.textContent = t('endConfirm');
+  endDialog.showModal();
+  endForm.querySelector('[value="cancel"]').focus();
+  try {
+    const c = await call(`/api/agents/${enc(a.pane)}/endcheck`);
+    if (endPane !== a.pane) return;
+    const rows = [];
+    if (c.status === 'working') rows.push(endLine(t('endWorking'), true));
+    if (c.status === 'blocked') rows.push(endLine(t('endBlocked'), true));
+    if (c.dirty) rows.push(endLine(t('endDirty', c.dirty), true));
+    if (c.worktree) rows.push(endLine(t('endWorktree', c.worktree)));
+    if (c.linked?.length) rows.push(endLine(t('endLinked', c.linked.join(', ')), true));
+    if (c.lastInWs) rows.push(endLine(t('endLastWs', c.wsLabel || wsName(wsOf(a.tab))), true));
+    if (c.holder) rows.push(endLine(t('endHolder', c.holder), true));
+    if (c.memKB) rows.push(endLine(t('endMem', fmtKB(c.memKB))));
+    if (c.ranFor) rows.push(endLine(t('endRan', dur(c.ranFor))));
+    if (!rows.some(r => r.className === 'warn')) rows.push(endLine(t('endNothing')));
+    list.replaceChildren(...rows);
+  } catch (err) { list.replaceChildren(endLine(errText(err), true)); }
+  go.disabled = false;
+});
+endForm.querySelector('[value="cancel"]').addEventListener('click', () => endDialog.close());
+endForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const pane = endPane, a = byPane.get(pane);
+  if (!pane || !a) return endDialog.close();
+  const go = endForm.querySelector('.end-go');
+  go.disabled = true;
+  go.textContent = t('ending');
+  try {
+    const r = await post(`/api/agents/${enc(pane)}/end`);
+    endDialog.close();
+    drafts.delete(pane);
+    if (selected === pane) closeSheet();
+    toast(t(r.mode === 'forced' ? 'endedForced' : 'endedClean', label(a)), false, 4000);
+    sfx('sent');
+    await refresh();
+  } catch (err) { toast(errText(err), true); }
+  finally { endPane = null; go.disabled = false; go.textContent = t('endConfirm'); }
+});
+
+// ─── History: this agent in the Journal (7 days) ─────────────────────────────
+const histEl = $('#sheet-history');
+let histFor = { terminal: null, last: -1, entries: [] };
+const HIST_SKIP = new Set(['agent.keys']); // the panel shows what matters; the Journal has all
+histEl.addEventListener('toggle', () => {
+  try { localStorage.setItem('orca-hist-open', histEl.open ? '1' : '0'); } catch { /* private mode */ }
+  const a = byPane.get(selected);
+  if (histEl.open && a) loadHistory(a); // fresh on every open
+});
+try { histEl.open = localStorage.getItem('orca-hist-open') === '1'; } catch { /* private mode */ }
+async function loadHistory(a) {
+  const key = a.terminal;
+  histFor = { terminal: key, last: a.jobs?.last || 0, entries: histFor.terminal === key ? histFor.entries : [] };
+  renderHistory(a);
+  try {
+    const r = await call(`/api/journal?terminal=${enc(key)}&days=7&limit=60`);
+    if (histFor.terminal !== key) return;
+    histFor.entries = r.entries.filter(x => !HIST_SKIP.has(x.event));
+  } catch { /* journal unreachable: keep what we had */ }
+  if (byPane.get(selected)?.terminal === key) renderHistory(byPane.get(selected));
+}
+function hhmm(ts) { const d = new Date(ts); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; }
+function renderHistory(a) {
+  const list = histFor.entries;
+  histEl.querySelector('.hsum').textContent = list.length ? t('histN', list.length) : '';
+  histEl.querySelector('.hall').href = '/journal.html?agent=' + enc(a.terminal) + '&name=' + enc(label(a));
+  const ol = histEl.querySelector('.hlist');
+  if (!list.length) { ol.replaceChildren(Object.assign(document.createElement('li'), { className: 'hempty', textContent: t('histEmpty') })); return; }
+  const J = window.OrcaJText;
+  ol.replaceChildren(...list.slice(0, 25).map(x => {
+    const li = document.createElement('li');
+    li.className = 'h-' + (x.group || 'other');
+    const when = document.createElement('time');
+    when.dateTime = new Date(x.ts).toISOString();
+    when.textContent = new Date(x.ts).toDateString() === new Date().toDateString() ? hhmm(x.ts) : `${new Date(x.ts).toLocaleDateString(lang, { weekday: 'short' })} ${hhmm(x.ts)}`;
+    const p = document.createElement('p');
+    p.textContent = J ? J.describe(x, lang, me) : x.event;
+    li.append(when, p);
+    const d = J?.detail(x);
+    if (d) { const q = document.createElement('p'); q.className = 'hdet'; q.textContent = d; li.append(q); }
+    return li;
+  }));
+}
+
+// Journal button: how many finished days nobody has reviewed yet.
+function renderJournalBadge(j) {
+  const n = j?.toReview || 0;
+  const b = $('#journal-badge');
+  b.hidden = !n;
+  b.textContent = n > 9 ? '9+' : String(n);
+  const btn = $('#journal-btn');
+  btn.title = n ? t('journalN', n) : t('journal');
+  btn.setAttribute('aria-label', btn.title);
+}
+
 let jobsFor = { pane: null, last: 0, running: null, jobs: [], at: 0, skew: 0 };
 const jobsEl = $('#sheet-jobs');
 async function loadJobs() {
@@ -790,6 +939,55 @@ function renderAsk() {
   $('#sheet-keys .key[data-key="enter"]')?.classList.toggle('primary', ans.parentElement.hidden);
   fadeKeys();
 }
+
+// The output is always shown (Reader or Terminal); opening an agent starts at the latest line.
+const termBox = $('#term-box');
+function outToBottom() { stickBottom = true; outEl.scrollTop = outEl.scrollHeight; renderReader(true); }
+
+// Reader | Terminal. Reader is the agent's conversation laid out to read (reader.js); Terminal is
+// the raw mirror. The choice is remembered on this device.
+const readerEl = $('#sheet-reader');
+let outMode = safeGet('orca-out-mode') === 'term' ? 'term' : 'reader';
+let readerStick = true;
+let readerSrc = null;
+const readerOpen = new Set();
+function applyOutMode() {
+  const reader = outMode === 'reader';
+  outEl.hidden = reader;
+  readerEl.hidden = !reader;
+  document.querySelectorAll('.term-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === outMode)));
+  if (reader) renderReader(true); else { outEl.scrollTop = outEl.scrollHeight; stickBottom = true; }
+}
+function renderReader(toBottom = false) {
+  if (outMode !== 'reader' || termBox.hidden || !window.OrcaReader) return;
+  const text = outEl.textContent;
+  const key = (outEl.dataset.pane || '') + '\u0000' + text;
+  if (key === readerSrc && !toBottom) return;
+  const sameAgent = readerSrc != null && readerSrc.split('\u0000')[0] === (outEl.dataset.pane || '');
+  if (!sameAgent) readerOpen.clear();
+  readerSrc = key;
+  readerEl.querySelectorAll('details[open]').forEach(d => readerOpen.add(d.dataset.key));
+  const fromEnd = readerEl.scrollHeight - readerEl.scrollTop;
+  try {
+    readerEl.replaceChildren(OrcaReader.render(OrcaReader.parse(text), document, readerOpen, t));
+  } catch { readerEl.textContent = text; }
+  if (toBottom || readerStick || !sameAgent) { readerEl.scrollTop = readerEl.scrollHeight; readerStick = true; }
+  else readerEl.scrollTop = readerEl.scrollHeight - fromEnd;
+}
+readerEl.addEventListener('scroll', () => { readerStick = readerEl.scrollHeight - readerEl.scrollTop - readerEl.clientHeight < 24; });
+readerEl.addEventListener('toggle', e => { const d = e.target; if (d.dataset?.key) d.open ? readerOpen.add(d.dataset.key) : readerOpen.delete(d.dataset.key); }, true);
+function copyPath(elm) {
+  const v = elm.dataset.copy;
+  (navigator.clipboard?.writeText(v) || Promise.reject()).then(() => toast(t('rdCopied', v)), () => {
+    const r = document.createRange(); r.selectNodeContents(elm); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  });
+}
+readerEl.addEventListener('click', e => { const c = e.target.closest('[data-copy]'); if (c) copyPath(c); });
+readerEl.addEventListener('keydown', e => { const c = e.target.closest?.('[data-copy]'); if (c && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); copyPath(c); } });
+document.querySelectorAll('.term-mode button').forEach(b => b.addEventListener('click', () => {
+  outMode = b.dataset.mode; safeSet('orca-out-mode', outMode); applyOutMode();
+}));
+applyOutMode();
 
 // ─── Answers + reply chips (from the agent's own question, else its screen) ───
 // Blocked: one big button per option. Idle: the reply chips under its last answer.
@@ -966,7 +1164,7 @@ function parseRecap(text) {
   for (let k = lines.length - 1; k >= 0; k--) if (/^※ recap:/.test(lines[k])) { i = k; break; }
   if (i < 0) return null;
   const parts = [lines[i].replace(/^※ recap:\s*/, '')];
-  for (let k = i + 1; k < lines.length && /^ {2}\S/.test(lines[k]); k++) parts.push(lines[k].trim());
+  for (let k = i + 1; k < lines.length && /^ {2}\S/.test(lines[k]) && !/^\s*⎿/.test(lines[k]); k++) parts.push(lines[k].trim());
   const all = parts.join(' ').replace(/\s*\(disable recaps in \/config\)\s*$/, '').replace(/\s+/g, ' ').trim();
   const m = all.match(/^(.*?)\s*\bNext(?:,|:)\s*(.+)$/);
   return m ? { sum: m[1], next: m[2].replace(/^./, c => c.toUpperCase()) } : { sum: all, next: '' };
@@ -1011,25 +1209,55 @@ function trimChrome(text) {
   return end === 0 ? text : lines.slice(0, end).join('\n'); // never blank a screen that is all chrome
 }
 
+// History kept per agent. herdr sometimes answers with only the visible screen (Claude is
+// repainting); a short read must not wipe the history the card already shows.
+const OUT_KEEP = 3000;
+const outSeen = new Map();
+function mergeOutput(pane, next) {
+  const prev = outSeen.get(pane);
+  let merged = next;
+  if (prev) {
+    const a = prev.split('\n'), b = next.split('\n');
+    if (b.length < a.length) {
+      // Anchor: the first three non-blank lines of the new read, found in the old one.
+      const idx = b.findIndex(l => l.trim());
+      const anchor = idx < 0 ? '' : b.slice(idx, idx + 3).join('\n');
+      const at = anchor.length >= 30 ? prev.lastIndexOf(anchor) : -1;
+      if (at >= 0) merged = prev.slice(0, at) + b.slice(idx).join('\n');
+    }
+  }
+  const lines = merged.split('\n');
+  if (lines.length > OUT_KEEP) merged = lines.slice(-OUT_KEEP).join('\n');
+  outSeen.set(pane, merged);
+  return merged;
+}
+
 async function loadOutput(toBottom = false) {
   if (!selected) return;
   loadReply();
   const pane = selected;
   const atBottom = stickBottom;
   try {
-    const { text } = await call(`/api/agents/${enc(pane)}/read?lines=80`);
+    const { text } = await call(`/api/agents/${enc(pane)}/read?lines=1000`);
     if (selected !== pane) return;
     const rc = parseRecap(text);
     if (rc) recapSeen.set(pane, rc);
     renderRecap();
-    const next = trimChrome(cleanOutput(text).trimEnd()).trimEnd() || t('empty');
+    const clean = trimChrome(cleanOutput(text).trimEnd()).trimEnd();
+    const next = clean ? mergeOutput(pane, clean) : (outSeen.get(pane) || t('empty'));
     const c = parseCtx(text);
     if (c) { const prev = ctxSeen.get(pane); if (!c.total && prev?.total) c.total = prev.total; ctxSeen.set(pane, c); }
     renderCtx();
-    if (outEl.textContent !== next) outEl.textContent = next;
+    if (outEl.textContent !== next) {
+      // Reading back: keep the same lines in view while new ones arrive at the end.
+      const fromEnd = outEl.scrollHeight - outEl.scrollTop;
+      outEl.textContent = next;
+      if (!toBottom && !atBottom && outEl.dataset.pane === pane) outEl.scrollTop = outEl.scrollHeight - fromEnd;
+    }
   } catch (err) { if (selected === pane) outEl.textContent = errText(err); }
   if (toBottom || atBottom || outEl.dataset.pane !== pane) { outEl.scrollTop = outEl.scrollHeight; stickBottom = true; }
   outEl.dataset.pane = pane;
+  renderReader();
   renderAsk();
 }
 
@@ -1245,7 +1473,7 @@ document.addEventListener('keydown', e => {
 $('#sheet-close').addEventListener('click', () => closeSheet());
 scrim.addEventListener('click', () => closeSheet());
 
-// ⋯ More: name ideas, tags, move, show on desktop, clear name
+// ⋯ More: links, history, name ideas, tags, move, clear name, end
 function setExtra(open) {
   $('#sheet-extra').hidden = !open;
   $('#sheet-more').setAttribute('aria-expanded', String(open));
@@ -1261,7 +1489,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !selected && view === 'holo' && !document.querySelector('dialog[open]')) window.OrcaHolo?.clearFocus();
   if (e.key === 'Escape' && !selected && view === 'island' && !document.querySelector('dialog[open]')) window.OrcaIsland?.clearFocus();
   // Esc always closes the card, even mid-message (the draft is kept for next time).
-  if (e.key === 'Escape' && selected && !$('#new-dialog').open && !$('#move-dialog').open) { document.activeElement?.blur?.(); closeSheet(); }
+  if (e.key === 'Escape' && selected && !$('#new-dialog').open && !$('#move-dialog').open && !$('#end-dialog').open) { document.activeElement?.blur?.(); closeSheet(); }
 });
 
 // Reply
@@ -1682,6 +1910,7 @@ async function refresh() {
     tagSlots = r.tagColors || {};
     tagLib = r.tagLib || [];
     if (r.access) { access = r.access; syncShellLock(); }
+    renderJournalBadge(r.journal);
     links = r.links || []; handoffs = r.handoffs || []; msgCounts = r.msgs || {};
     if (r.now) clockSkew = r.now - Date.now();
     byPane = new Map(agents.map(a => [a.pane, a]));
@@ -1796,10 +2025,11 @@ function renderLinks(a) {
   if (linksEl.dataset.key === key) return;
   linksEl.dataset.key = key;
   // A waiting hand-off opens the section by itself (once per offer).
-  if (hands.length && linksAutoOpened !== hands[0].id + hands[0].end) { linksAutoOpened = hands[0].id + hands[0].end; linksEl.open = true; }
+  if (hands.length && linksAutoOpened !== hands[0].id + hands[0].end) { linksAutoOpened = hands[0].id + hands[0].end; linksEl.open = true; setExtra(true); }
   linksEl.querySelector('.lsum').textContent = mine.length ? t('linksN', mine.length) : '';
   const lh = linksEl.querySelector('.lhand');
   lh.hidden = !hands.length; lh.textContent = t('handBadge');
+  $('#sheet-more').classList.toggle('dot', hands.length > 0); // the hand-off badge sits inside ⋯
 
   // Hand-off cards
   $('#handoff-box').replaceChildren(...hands.map(h => {

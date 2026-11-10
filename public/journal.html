@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0A">
+  <meta name="color-scheme" content="dark light">
+  <title>ORCA Journal</title>
+  <meta name="description" content="ORCA by Operio — what people and agents did, and the daily review">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jetbrains-mono-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/journal.css">
+  <script src="/theme-boot.js"></script>
+  <script src="/jtext.js" defer></script>
+  <script src="/journal.js" defer></script>
+</head>
+<body class="jpage">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  </svg>
+
+  <header class="jbar">
+    <a class="icon-btn jback" href="/" data-i18n-title="back"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></a>
+    <h1 class="jtitle"><img class="mark" src="/icons/icon.svg" alt="" width="28" height="28"><span data-i18n="title">Journal</span></h1>
+    <span class="jspacer"></span>
+    <button id="theme" class="chip icon" type="button" data-i18n-title="themeToggle"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
+    <button id="lang" class="chip icon lang" type="button" aria-label="Español / English">ES</button>
+  </header>
+
+  <nav class="jtabs" role="tablist">
+    <button id="tab-timeline" class="jtab" role="tab" type="button" aria-selected="true" aria-controls="timeline"><span data-i18n="timeline">Timeline</span></button>
+    <button id="tab-review" class="jtab" role="tab" type="button" aria-selected="false" aria-controls="review" hidden><span data-i18n="review">Daily review</span><span id="review-count" class="jcount" hidden></span></button>
+  </nav>
+
+  <main class="jmain">
+    <section id="timeline" role="tabpanel" aria-labelledby="tab-timeline">
+      <div class="jday">
+        <button id="day-prev" class="chip icon" type="button" data-i18n-title="prevDay"><svg class="ic" aria-hidden="true"><use href="#i-left"/></svg></button>
+        <input id="day" class="jdate" type="date" aria-label="Day">
+        <button id="day-next" class="chip icon" type="button" data-i18n-title="nextDay"><svg class="ic" aria-hidden="true"><use href="#i-chev"/></svg></button>
+        <button id="day-today" class="chip small" type="button" data-i18n="today">Today</button>
+        <span class="jspacer"></span>
+        <a id="export" class="chip small" href="/api/journal/export" download><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg><span data-i18n="export">Export .md</span></a>
+      </div>
+      <div id="agent-filter" class="jagent" hidden><span></span><button type="button" class="chip small" data-i18n="clearAgent">Show all agents</button></div>
+      <div id="groups" class="jgroups" role="group"></div>
+      <div class="jfilters">
+        <input id="q" type="search" autocomplete="off" spellcheck="false" data-i18n-ph="search">
+        <select id="who" aria-label="Person"></select>
+        <select id="agent" aria-label="Agent"></select>
+      </div>
+      <p id="tl-note" class="jnote" hidden></p>
+      <ol id="entries" class="jentries" aria-live="polite"></ol>
+    </section>
+
+    <section id="review" role="tabpanel" aria-labelledby="tab-review" hidden>
+      <p class="jlead" data-i18n="reviewLead">Each day is summed up here. Read it, add a note if something needs follow-up, and mark it reviewed.</p>
+      <ol id="digests" class="jdigests"></ol>
+    </section>
+  </main>
+
+  <dialog id="out-dialog" class="out-dialog" aria-labelledby="out-title">
+    <div class="out-head">
+      <h2 id="out-title" data-i18n="savedOutput">Saved output</h2>
+      <button id="out-close" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <pre id="out-text" class="out-text" tabindex="0"></pre>
+  </dialog>
+
+  <p id="toast" class="toast" role="status" hidden></p>
+</body>
+</html>
