@@ -35,7 +35,7 @@ HERDR_SHA256_macos_aarch64="fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0
 # Served by make.operio.work, with the GitHub release as a mirror. Same file, same sha256.
 PANEL_URL="https://make.operio.work/releases/operio-orca-${PANEL_VERSION}.tar.gz"
 PANEL_MIRROR_URL="https://github.com/operio-work/orca/releases/download/v${PANEL_VERSION}/operio-orca-${PANEL_VERSION}.tar.gz"
-PANEL_SHA256="8907b7c3aa40a162cf60f53c09ead932822b72b09025cbc73e0ad539e14565ac"
+PANEL_SHA256="724192430ac12d44b280848afdbddf55414ee2cf68706a17e14e6a60280105ef"
 # For testing only: fetch the tarball from another URL (e.g. a local copy of the site).
 # The sha256 above is still enforced; there is no way to override it.
 if [ -n "${OPERIO_ORCA_PANEL_URL:-}" ]; then PANEL_URL="$OPERIO_ORCA_PANEL_URL"; PANEL_MIRROR_URL=""; fi
