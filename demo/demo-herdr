@@ -21,7 +21,9 @@ const flag = name => { const i = rest.indexOf(name); return i >= 0 ? rest[i + 1]
 const cmd = `${a} ${b}`;
 
 tl.writeDueOutputs(st, now, DIR);
-const list = () => tl.agentsFor(st, now, HOME);
+// Agents the viewer ended (End in the card) are gone from every list until --reset.
+const isEnded = pane => !!(st.ended && st.ended[pane]);
+const list = () => tl.agentsFor(st, now, HOME).filter(x => !isEnded(x.row.pane_id));
 const find = pane => list().find(x => x.row.pane_id === pane);
 const anyDyn = pane => (st.dyn || []).find(d => d.pane === pane);
 const cutLines = (lines, n) => lines.slice(-Math.max(1, Math.min(Number(n) || 200, 400)));
@@ -33,6 +35,16 @@ function read(pane, { source = 'recent', lines = 200, format = 'text' }) {
   rows = source === 'visible' ? cutLines(rows, 45) : cutLines(rows, lines);
   const text = rows.map(r => (format === 'ansi' ? tl.colorize(r) : tl.stripAnsi(r))).join(format === 'ansi' ? '\r\n' : '\n');
   process.stdout.write(text + '\n');
+}
+
+// End: the agent quits (its own /exit or /quit) or its pane is closed. Scripted agents are
+// marked ended; agents the viewer started are dropped.
+function endPane(pane) {
+  if (!find(pane) && !anyDyn(pane)) return false;
+  if (anyDyn(pane)) st.dyn = st.dyn.filter(d => d.pane !== pane);
+  else (st.ended ||= {})[pane] = now;
+  dirty = true;
+  return true;
 }
 
 function input(pane, kind, value) {
@@ -57,7 +69,12 @@ switch (cmd) {
     out({ result: { workspaces: [{ workspace_id: c.ws, number: 1, label: c.name }] } });
     break;
   }
-  case 'tab list': out({ result: { tabs: tl.tabsFor(st) } }); break;
+  case 'tab list': {
+    // A scripted tab whose agents were all ended closes, like herdr closes an empty tab.
+    const live = new Set(list().map(x => x.row.tab_id));
+    out({ result: { tabs: tl.tabsFor(st).filter(t => live.has(t.tab_id)) } });
+    break;
+  }
   case 'pane list': out({ result: { panes: list().map(x => ({ pane_id: x.row.pane_id, tab_id: x.row.tab_id, terminal_id: x.row.terminal_id, agent: x.row.agent, cwd: x.row.cwd, foreground_cwd: x.row.cwd })) } }); break;
   case 'pane layout': {
     const pane = flag('--pane');
@@ -73,7 +90,12 @@ switch (cmd) {
   }
   case 'agent read': read(rest[0], { source: flag('--source'), lines: flag('--lines'), format: flag('--format') }); break;
   case 'pane read': read(rest[0], { source: flag('--source'), lines: flag('--lines'), format: flag('--format') }); break;
-  case 'agent prompt': input(rest[0], 'text', rest[1]); out({ result: {} }); break;
+  case 'agent prompt':
+    if (/^\/(exit|quit)$/.test(String(rest[1] || '').trim())) endPane(rest[0]);
+    else input(rest[0], 'text', rest[1]);
+    out({ result: {} });
+    break;
+  case 'pane close': endPane(rest[0]); out({ result: {} }); break;
   case 'pane send-text': input(rest[0], 'text', rest[1]); out({ result: {} }); break;
   case 'agent send-keys':
   case 'pane send-keys': input(rest[0], 'key', rest[1]); out({ result: {} }); break;
@@ -104,6 +126,6 @@ switch (cmd) {
     out({ result: {} });
     break;
   }
-  default: out({ result: {} }); // focus, zoom, close…: nothing to do in a demo
+  default: out({ result: {} }); // focus, zoom…: nothing to do in a demo
 }
 if (dirty) tl.saveState(DIR, st);
