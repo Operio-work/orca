@@ -75,7 +75,8 @@ it safe is that only you can reach it:
   other websites from posting to it (CSRF).
 - Opening or creating a shell asks for a confirmation first, which lasts 15 minutes.
 - Settings, VAPID keys, state and logs live in `~/.config/operio-orca` with owner-only permissions.
-  Agent prompts and replies are never written to the log.
+  Agent prompts and replies are never written to the log. The Journal keeps what you sent and
+  what agents answered, with keys and tokens redacted before anything is written, for 90 days.
 
 Anyone with access to your user account, or to a device you tunnel from, can use it.
 
@@ -123,11 +124,29 @@ anything to your customers: they report, or they draft and you send.
 
 The full list, including the routines Operio runs for you, is in `catalog/catalog.json`.
 
+## Stop, End and the Journal
+
+- **Stop** (on a working agent's card) interrupts the job; the agent stays. It sends Esc, plus one
+  ⌃C for Claude if it is still working. opencode only ever gets Esc, because ⌃C quits it.
+- **End** (in the card's ⋯ panel) first shows what would be lost: uncommitted changes in its
+  folder, a worktree, links to other agents, the last pane of a workspace. Then it saves the
+  agent's last output, asks it to quit with its own command (`/exit`, `/quit`), and closes its
+  pane. Its folder, files and worktree are never touched.
+- The **Journal** (book icon in the header) is a timeline of what you and your agents did:
+  agents started and ended, messages, answers, finished jobs with their saved output, links and
+  shell confirmations. Filter it, search it, export a day as Markdown. The **Daily review** tab
+  sums up each finished day so you can mark it reviewed with a note; the icon shows how many
+  days wait. The card's ⋯ panel has the same history for one agent.
+- It is plain files in `~/.config/operio-orca/journal/` (owner-only): one JSON line per entry,
+  keys and tokens redacted before they are written. Days older than 7 are compressed, older
+  than 90 deleted. Nothing is sent anywhere and no model is called; the review is a summary
+  ORCA builds from the entries.
+
 ## Settings
 
 `~/.config/operio-orca/env`, one `KEY=value` per line: `OPERIO_ORCA_PORT` (7171),
 `OPERIO_ORCA_HOST` (127.0.0.1), `OPERIO_ORCA_ALLOWED_HOSTS`, `OPERIO_ORCA_FOLDERS` (folders offered
-for new agents, default `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15).
+for new agents, default `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15), `OPERIO_ORCA_JOURNAL_DAYS` (90).
 
 ## Demo
 

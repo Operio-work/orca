@@ -18,6 +18,8 @@
   <script src="/theme-boot.js"></script>
   <script src="/vendor/xterm/xterm.js" defer></script>
   <script src="/sound.js" defer></script>
+  <script src="/jtext.js" defer></script>
+  <script src="/reader.js" defer></script>
   <script src="/app.js" defer></script>
   <script src="/cron.js" defer></script>
   <script src="/routines.js" defer></script>
@@ -52,6 +54,10 @@
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-journal" viewBox="0 0 24 24"><path d="M5 4a2 2 0 0 1 2-2h12v18H7a2 2 0 0 0-2 2z"/><path d="M5 20V4M9 7h6M9 11h6"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
   </svg>
 
   <div class="shell">
@@ -62,6 +68,7 @@
       <div class="actions">
         <button id="new" class="chip primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="new">New</span></button>
         <button id="routines-btn" class="chip" type="button"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-i18n="routines">Routines</span></button>
+        <a id="journal-btn" class="chip icon jbtn" href="/journal.html" data-i18n-title="journal"><svg class="ic" aria-hidden="true"><use href="#i-journal"/></svg><span id="journal-badge" class="jbadge" hidden></span></a>
         <div class="viewpick">
           <button id="view-btn" class="chip view-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="views" data-i18n-title="views"><svg class="ic cur" aria-hidden="true"><use href="#i-map"/></svg><svg class="ic caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
           <div id="views" class="view-menu" role="group" hidden>
@@ -169,7 +176,32 @@
             <button id="sheet-suggest" class="btn suggest" type="button" hidden></button>
             <button id="sheet-move" class="btn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-move"/></svg><span data-i18n="move">Move</span></button>
             <button id="sheet-clear" class="btn danger" type="button" data-i18n="clear">Clear name</button>
+            <button id="sheet-end" class="btn danger" type="button"><svg class="ic" aria-hidden="true"><use href="#i-power"/></svg><span data-i18n="endAgent">End agent</span></button>
           </div>
+          <details id="sheet-links" class="links">
+            <summary><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg><span class="lhead" data-i18n="linksTitle">Links</span><span class="lsum"></span><span class="lhand" hidden></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
+            <div class="lbody">
+              <div id="handoff-box" class="handoff-box"></div>
+              <ul id="link-list" class="link-list"></ul>
+              <form id="link-add" class="link-add">
+                <select name="rel" aria-label="Relation"><option value="waitsOn" data-i18n="relWaitsOn">Depends on</option><option value="feeds" data-i18n="relFeeds">Feeds</option><option value="talk" data-i18n="relTalk">Talks with</option></select>
+                <select name="other" aria-label="Agent"></select>
+                <button class="btn small" type="submit" data-i18n="linkAdd">Link</button>
+              </form>
+              <p class="lhint" data-i18n="linkHint"></p>
+              <details id="link-msgs" class="link-msgs">
+                <summary><span data-i18n="msgsTitle">Messages</span><span class="mcount"></span></summary>
+                <ol class="mlist"></ol>
+              </details>
+            </div>
+          </details>
+          <details id="sheet-history" class="links hist">
+            <summary><svg class="ic" aria-hidden="true"><use href="#i-history"/></svg><span class="lhead" data-i18n="histTitle">History</span><span class="lsum hsum"></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
+            <div class="lbody">
+              <ol class="hlist"></ol>
+              <a class="hall" href="/journal.html" data-i18n="histOpen">Open in the Journal</a>
+            </div>
+          </details>
         </div>
         <p id="sheet-title" class="title"></p>
         <div id="sheet-recap" class="recap" hidden>
@@ -180,29 +212,21 @@
           <summary><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4 4 10-10"/></svg><span class="jhead" data-i18n="jobsTitle">Latest jobs</span><span class="jlast"></span><span class="jcount"></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
           <ol class="jlist"></ol>
         </details>
-        <details id="sheet-links" class="links">
-          <summary><svg class="ic" aria-hidden="true"><use href="#i-link"/></svg><span class="lhead" data-i18n="linksTitle">Links</span><span class="lsum"></span><span class="lhand" hidden></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 10 4 4 4-4"/></svg></summary>
-          <div class="lbody">
-            <div id="handoff-box" class="handoff-box"></div>
-            <ul id="link-list" class="link-list"></ul>
-            <form id="link-add" class="link-add">
-              <select name="rel" aria-label="Relation"><option value="waitsOn" data-i18n="relWaitsOn">Depends on</option><option value="feeds" data-i18n="relFeeds">Feeds</option><option value="talk" data-i18n="relTalk">Talks with</option></select>
-              <select name="other" aria-label="Agent"></select>
-              <button class="btn small" type="submit" data-i18n="linkAdd">Link</button>
-            </form>
-            <p class="lhint" data-i18n="linkHint"></p>
-            <details id="link-msgs" class="link-msgs">
-              <summary><span data-i18n="msgsTitle">Messages</span><span class="mcount"></span></summary>
-              <ol class="mlist"></ol>
-            </details>
+        <div id="term-box" class="term">
+          <div class="term-bar">
+            <div class="term-mode" role="group">
+              <button type="button" data-mode="reader" aria-pressed="true" data-i18n="rdReader">Reader</button>
+              <button type="button" data-mode="term" aria-pressed="false" data-i18n="rdTerm">Terminal</button>
+            </div>
+            <button id="term-theme" class="term-theme" type="button"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
           </div>
-        </details>
-        <div class="term">
           <pre id="sheet-output" class="output" tabindex="0"></pre>
-          <button id="term-theme" class="term-theme" type="button"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
+          <div id="sheet-reader" class="reader" tabindex="0" hidden></div>
+
         </div>
         <div class="dock">
           <p id="sheet-needs" class="needs" hidden data-i18n="needsYou">Needs you — answer with a key</p>
+          <button id="sheet-stop" class="stopbtn" type="button" hidden><svg class="ic" aria-hidden="true"><use href="#i-stop"/></svg><span data-i18n="stop">Stop</span><small data-i18n="stopHint">interrupts the job, the agent stays</small></button>
           <div id="answers" class="answers" hidden></div>
           <div id="sheet-keys" class="keys"></div>
           <div id="chips" class="chips" hidden></div>
@@ -263,6 +287,18 @@
       <div class="dialog-row">
         <button type="button" class="btn" value="cancel" data-i18n="cancel">Cancel</button>
         <button type="submit" class="btn primary" data-i18n="move">Move</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="end-dialog" aria-labelledby="end-title">
+    <form id="end-form" method="dialog">
+      <h2 id="end-title">End agent</h2>
+      <p class="hint" data-i18n="endHint">It is asked to quit, then its pane closes. Its last output is saved in the Journal. Its folder, files and worktree are not touched.</p>
+      <ul id="end-warn" class="end-warn" aria-live="polite"></ul>
+      <div class="dialog-row">
+        <button type="button" class="btn" value="cancel" data-i18n="cancel">Cancel</button>
+        <button type="submit" class="btn primary end-go" data-i18n="endConfirm">End agent</button>
       </div>
     </form>
   </dialog>

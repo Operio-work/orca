@@ -3,6 +3,24 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Panel
+- **Stop** on a working agent's card interrupts the job with keys that suit the agent (opencode
+  never gets ⌃C, which quits it). **End** shows what would be lost first, saves the agent's last
+  output, asks it to quit with its own command and closes its pane; its links and tags go with it.
+- **Journal** (`/journal.html`, EN/ES): a local, append-only timeline of what you and your agents
+  did, with saved output per finished job, filters, search, Markdown export and a **Daily
+  review** of each finished day. Files in `~/.config/operio-orca/journal/` (0600), secrets
+  redacted before writing, gzip after 7 days, deleted after 90 (`OPERIO_ORCA_JOURNAL_DAYS`).
+  No model or outside service is involved.
+- The card's output is always open, with a **Reader** view (your messages as bubbles, replies
+  as prose, tool work folded) and the raw **Terminal**; the choice is remembered per device.
+  Links and a per-agent History move into the ⋯ panel.
+- Deeper card history: reads up to 1000 lines, keeps what it already showed when herdr answers
+  a short read (and retries it), and holds your scroll position while new lines arrive.
+- Demo: End and Stop work on the scripted agents; an ended agent stays gone until `--reset`.
+
 ## [0.1.0] - 2026-11-09
 
 First public release.

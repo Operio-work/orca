@@ -30,5 +30,22 @@ else if (cmd === 'tab create') {
   out({ result: { pane: ag ? { pane_id: ag.pane_id, terminal_id: ag.terminal_id } : null } });
 } else if (cmd === 'agent prompt') {
   fs.appendFileSync(path.join(dir, 'prompts.jsonl'), JSON.stringify({ pane: rest[0], text: rest[1] }) + '\n');
+  // An agent told to /exit quits (its pane stays until closed; here it just leaves the list).
+  if (/^\/(exit|quit)$/.test(String(rest[1] || '').trim())) { st.agents = st.agents.filter(x => x.pane_id !== rest[0]); save(); }
   out({ result: {} });
+} else if (cmd === 'agent send-keys' || cmd === 'pane send-keys') {
+  fs.appendFileSync(path.join(dir, 'keys.jsonl'), JSON.stringify({ pane: rest[0], key: rest[1] }) + '\n');
+  const ag = st.agents.find(x => x.pane_id === rest[0]);
+  if (ag && rest[1] === 'esc' && ag.agent_status === 'working') { ag.agent_status = 'idle'; save(); }
+  out({ result: {} });
+} else if (cmd === 'pane close') {
+  st.agents = st.agents.filter(x => x.pane_id !== rest[0]); save(); out({ result: {} });
+} else if (cmd === 'agent read' || cmd === 'pane read') {
+  // Test output: $FAKE_HERDR_DIR/out-<pane>.txt, else one line per requested line count.
+  const f = path.join(dir, `out-${rest[0].replace(':', '-')}.txt`);
+  let text = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
+  const n = Number(flag('--lines')) || 40;
+  if (text) text = text.split('\n').slice(-n).join('\n');
+  fs.appendFileSync(path.join(dir, 'reads.jsonl'), JSON.stringify({ pane: rest[0], lines: n }) + '\n');
+  process.stdout.write(text);
 } else out({ result: {} });

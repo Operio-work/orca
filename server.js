@@ -22,6 +22,7 @@ const guard = require('./lib/guard');
 const routinesLib = require('./lib/routines');
 const { Scheduler } = require('./lib/scheduler');
 const cronLib = require('./lib/cron');
+const { createJournal } = require('./lib/journal');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = require('./lib/config').load();
@@ -115,6 +116,31 @@ function person(login) {
 
 // Writes must come from this app's own origin (blocks cross-site form/fetch posts).
 const sameOrigin = req => guard.sameOrigin(req, ALLOWED_HOSTS);
+
+// ─── Journal: what you and your agents did, kept JOURNAL_DAYS (90) for review ─────
+// Append-only daily files under <config>/journal, owner-only, with secrets redacted before
+// they are written (lib/journal.js). Nothing leaves this computer.
+const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL_DAYS });
+const agentCache = new Map(); // pane -> last shaped agent (refreshed by every listAgents)
+function jAgent(x) {
+  const a = typeof x === 'string' ? agentCache.get(x) || { pane: x } : x || {};
+  const born = a.terminal && state.born?.[a.terminal];
+  return { name: a.name || null, pane: a.pane || null, terminal: a.terminal || null, kind: born?.kind || a.kind || a.agent || null, cwd: a.cwd || null };
+}
+// who: a request (always "you" here) or null for ORCA itself.
+function jr(who, event, agent, detail = {}) {
+  return journal.write(event, { who: who ? 'local' : null, agent: agent ? jAgent(agent) : undefined, ...detail });
+}
+// Errors are grouped: one entry per code+route per 10 minutes, with how many it stands for.
+const errAgg = new Map(); // key -> { n, at }
+function jError(pathname, code) {
+  const route = pathname.replace(/\/api\/(agents|term)\/[^/]+/, '/api/$1/:pane');
+  const key = code + ' ' + route;
+  const g = errAgg.get(key) || { n: 0, at: 0 };
+  g.n++;
+  if (Date.now() - g.at >= 10 * 60e3) { journal.write('error', { who: null, code, path: route, n: g.n }); g.n = 0; g.at = Date.now(); }
+  errAgg.set(key, g);
+}
 
 function readBody(req, limit = 16 * 1024) {
   return new Promise((resolve, reject) => {
@@ -270,8 +296,11 @@ async function workspaceLayout() {
 
 async function listAgents() {
   const out = await herdrJson(['agent', 'list']);
-  return (out.result?.agents || []).map(shapeAgent)
+  const list = (out.result?.agents || []).map(shapeAgent)
     .sort((a, b) => a.tab.localeCompare(b.tab, 'en', { numeric: true }) || a.pane.localeCompare(b.pane));
+  agentCache.clear();
+  for (const a of list) agentCache.set(a.pane, a);
+  return list;
 }
 
 // ─── Job log: every finished turn, per terminal ─────────────────────────────
@@ -337,12 +366,13 @@ function summarizeTurn(text) {
 }
 
 async function recordJob(a, from, end) {
-  let sum = { ask: '', said: '' };
+  let sum = { ask: '', said: '' }, out = null;
   try {
     let text;
-    try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '200', '--format', 'text']); }
+    try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '300', '--format', 'text']); }
     catch { text = await herdr(['agent', 'read', a.pane, '--source', 'visible', '--format', 'text']); }
     sum = summarizeTurn(text);
+    out = journal.snapshot(a.name || a.pane, text);
   } catch { /* pane gone: keep the job with the title only */ }
   const sent = sentAsk.get(a.terminal);
   if (!sum.ask && sent && (!from || sent.at >= from - 5000)) sum.ask = sent.text.replace(/\s+/g, ' ').slice(0, 160);
@@ -352,7 +382,9 @@ async function recordJob(a, from, end) {
   state.jobs[a.terminal] = list;
   for (const [t, l] of Object.entries(state.jobs)) if (!l.length || end - l[0].end > JOB_TTL) delete state.jobs[t];
   saveState();
-  log('agent.job', { pane: a.pane, secs: from ? Math.round((end - from) / 1000) : null });
+  const secs = from ? Math.round((end - from) / 1000) : null;
+  log('agent.job', { pane: a.pane, secs });
+  jr(null, 'agent.job', a, { ask: job.ask, said: job.said, title: job.title, secs, out });
   offerHandoffs(a, job);
 }
 
@@ -406,6 +438,10 @@ async function press(pane, ...keys) { for (const k of keys) { await herdr(['agen
 // ─── Alert poller: blocked = needs you; working → idle/done = finished ───────
 const prev = new Map(); // pane -> { status, since }
 let polledOnce = false;
+state.born = state.born || {}; // terminal -> { at (first seen, null = before ORCA was watching), kind, seen }
+const lastLive = new Map();    // terminal -> agent at the last poll
+const missing = new Map();     // terminal -> polls it has been missing for
+const ended = new Set();       // terminals ORCA itself ended (so they aren't also logged as gone)
 async function poll() {
   let agents;
   try { agents = await listAgents(); } catch { return; }
@@ -428,6 +464,7 @@ async function poll() {
     const label = a.name || a.pane;
     const url = '/#' + encodeURIComponent(a.pane);
     if (a.status === 'blocked') {
+      jr(null, 'agent.blocked', a, { title: a.title || '' });
       pushAll({ name: label, body: a.title || a.cwd, tag: a.pane, url, kind: 'blocked' }, holderLogin(a.terminal));
     } else if (p.status === 'working' && (a.status === 'idle' || a.status === 'done') && now - p.since >= MIN_WORK_MS) {
       pushAll({ name: label, body: a.title || a.cwd, tag: a.pane, url, kind: 'done' }, holderLogin(a.terminal));
@@ -435,6 +472,28 @@ async function poll() {
   }
   for (const pane of prev.keys()) if (!seen.has(pane)) prev.delete(pane);
   for (const pane of work.keys()) if (!seen.has(pane)) work.delete(pane);
+  // Lifecycle by terminal (survives moves): first seen = born; missing twice in a row = gone.
+  // An agent ORCA ended is journaled by the End action, not here.
+  const live = new Set(agents.map(a => a.terminal));
+  let bornChanged = false;
+  for (const a of agents) {
+    if (!state.born[a.terminal]) { state.born[a.terminal] = { at: polledOnce ? now : null, kind: a.agent }; bornChanged = true; }
+    lastLive.set(a.terminal, a);
+    missing.delete(a.terminal);
+  }
+  for (const [t, a] of lastLive) {
+    if (live.has(t)) continue;
+    const n = (missing.get(t) || 0) + 1;
+    if (n < 2) { missing.set(t, n); continue; } // one missed list can be a blip
+    missing.delete(t); lastLive.delete(t);
+    if (ended.has(t)) { ended.delete(t); continue; }
+    const b = state.born[t];
+    jr(null, 'agent.gone', a, { ranFor: b?.at ? now - b.at : null });
+  }
+  // Births of terminals gone for over a day are forgotten (the journal keeps the history).
+  for (const [t, b] of Object.entries(state.born)) if (!live.has(t) && !lastLive.has(t) && now - (b.seen || b.at || now) > 864e5) { delete state.born[t]; bornChanged = true; }
+  for (const t of live) if (state.born[t]) state.born[t].seen = now;
+  if (bornChanged) saveState();
   polledOnce = true;
   deliverQueued(agents).catch(e => log('msg.deliver_error', { detail: e.detail || e.message }));
 }
@@ -478,7 +537,7 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
     await herdr(['pane', 'rename', pane, name]).catch(() => {});
     log('shell.new', { pane, name, cwd: shortHome(cwd), tab: tab || 'new' });
     layoutCache.at = 0;
-    return { pane, shell: true };
+    return { pane, shell: true, name, kind, cwd: shortHome(cwd) };
   }
   let blocked = false;
   try {
@@ -489,10 +548,12 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
     blocked = true;
   }
   await herdr(['agent', 'rename', pane, name]).catch(() => {});
-  try { const pg = await herdrJson(['pane', 'get', pane]); applyName(pg.result?.pane?.terminal_id, name); } catch { applyName(null, name); }
+  let terminal = null;
+  try { const pg = await herdrJson(['pane', 'get', pane]); terminal = pg.result?.pane?.terminal_id || null; applyName(terminal, name); } catch { applyName(null, name); }
+  if (terminal) { state.born[terminal] = { at: Date.now(), kind, seen: Date.now() }; saveState(); }
   log('agent.new', { pane, name, kind, cwd: shortHome(cwd), tab: tab || 'new', blocked });
   layoutCache.at = 0;
-  return { pane, blocked };
+  return { pane, blocked, terminal, name, kind, cwd: shortHome(cwd) };
 }
 
 // ─── Move an agent (its pane) to another place ───────────────────────────────
@@ -536,6 +597,125 @@ async function moveAgent(pane, body) {
   layoutCache.at = 0;
   log('agent.move', { from: pane, to: moved, mode, tab: r.pane.tab_id, closedTab: r.closed_tab_id || null, closedWorkspace: r.closed_workspace_id || null });
   return { ok: true, pane: moved, tab: r.pane.tab_id, workspace: r.pane.workspace_id, closedWorkspace: !!r.closed_workspace_id };
+}
+
+// ─── Stop and End ─────────────────────────────────────────────────────────────
+// Stop: interrupt the current job, the agent stays (Esc; ⌃C once if it is still working —
+// never twice, which quits Claude). End: save its output, ask it to quit with its own
+// command, ⌃C⌃C if it ignores that, then close the pane (which kills whatever is left).
+// Its folder, files and worktree are never touched.
+const EXIT_CMD = { claude: '/exit', opencode: '/exit', codex: '/quit', hermes: '/exit', agy: '/exit' };
+async function agentRunning(terminal) {
+  try { return ((await herdrJson(['agent', 'list'])).result?.agents || []).find(x => x.terminal_id === terminal) || null; }
+  catch { return { unknown: true }; } // can't tell: treat as still running
+}
+async function waitGone(terminal, tries) {
+  for (let i = 0; i < tries; i++) { await sleep(500); if (!(await agentRunning(terminal))) return true; }
+  return false;
+}
+
+// Interrupt keys per agent. opencode quits on a single ⌃C, so it only ever gets Esc Esc (its
+// "press again to interrupt"). Claude stops on Esc; one ⌃C is a safe fallback there (two quit).
+const STOP_KEYS = { opencode: ['esc', 'esc'] };
+const CTRL_C_STOPS = new Set(['claude']);
+async function stopAgent(a) {
+  const keys = STOP_KEYS[a.agent] || ['esc'];
+  for (const k of keys) { await herdr(['agent', 'send-keys', a.pane, k]); await sleep(250); }
+  await sleep(1500);
+  let now = await agentRunning(a.terminal);
+  let how = keys.join('+');
+  if (now?.agent_status === 'working' && CTRL_C_STOPS.has(a.agent)) {
+    await herdr(['agent', 'send-keys', a.pane, 'ctrl+c']);
+    how += '+ctrl+c';
+    await sleep(1200);
+    now = await agentRunning(a.terminal);
+  }
+  return { how, status: now?.agent_status || (now ? null : 'exited') };
+}
+
+const execFileP = (cmd, args, opts = {}) => new Promise(resolve => execFile(cmd, args, { timeout: 3000, maxBuffer: 1024 * 1024, ...opts }, (err, stdout) => resolve(err ? null : stdout)));
+const WORKTREE_RE = /\/\.claude\/worktrees\/[^/]+|\/\.worktrees\/[^/]+/;
+
+// What ending this agent would lose — shown in the confirm box before anything happens.
+async function endCheck(a) {
+  const abs = expandHome(a.cwd || '~');
+  const [porcelain, layout] = await Promise.all([
+    execFileP('git', ['-C', abs, 'status', '--porcelain', '--untracked-files=normal']),
+    workspaceLayout().catch(() => null),
+  ]);
+  const byTerminal = new Map([...agentCache.values()].map(x => [x.terminal, x]));
+  const linked = state.links.filter(l => l.from === a.terminal || l.to === a.terminal)
+    .map(l => byTerminal.get(l.from === a.terminal ? l.to : l.from)).filter(Boolean).map(nameOf);
+  const wt = abs.match(WORKTREE_RE);
+  const tab = layout?.tabs.find(t => t.id === a.tab);
+  const ws = (a.tab || '').split(':')[0];
+  const lastInWs = !!tab && tab.panes.length <= 1 && layout.tabs.filter(t => t.ws === ws).length <= 1;
+  const mem = memCache.data && Date.now() - memCache.at < 120e3 ? memCache.data.agents.find(r => r.pane === a.pane) : null;
+  const born = state.born[a.terminal];
+  return {
+    name: a.name || a.pane, status: a.status,
+    dirty: porcelain == null ? null : porcelain.split('\n').filter(Boolean).length, // null = not a git folder
+    worktree: wt ? shortHome(abs.slice(0, wt.index + wt[0].length)) : null,
+    linked, lastInWs, wsLabel: lastInWs ? (layout.workspaces.find(w => w.id === ws)?.label || null) : null,
+    memKB: mem?.pss ?? null,
+    ranFor: born?.at ? Date.now() - born.at : null,
+  };
+}
+
+// Forget everything ORCA kept about a terminal; tell its linked agents.
+function forgetTerminal(t, name) {
+  const mine = state.links.filter(l => l.from === t || l.to === t);
+  const others = [...new Set(mine.map(l => (l.from === t ? l.to : l.from)))];
+  state.links = state.links.filter(l => l.from !== t && l.to !== t);
+  for (const l of mine) delete state.handoffs[l.id];
+  for (const m of state.msgs) if (m.state === 'queued' && m.to === t) m.state = 'failed';
+  for (const o of others) {
+    try { queueMsg({ from: t, to: o, text: `[ORCA] Agent ${name} was ended. Your link with it is gone, and operio-orca-send can no longer reach it. No reply needed.`, via: 'intro' }); } catch { /* best effort */ }
+  }
+  for (const k of ['tags', 'claims', 'seen', 'jobs', 'born']) if (state[k]) delete state[k][t];
+  sentAsk.delete(t);
+  saveState();
+  return others.length;
+}
+
+async function endAgent(a) {
+  // 1. Keep its last output for the journal.
+  let text = '';
+  try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '400', '--format', 'text']); }
+  catch { text = await visible(a.pane).catch(() => ''); }
+  const out = journal.snapshot(a.name || a.pane, text);
+  const last = summarizeTurn(text);
+  ended.add(a.terminal);
+  // 2. Ask it to quit the way it understands.
+  let mode = 'forced';
+  try {
+    if (a.status === 'working' || a.status === 'blocked') { await herdr(['agent', 'send-keys', a.pane, 'esc']).catch(() => {}); await sleep(800); }
+    const cmd = EXIT_CMD[a.agent];
+    if (cmd) {
+      await herdr(['agent', 'prompt', a.pane, cmd], 8000).catch(() => {});
+      if (await waitGone(a.terminal, 10)) mode = 'clean';
+    }
+    if (mode === 'forced') {
+      await herdr(['agent', 'send-keys', a.pane, 'ctrl+c']).catch(() => {});
+      await sleep(250);
+      await herdr(['agent', 'send-keys', a.pane, 'ctrl+c']).catch(() => {});
+      if (await waitGone(a.terminal, 6)) mode = 'interrupted';
+    }
+  } catch (e) { log('agent.end_signal_failed', { pane: a.pane, detail: e.detail || e.message }); }
+  // 3. Close the pane: whatever still runs there stops.
+  let closed = true;
+  try { await herdr(['pane', 'close', a.pane]); }
+  catch (e) { closed = false; log('agent.end_close_failed', { pane: a.pane, detail: e.detail || e.message }); }
+  if (!closed && mode === 'forced') { ended.delete(a.terminal); throw new HttpError(502, 'end_failed'); }
+  // 4. Forget it and tell its links.
+  const born = state.born[a.terminal];
+  const ranFor = born?.at ? Date.now() - born.at : null;
+  const jobs24 = jobStats(a.terminal).n;
+  const notified = forgetTerminal(a.terminal, nameOf(a));
+  prev.delete(a.pane); work.delete(a.pane); agentCache.delete(a.pane);
+  layoutCache.at = 0;
+  log('agent.end', { pane: a.pane, mode, closed });
+  return { mode, closed, out, ranFor, jobs24, notified, said: last.said };
 }
 
 // ─── Memory: RAM per agent + machine totals ─────────────────────────────────
@@ -708,6 +888,7 @@ function queueMsg({ from, to, text, via }, byTerminal) {
         pushAll({ name: `${nameOf(a)} ↔ ${nameOf(b)}`, body: `${LINK_HOURLY}/h`, tag: 'chatty-' + key, url: '/#' + encodeURIComponent(a?.pane || ''), kind: 'chatty' }).catch(() => {});
       }
       log('msg.rate_limited', { key });
+      jr(null, 'msg.rate_limited', byTerminal?.get(from) || null, { to: byTerminal?.get(to) ? jAgent(byTerminal.get(to)) : undefined, perHour: LINK_HOURLY });
       throw new HttpError(429, 'rate_limited');
     }
   }
@@ -903,6 +1084,7 @@ const agentServer = http.createServer(async (req, res) => {
       if (!text) throw new HttpError(400, 'empty');
       if (text.length > MSG_MAX) throw new HttpError(400, 'too_long');
       const m = queueMsg({ from: me.terminal, to: other.terminal, text, via: 'agent' }, new Map(agents.map(a => [a.terminal, a])));
+      jr(null, 'msg.agent', me, { to: jAgent(other), text: text.slice(0, 1500) });
       return reply(200, { ok: true, id: m.id, to: nameOf(other), status: other.status, queued: other.status !== 'idle' && other.status !== 'done' });
     }
     throw new HttpError(404, 'not_found');
@@ -955,6 +1137,156 @@ async function termScreen(pane) {
   return { text, rows: rows || 40, cols: cols || 80, agent: g.agent || null };
 }
 
+// ─── Journal API: timeline, saved output, export, daily review ────────────────
+const GROUPS = {
+  lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'shell.new'],
+  work: ['agent.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
+  coordination: ['link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
+  security: ['shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
+  errors: ['error'],
+};
+const groupOf = ev => Object.keys(GROUPS).find(g => GROUPS[g].includes(ev)) || 'other';
+const brief = l => { const p = person(l); return { id: p.id, name: p.name, slot: p.slot }; };
+function shapeEntry(e) {
+  const { who, holder, ...rest } = e;
+  return { ...rest, group: groupOf(e.event), who: who ? brief(who) : null };
+}
+// One line of plain English per entry (the export and the search).
+function describe(e) {
+  const who = e.who ? person(e.who).name : 'ORCA';
+  const ag = e.agent ? (e.agent.name || e.agent.pane || '?') : '';
+  const to = e.to ? (e.to.name || e.to.pane || '?') : '';
+  const min = ms => (ms == null ? '' : ` after ${Math.max(1, Math.round(ms / 60e3))} min`);
+  switch (e.event) {
+    case 'agent.new': return `${who} started ${ag} (${e.kind}) in ${e.agent?.cwd || '?'}`;
+    case 'shell.new': return `${who} opened a new shell ${ag} in ${e.agent?.cwd || '?'}`;
+    case 'agent.end': return `${who} ended ${ag} (${e.mode})${min(e.ranFor)}${e.said ? ` — last reply: ${e.said}` : ''}`;
+    case 'agent.gone': return `${ag} exited on its own${min(e.ranFor)}`;
+    case 'agent.stop': return `${who} stopped ${ag} (${e.how})`;
+    case 'agent.move': return `${who} moved ${ag} (${e.mode})`;
+    case 'agent.rename': return `${who} renamed ${e.was || ag} to ${e.name || '(no name)'}`;
+    case 'agent.claim': return `${who} ${{ claim: 'claimed', release: 'released', take: 'took over', assign: 'assigned' }[e.mode] || e.mode} ${ag}${e.to ? ` to ${e.to}` : ''}`;
+    case 'agent.tags': return `${who} tagged ${ag}: ${(e.tags || []).join(', ') || '(none)'}`;
+    case 'agent.prompt': return `${who} → ${ag}: ${e.text}`;
+    case 'agent.answer': return `${who} answered ${ag}${e.question ? ` “${e.question}”` : ''}: ${(e.picked || []).join(' / ')}`;
+    case 'agent.keys': return `${who} pressed ${e.key} on ${ag}`;
+    case 'agent.job': return `${ag} finished a job${e.secs != null ? ` (${Math.max(1, Math.round(e.secs / 60))} min)` : ''}${e.ask ? ` — asked: ${e.ask}` : ''}${e.said ? ` — reply: ${e.said}` : ''}`;
+    case 'agent.blocked': return `${ag} needs you${e.title ? `: ${e.title}` : ''}`;
+    case 'link.add': return `${who} linked ${ag} → ${to} (${e.kind})`;
+    case 'link.delete': return `${who} removed the link ${ag} → ${to}`;
+    case 'handoff.send': return `${who} handed ${ag}'s result to ${to}${e.note ? ` — note: ${e.note}` : ''}`;
+    case 'handoff.dismiss': return `${who} dismissed the hand-off ${ag} → ${to}`;
+    case 'msg.agent': return `${ag} messaged ${to}: ${e.text}`;
+    case 'msg.rate_limited': return `Link ${ag} ↔ ${to} paused (over ${e.perHour} messages/hour)`;
+    case 'shell.open': return `${who} opened the shell ${ag || e.agent?.pane || ''}`;
+    case 'shell.close': return `${who} closed the shell ${ag || e.agent?.pane || ''}`;
+    case 'shell.unlock': return `${who} allowed shells for ${e.minutes} min`;
+    case 'shell.lock': return `${who} locked shells again`;
+    case 'access.denied': return `${who} was refused (${e.code})${ag ? ` on ${ag}` : ''} ${e.path || ''}`.trim();
+    case 'error': return `Error ${e.code} on ${e.path} ×${e.n}`;
+    default: return `${who} ${e.event}${ag ? ` ${ag}` : ''}`;
+  }
+}
+
+let toReview = 0;
+function countToReview() {
+  try { toReview = journal.listDigests().filter(d => d.final && !d.reviewed && (d.agents.length || d.counts.prompts || d.counts.security)).length; } catch { /* first run */ }
+}
+const nameOfWho = l => person(l).name;
+function digestFor(day) {
+  if (day === journal.dayOf()) return journal.buildDigest(day, nameOfWho); // today: always live
+  return journal.readDigest(day) || journal.buildDigest(day, nameOfWho);
+}
+
+async function journalApi(req, res, url) {
+  const { pathname } = url;
+  const q = k => url.searchParams.get(k) || '';
+  const today = journal.dayOf();
+
+  if (req.method === 'GET' && pathname === '/api/journal') {
+    const day = journal.DAY_RE.test(q('day')) ? q('day') : today;
+    const span = Math.min(Math.max(Number(q('days')) || 1, 1), 31); // days back from `day`, for an agent's history
+    let raw = [];
+    for (let i = 0; i < span; i++) raw = raw.concat(journal.readDay(journal.addDays(day, -i)));
+    const visible = raw.map(shapeEntry);
+    const people = new Map(), agentsSeen = new Map();
+    for (const e of visible) {
+      if (e.who) people.set(e.who.id, e.who);
+      for (const a of [e.agent, e.to]) if (a?.terminal || a?.pane) agentsSeen.set(a.terminal || a.pane, { key: a.terminal || a.pane, name: a.name || a.pane });
+    }
+    const term = q('terminal'), whoId = q('who'), group = q('group'), text = q('q').toLowerCase().slice(0, 100);
+    let list = visible.filter(e =>
+      (!term || e.agent?.terminal === term || e.agent?.pane === term || e.to?.terminal === term) &&
+      (!whoId || e.who?.id === whoId) &&
+      (!group || e.group === group) &&
+      (!text || (describe({ ...e, who: null }) + ' ' + (e.who?.name || '')).toLowerCase().includes(text)));
+    const total = list.length;
+    const limit = Math.min(Math.max(Number(q('limit')) || 500, 1), 2000);
+    list = list.sort((a, b) => b.ts - a.ts).slice(0, limit);
+    return send(res, 200, {
+      day, days: journal.days(), today, total, limit,
+      entries: list,
+      people: [...people.values()], agents: [...agentsSeen.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      admin: true, me: brief('local'), keepDays: CFG.JOURNAL_DAYS,
+    });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/journal/out') {
+    const text = journal.readSnapshot(q('id'));
+    if (text == null) throw new HttpError(404, 'gone');
+    return send(res, 200, text, 'text/plain; charset=utf-8');
+  }
+
+  if (req.method === 'GET' && pathname === '/api/journal/export') {
+    const day = journal.DAY_RE.test(q('day')) ? q('day') : today;
+    const entries = journal.readDay(day);
+    const md = journal.digestMarkdown(digestFor(day)) + '\n---\n\n' + journal.dayMarkdown(day, entries, describe);
+    res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Content-Disposition': `attachment; filename="orca-journal-${day}.md"`, 'Cache-Control': 'no-store', ...SECURITY_HEADERS });
+    return res.end(md);
+  }
+
+  if (req.method === 'GET' && pathname === '/api/journal/digests') {
+    const stored = journal.listDigests().filter(d => d.day !== today);
+    const live = journal.days().includes(today) ? [digestFor(today)] : [];
+    const list = [...live, ...stored].map(d => ({ day: d.day, final: d.final, counts: d.counts, reviewed: d.reviewed, agents: d.agents.length, people: d.people.map(p => p.name), generatedAt: d.generatedAt }));
+    return send(res, 200, { digests: list, toReview, today });
+  }
+  if (req.method === 'GET' && pathname === '/api/journal/digest') {
+    const day = q('day');
+    if (!journal.DAY_RE.test(day)) throw new HttpError(400, 'bad_request');
+    return send(res, 200, digestFor(day));
+  }
+  // Mark a finished day reviewed (or reopen it). Writes pass the server's same-origin check.
+  if (req.method === 'POST' && pathname === '/api/journal/review') {
+    const body = await readBody(req);
+    const day = String(body.day || '');
+    if (!journal.DAY_RE.test(day)) throw new HttpError(400, 'bad_request');
+    if (day >= today) throw new HttpError(409, 'not_final');
+    if (!journal.readDigest(day)) journal.saveDigest(journal.buildDigest(day, nameOfWho));
+    const d = journal.review(day, body.undo ? null : person('local').name, String(body.note || '').slice(0, 500));
+    if (!d) throw new HttpError(404, 'gone');
+    jr(req, body.undo ? 'journal.unreview' : 'journal.review', null, { day });
+    countToReview();
+    return send(res, 200, { ok: true, reviewed: d.reviewed, toReview });
+  }
+  throw new HttpError(404, 'not_found');
+}
+
+// Today's digest is refreshed every 5 min; past days are finalised (and old files compressed
+// or deleted) at start and on the first tick after midnight. A server down at midnight
+// catches up on the next start.
+let lastHousekeep = '';
+function journalTick() {
+  const today = journal.dayOf();
+  try {
+    if (today !== lastHousekeep) { journal.housekeep(nameOfWho); lastHousekeep = today; }
+    if (journal.days().includes(today)) journal.saveDigest(journal.buildDigest(today, nameOfWho));
+  } catch (e) { log('journal.tick_failed', { detail: e.message }); }
+  countToReview();
+}
+setTimeout(journalTick, 3000).unref();
+setInterval(journalTick, 5 * 60e3).unref();
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function api(req, res, url) {
   const { pathname } = url;
@@ -973,6 +1305,7 @@ async function api(req, res, url) {
         if (!sameOrigin(req)) return send(res, 403, { error: 'cross-origin' });
         const body = await readBody(req);
         await herdr(['pane', 'zoom', pane, body.on ? '--on' : '--off']).catch(() => {});
+        jr(req, body.on ? 'shell.open' : 'shell.close', agentCache.get(pane) || { pane }, {});
         return send(res, 200, { ok: true });
       }
       if (req.method === 'POST' && tm[2] === '/input') {
@@ -997,17 +1330,19 @@ async function api(req, res, url) {
     if (body.confirm !== true) throw new HttpError(400, 'confirm_needed');
     shellUnlockedUntil = Date.now() + SHELL_UNLOCK_MS;
     log('shell.confirmed', { minutes: Math.round(SHELL_UNLOCK_MS / 60e3) });
+    jr(req, 'shell.unlock', null, { minutes: Math.round(SHELL_UNLOCK_MS / 60e3) });
     return send(res, 200, { ok: true, ...shellAccess() });
   }
   if (req.method === 'POST' && pathname === '/api/shell/lock') {
     shellUnlockedUntil = 0;
     log('shell.locked');
+    jr(req, 'shell.lock', null, {});
     return send(res, 200, { ok: true });
   }
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), access: accessView(), now: Date.now() });
+    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), access: accessView(), journal: { toReview }, now: Date.now() });
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -1025,6 +1360,18 @@ async function api(req, res, url) {
     }));
     return send(res, 200, { messages: list });
   }
+
+  // ── End: what would be lost (the confirm box shows it before anything is sent)
+  if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/endcheck$/.test(pathname)) {
+    const pane = decodeURIComponent(pathname.split('/')[3]);
+    if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'gone');
+    return send(res, 200, await endCheck(a));
+  }
+
+  // ── Journal
+  if (pathname === '/api/journal' || pathname.startsWith('/api/journal/')) return journalApi(req, res, url);
 
   if (req.method === 'GET' && pathname === '/api/memory') return send(res, 200, await memory());
 
@@ -1084,11 +1431,19 @@ async function api(req, res, url) {
     if (!m) return send(res, 404, { error: 'not found' });
     const pane = decodeURIComponent(m[1]);
     if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
-    const lines = Math.min(Math.max(Number(url.searchParams.get('lines')) || 40, 5), 200);
+    const lines = Math.min(Math.max(Number(url.searchParams.get('lines')) || 40, 5), 2000);
     // Full-screen agents (alternate screen) can't have their history read while they work or
     // wait on a question; show what is on their screen instead of an error.
     let text;
-    try { text = await herdr(['agent', 'read', pane, '--source', 'recent', '--lines', String(lines), '--format', 'text']); }
+    // herdr now and then answers a deep read with only the screen; retry and keep the longest.
+    try {
+      const read = () => herdr(['agent', 'read', pane, '--source', 'recent', '--lines', String(lines), '--format', 'text']);
+      text = await read();
+      for (let i = 0; i < 2 && lines > 120 && text.split('\n').length < Math.min(lines, 120); i++) {
+        const again = await read();
+        if (again.length > text.length) text = again;
+      }
+    }
     catch (err) {
       if (!/alternate-screen|not idle|while .* is (working|blocked)/i.test(err.detail || err.message || '')) throw err;
       text = await herdr(['agent', 'read', pane, '--source', 'visible', '--format', 'text']);
@@ -1171,6 +1526,7 @@ async function api(req, res, url) {
     state.links.push(l);
     saveState();
     log('link.add', { id: l.id, kind, from: a.pane, to: b.pane });
+    jr(req, 'link.add', a, { kind, to: jAgent(b) });
     // Tell both agents what they can now do (queued until each is idle). Skipped when the pair was already linked.
     if (body.intro !== false && !existing.length) {
       const byTerminal = new Map(agents.map(x => [x.terminal, x]));
@@ -1180,6 +1536,7 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true, id: l.id });
   }
   if (pathname === '/api/links/delete') {
+    const gone = state.links.find(l => l.id === body.id);
     const before = state.links.length;
     state.links = state.links.filter(l => l.id !== body.id);
     if (state.links.length === before) throw new HttpError(404, 'gone');
@@ -1188,6 +1545,7 @@ async function api(req, res, url) {
     for (const m of state.msgs) if (m.state === 'queued' && m.via === 'agent' && !pairOf(m.from, m.to).length) m.state = 'failed';
     saveState();
     log('link.delete', { id: body.id });
+    { const byT = new Map([...agentCache.values()].map(x => [x.terminal, x])); jr(req, 'link.delete', byT.get(gone?.from) || null, { kind: gone?.kind, to: byT.get(gone?.to) ? jAgent(byT.get(gone.to)) : undefined }); }
     return send(res, 200, { ok: true });
   }
   // ── Hand-off: a person approves (send) or drops (dismiss) the offer
@@ -1199,6 +1557,7 @@ async function api(req, res, url) {
       delete state.handoffs[body.id];
       saveState();
       log('handoff.dismiss', { id: body.id });
+      { const byT = new Map([...agentCache.values()].map(x => [x.terminal, x])); jr(req, 'handoff.dismiss', byT.get(l.from) || null, { to: byT.get(l.to) ? jAgent(byT.get(l.to)) : undefined }); }
       return send(res, 200, { ok: true });
     }
     if (body.action !== 'send') throw new HttpError(400, 'bad_request');
@@ -1213,6 +1572,7 @@ async function api(req, res, url) {
     saveState();
     autoClaim(down.terminal, loginOf(req));
     log('handoff.send', { id: body.id, to: down.pane, note: !!note });
+    jr(req, 'handoff.send', up || null, { to: jAgent(down), note, said: h.said });
     deliverQueued(agents).catch(() => {});
     return send(res, 200, { ok: true, id: m.id, queued: down.status !== 'idle' && down.status !== 'done' });
   }
@@ -1221,17 +1581,41 @@ async function api(req, res, url) {
   if (pathname === '/api/agents/new') {
     // A shell needs a fresh confirmation first.
     if (String(body.kind || '') === 'shell') requireShell();
-    return send(res, 200, await newAgent(body));
+    const r = await newAgent(body);
+    jr(req, r.shell ? 'shell.new' : 'agent.new', { name: r.name, pane: r.pane, terminal: r.terminal || null, cwd: r.cwd, agent: r.kind },
+      { kind: r.kind, tab: body.tab || 'new', blocked: !!r.blocked });
+    return send(res, 200, { pane: r.pane, blocked: r.blocked, shell: r.shell });
   }
 
   // ── Per-agent actions
-  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim)$/);
+  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end)$/);
   if (!m) return send(res, 404, { error: 'not found' });
   const pane = decodeURIComponent(m[1]);
   const action = m[2];
   if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
 
-  if (action === 'move') return send(res, 200, await moveAgent(pane, body));
+  if (action === 'move') {
+    const before = jAgent(pane);
+    const r = await moveAgent(pane, body);
+    jr(req, 'agent.move', { ...before, pane: r.pane }, { from: pane, mode: body.mode, closedWorkspace: r.closedWorkspace });
+    return send(res, 200, r);
+  }
+
+  // Stop interrupts the job (the agent stays); End saves its output, asks it to quit, closes its pane.
+  if (action === 'stop' || action === 'end') {
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'gone');
+    if (action === 'stop') {
+      const r = await stopAgent(a);
+      jr(req, 'agent.stop', a, { how: r.how, wasStatus: a.status, status: r.status });
+      log('agent.stop', { pane, how: r.how });
+      return send(res, 200, { ok: true, ...r });
+    }
+    const snap = jAgent(a);
+    const r = await endAgent(a);
+    jr(req, 'agent.end', snap, { mode: r.mode, closed: r.closed, out: r.out, ranFor: r.ranFor, jobs24: r.jobs24, linksNotified: r.notified, said: r.said, wasStatus: a.status });
+    return send(res, 200, { ok: true, mode: r.mode, closed: r.closed });
+  }
 
   // Show: bring it to the front. If its tab is zoomed, un-zoom it, so you see exactly where it sits.
   if (action === 'focus') {
@@ -1257,6 +1641,7 @@ async function api(req, res, url) {
     if (body.clear) {
       await herdr(['agent', 'rename', pane, '--clear']);
       log('agent.rename', { pane, name: null });
+      jr(req, 'agent.rename', pane, { name: null, was: agentCache.get(pane)?.name || null });
       return send(res, 200, { ok: true, name: null });
     }
     const name = String(body.name || '').trim();
@@ -1265,6 +1650,7 @@ async function api(req, res, url) {
     const a = (await listAgents()).find(x => x.pane === pane);
     applyName(a?.terminal, name);
     log('agent.rename', { pane, name });
+    jr(req, 'agent.rename', a || pane, { name });
     return send(res, 200, { ok: true, name });
   }
 
@@ -1297,6 +1683,7 @@ async function api(req, res, url) {
     } else throw new HttpError(400, 'bad_request');
     saveState();
     log('agent.claim', { pane, mode });
+    jr(req, 'agent.claim', a, { mode, to: mode === 'assign' ? person(state.claims[a.terminal]?.login).name : undefined });
     return send(res, 200, { ok: true, claim: claimOf(a.terminal) });
   }
 
@@ -1314,7 +1701,8 @@ async function api(req, res, url) {
     if (text.length > 4000) throw new HttpError(400, 'too_long');
     // herdr has no `--` separator: a leading space stops a message like "-x" being read as a flag.
     await herdr(['agent', 'prompt', pane, text.startsWith('-') ? ' ' + text : text], 10000);
-    log('agent.prompt', { pane, chars: text.length }); // never log the text itself
+    log('agent.prompt', { pane, chars: text.length }); // never log the text itself (the journal keeps it, redacted)
+    jr(req, 'agent.prompt', pane, { text });
     const at = Date.now();
     const who = loginOf(req);
     herdrJson(['pane', 'get', pane]).then(pg => { const t = pg.result?.pane?.terminal_id; if (t) { sentAsk.set(t, { text, at }); autoClaim(t, who); } }).catch(() => {});
@@ -1336,6 +1724,7 @@ async function api(req, res, url) {
       if (!menu?.options.some(o => o.n === body.screen)) throw new HttpError(409, 'question_gone');
       await press(pane, String(body.screen));
       log('agent.answer', { pane, kind: 'screen', n: body.screen });
+      jr(req, 'agent.answer', a, { question: menu.question, picked: [menu.options.find(o => o.n === body.screen)?.label || String(body.screen)] });
       return send(res, 200, { ok: true });
     }
     const qs = handoff(a)?.ask?.questions;
@@ -1376,6 +1765,7 @@ async function api(req, res, url) {
       if (/Ready to submit your answers\?/.test(await visible(pane))) await press(pane, '1');
     }
     log('agent.answer', { pane, kind: 'ask', questions: qs.length }); // never log the answer text
+    jr(req, 'agent.answer', a, { question: qs.map(q => q.question).join(' / '), picked: answers.map((ans, i) => typeof ans.other === 'string' ? ans.other : ans.pick.map(n => qs[i].options[n - 1]?.label || n).join(', ')) });
     return send(res, 200, { ok: true });
   }
 
@@ -1384,6 +1774,7 @@ async function api(req, res, url) {
     if (!KEYS.includes(key)) throw new HttpError(400, 'bad_request');
     await herdr(['agent', 'send-keys', pane, key]);
     log('agent.keys', { pane, key });
+    jr(req, 'agent.keys', pane, { key });
     return send(res, 200, { ok: true });
   }
 
@@ -1401,6 +1792,7 @@ async function api(req, res, url) {
   for (const k of Object.keys(state.tags)) if (!live.has(k)) delete state.tags[k];
   saveState();
   log('agent.tags', { pane, tags });
+  jr(req, 'agent.tags', a, { tags });
   return send(res, 200, { ok: true, tags });
 }
 
@@ -1652,6 +2044,11 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       const status = e.status || 500;
       if (status >= 409 || !e.code) log('api.error', { path: url.pathname, code: e.code, detail: e.detail || e.message });
+      if (e.code === 'shell_locked') {
+        const pm = url.pathname.match(/^\/api\/(?:agents|term)\/([^/]+)/);
+        const pane = pm ? decodeURIComponent(pm[1]) : null;
+        jr(req, 'access.denied', pane && PANE_RE.test(pane) ? pane : null, { code: e.code, path: url.pathname.replace(/\/api\/(agents|term)\/[^/]+/, '/api/$1/:pane') });
+      } else if (status >= 500 || !e.code) jError(url.pathname, e.code || 'internal');
       return send(res, status, { error: e.code || 'internal' });
     }
   }

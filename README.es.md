@@ -75,7 +75,9 @@ sesión. Lo que lo protege es que solo tú puedes llegar a él:
   impide que otros sitios web le envíen peticiones (CSRF).
 - Abrir o crear una terminal pide una confirmación primero, que dura 15 minutos.
 - Ajustes, llaves VAPID, estado y registros viven en `~/.config/operio-orca` con permisos solo
-  para ti. Las instrucciones y respuestas de los agentes nunca se escriben en el registro.
+  para ti. Las instrucciones y respuestas de los agentes nunca se escriben en el registro. La
+  Bitácora guarda lo que enviaste y lo que respondieron los agentes durante 90 días, con llaves
+  y tokens ocultos antes de escribir nada.
 
 Cualquiera con acceso a tu cuenta de usuario, o a un dispositivo desde el que abras el túnel, puede usarlo.
 
@@ -113,11 +115,31 @@ le envían nada a tus clientes: hacen un reporte, o preparan un borrador y tú l
 
 La lista completa, con las rutinas que Operio opera por ti, está en `catalog/catalog.json`.
 
+## Detener, Terminar y la Bitácora
+
+- **Detener** (en la tarjeta de un agente que está trabajando) interrumpe el trabajo; el agente
+  sigue. Envía Esc, y un ⌃C a Claude si sigue trabajando. opencode solo recibe Esc, porque ⌃C lo cierra.
+- **Terminar agente** (en el panel ⋯ de la tarjeta) primero muestra qué se perdería: cambios sin
+  commit en su carpeta, un worktree, enlaces con otros agentes, el último panel de un espacio.
+  Luego guarda su última salida, le pide que salga con su propio comando (`/exit`, `/quit`) y
+  cierra su panel. Su carpeta, archivos y worktree nunca se tocan.
+- La **Bitácora** (ícono de libro en el encabezado) es una cronología de lo que hicieron tú y tus
+  agentes: agentes iniciados y terminados, mensajes, respuestas, trabajos terminados con su
+  salida guardada, enlaces y confirmaciones de terminal. Fíltrala, búscala, exporta un día en
+  Markdown. La pestaña **Revisión diaria** resume cada día terminado para que lo marques como
+  revisado con una nota; el ícono muestra cuántos días esperan. El panel ⋯ de la tarjeta tiene el
+  mismo historial para un agente.
+- Son archivos simples en `~/.config/operio-orca/journal/` (solo para ti): una línea JSON por
+  entrada, con llaves y tokens ocultos antes de escribirse. Los días de más de 7 se comprimen y los
+  de más de 90 se borran. No se envía nada a ningún lado ni se llama a ningún modelo; la revisión
+  es un resumen que ORCA arma con las entradas.
+
 ## Ajustes
 
 `~/.config/operio-orca/env`, un `CLAVE=valor` por línea: `OPERIO_ORCA_PORT` (7171),
 `OPERIO_ORCA_HOST` (127.0.0.1), `OPERIO_ORCA_ALLOWED_HOSTS`, `OPERIO_ORCA_FOLDERS` (carpetas que se
-ofrecen para agentes nuevos, por defecto `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15).
+ofrecen para agentes nuevos, por defecto `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15),
+`OPERIO_ORCA_JOURNAL_DAYS` (90).
 
 ## Demo
 
