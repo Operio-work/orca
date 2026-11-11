@@ -141,6 +141,9 @@ if [ "$legacy" -eq 1 ]; then say "also removed leftovers of a pre-release develo
 case "$PREFIX" in
   ""|"/"|"$HOME"|"$HOME/") say "refusing to delete PREFIX=$PREFIX"; exit 1 ;;
 esac
+# herdr servers started from our copy keep running, because they hold your agents. Note them
+# so the last line can say how to stop them once those agents are done.
+herdr_pids="$(ps -u "$(id -u)" -o pid=,args= 2>/dev/null | awk -v b="$PREFIX/bin/herdr" '$2 == b && $3 == "server" {print $1}' | tr '\n' ' ' | sed 's/ $//')"
 rm -rf "$PREFIX"
 say "removed $PREFIX"
 
@@ -154,3 +157,6 @@ else
   say "kept your settings, routines and drafts in $CONFIG_DIR (delete it, or run with --purge)"
 fi
 say "ORCA is uninstalled. herdr's own data (~/.config/herdr) and running agents were not touched."
+if [ -n "$herdr_pids" ]; then
+  say "herdr is still running your agents (pid $herdr_pids). When they are done, stop it with: kill $herdr_pids"
+fi
