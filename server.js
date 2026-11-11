@@ -518,7 +518,16 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
 
   let pane;
   if (!tab || tab === 'new') {
-    const out = await herdrJson(['tab', 'create', '--cwd', cwd, '--label', name]);
+    let out;
+    try {
+      out = await herdrJson(['tab', 'create', '--cwd', cwd, '--label', name]);
+    } catch (e) {
+      // A fresh herdr has no workspace yet: the first agent opens one, named after its folder.
+      if (e.code !== 'ws_gone') throw e;
+      out = await herdrJson(['workspace', 'create', '--cwd', cwd, '--label', path.basename(cwd) || 'agents']);
+      const t = out.result?.tab?.tab_id;
+      if (t) await herdr(['tab', 'rename', t, name]).catch(() => {});
+    }
     pane = out.result?.root_pane?.pane_id;
   } else {
     if (!TAB_RE.test(tab)) throw new HttpError(400, 'bad_request');

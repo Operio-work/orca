@@ -135,3 +135,16 @@ test('VAPID keys are generated on first run, owner-only', () => {
   assert.ok(JSON.parse(fs.readFileSync(f, 'utf8')).publicKey);
   assert.equal((fs.statSync(f).mode & 0o777).toString(8), '600');
 });
+
+test('the first agent on a fresh herdr opens a workspace for itself', async () => {
+  const f = path.join(FAKE, 'state.json');
+  const st = JSON.parse(fs.readFileSync(f, 'utf8'));
+  fs.writeFileSync(f, JSON.stringify({ ...st, noWorkspace: true }));
+  const r = await post('/api/agents/new', { kind: 'claude', name: 'first', folder: '~' });
+  assert.equal(r.status, 200, r.text);
+  assert.ok(r.json.pane);
+  const ws = fs.readFileSync(path.join(FAKE, 'workspaces.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  assert.equal(ws.length, 1);
+  assert.equal(ws[0].cwd, HOME);
+  assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).noWorkspace, undefined);
+});
