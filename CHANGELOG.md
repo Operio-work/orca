@@ -20,6 +20,11 @@ The installer pins one panel release and one herdr release together; `operio-orc
 - `operio-orca doctor`: one line per check (Node, panel files, herdr, port, service, file modes,
   settings, disk) with the exact fix under every ✗; exit 1 when something is wrong.
   `operio-orca open` opens the panel in the browser (xdg-open, open, or wslview/explorer.exe on WSL).
+- `operio-orca logs [panel|herdr|routines] [-n N] [-f]` tails the right log (journalctl when systemd
+  runs the panel); routine runs are printed one per line. `operio-orca update --check` compares the
+  installed panel and herdr with the installer's pins, installs nothing, exits 2 when behind.
+- `operio-orca update` no longer ends with "tmp: unbound variable" (exit 1) after a successful
+  update: the temp folder's cleanup ran after the function's variable was gone.
 ## [0.1.0] - 2026-11-09
 
 First public release.

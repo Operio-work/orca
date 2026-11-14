@@ -299,12 +299,14 @@ const en = {
       ['operio-orca stop', 'Stop it until you start it again'],
       ['operio-orca start', 'Start it again'],
       ['operio-orca open', 'Open it in your browser'],
-      ['operio-orca doctor', 'Check the install and print the fix for anything wrong']
+      ['operio-orca doctor', 'Check the install and print the fix for anything wrong'],
+      ['operio-orca logs', 'The panel log (logs herdr, logs routines; -f to follow)']
     ],
     commandsWhyQ: 'Why operio-orca and not just orca?',
     commandsWhyA: 'Ubuntu and many Linux desktops already ship a program called orca: the GNOME screen reader. A distinct name keeps the two apart.',
     updateTitle: 'Update',
     updateBody: 'Updates the panel and herdr together, to versions that are tested with each other. Use this instead of updating herdr on its own.',
+    updateCheck: 'To only see whether there is a newer version, without installing anything:',
     demoTitle: 'Try the demo',
     demoBody: 'A second panel on port 7172 with two fictional businesses, Harbor Street Bistro and Brightside Dental. No real data, no cost, and it never touches your own setup.',
     demoCmds: [
@@ -634,12 +636,14 @@ vsTitle: 'Cómo se compara ORCA',
       ['operio-orca stop', 'Lo detiene hasta que lo inicies de nuevo'],
       ['operio-orca start', 'Lo inicia de nuevo'],
       ['operio-orca open', 'Lo abre en tu navegador'],
-      ['operio-orca doctor', 'Revisa la instalación y muestra cómo arreglar lo que falle']
+      ['operio-orca doctor', 'Revisa la instalación y muestra cómo arreglar lo que falle'],
+      ['operio-orca logs', 'El registro del panel (logs herdr, logs routines; -f para seguirlo)']
     ],
     commandsWhyQ: '¿Por qué operio-orca y no solo orca?',
     commandsWhyA: 'Ubuntu y muchos escritorios Linux ya traen un programa llamado orca: el lector de pantalla de GNOME. Un nombre distinto evita que se confundan.',
     updateTitle: 'Actualizar',
     updateBody: 'Actualiza el panel y herdr juntos, a versiones probadas entre sí. Úsalo en lugar de actualizar herdr por separado.',
+    updateCheck: 'Para solo ver si hay una versión nueva, sin instalar nada:',
     demoTitle: 'Prueba la demo',
     demoBody: 'Un segundo panel en el puerto 7172 con dos negocios ficticios, Harbor Street Bistro y Brightside Dental. Sin datos reales, sin costo, y nunca toca tu propia configuración.',
     demoCmds: [

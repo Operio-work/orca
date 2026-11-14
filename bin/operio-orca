@@ -7,7 +7,9 @@
 #   operio-orca status      is it running, where, which versions
 #   operio-orca open        open the panel in your browser
 #   operio-orca doctor      check the install and print the fix for anything wrong
+#   operio-orca logs        show the panel log (logs herdr | routines; -n LINES, -f to follow)
 #   operio-orca update      move the panel and herdr together to the versions the installer pins
+#                         (--check only compares versions and installs nothing)
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -43,6 +45,7 @@ LOG_FILE="$CONFIG_DIR/logs/server.log"
 UNIT=operio-orca.service
 LABEL=work.operio.orca
 INSTALL_URL="${OPERIO_ORCA_INSTALL_URL:-https://make.operio.work/install.sh}"
+UPDATE_TMP=""
 
 say() { printf '%s\n' "operio-orca: $*"; }
 die() { printf '%s\n' "operio-orca: ERROR: $*" >&2; exit 1; }
@@ -142,22 +145,57 @@ cmd_status() {
 
 pass_flags() { [ "$SERVICE_ENABLED" = 1 ] || printf '%s\n' --no-service; }
 
+fetch_installer() { # dest — HTTPS only, except plain http to this computer (testing)
+  local proto="=https"
+  case "$INSTALL_URL" in http://127.0.0.1[:/]*|http://localhost[:/]*) proto="=http,https" ;; esac
+  curl -fsSL --proto "$proto" --tlsv1.2 -o "$1" "$INSTALL_URL"
+}
+pin_of() { sed -n "s/^$1=\"\([^\"]*\)\".*/\1/p" "$2" | head -1; } # KEY file → the installer's pinned value
+
+update_check() { # compare the installed versions with the installer's pins; install nothing
+  local src="$1" inst
+  if [ -n "$src" ]; then inst="$src/install.sh"; [ -f "$inst" ] || die "$src has no install.sh"
+  else
+    UPDATE_TMP="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-check.XXXXXX")"
+    trap 'rm -rf "${UPDATE_TMP:-}"' EXIT
+    inst="$UPDATE_TMP/install.sh"
+    fetch_installer "$inst" || die "could not download $INSTALL_URL"
+  fi
+  local a_panel a_herdr a_sha i_panel i_herdr=""
+  a_panel="$(pin_of PANEL_VERSION "$inst")"; a_herdr="$(pin_of HERDR_VERSION "$inst")"; a_sha="$(pin_of PANEL_SHA256 "$inst")"
+  [ -n "$a_panel" ] && [ -n "$a_herdr" ] || die "that installer has no version pins ($INSTALL_URL)"
+  i_panel="$("$NODE_BIN" -p "require('$APP_DIR/package.json').version")"
+  if [ -f "$PREFIX/manifest.json" ]; then i_herdr="$("$NODE_BIN" -p "require('$PREFIX/manifest.json').herdr")"
+  elif [ -x "$HERDR_BIN" ]; then i_herdr="$("$HERDR_BIN" --version 2>/dev/null | awk '{print $2}' || true)"; fi
+  say "installed: panel $i_panel, herdr ${i_herdr:-none}"
+  say "available: panel $a_panel, herdr $a_herdr (panel sha256 ${a_sha:0:12}…) from ${src:-$INSTALL_URL}"
+  if [ "$i_panel" = "$a_panel" ] && [ "$i_herdr" = "$a_herdr" ]; then say "up to date"; return 0; fi
+  say "update available: run  operio-orca update"
+  return 2
+}
+
 cmd_update() {
-  local src=""
+  local src="" check=0
   while [ $# -gt 0 ]; do
-    case "$1" in --source) src="${2:-}"; shift 2 ;; --source=*) src="${1#--source=}"; shift ;; *) die "unknown option: $1" ;; esac
+    case "$1" in
+      --source) src="${2:-}"; shift 2 ;; --source=*) src="${1#--source=}"; shift ;;
+      --check) check=1; shift ;;
+      *) die "unknown option: $1" ;;
+    esac
   done
+  if [ "$check" = 1 ]; then update_check "$src"; return; fi
   local flags=(); while IFS= read -r f; do [ -n "$f" ] && flags+=("$f"); done < <(pass_flags)
   if [ -n "$src" ]; then
     [ -f "$src/install.sh" ] || die "$src has no install.sh"
     bash "$src/install.sh" --source "$src" ${flags[@]+"${flags[@]}"}
   else
     # The installer pins one panel release and one herdr release together, with checksums.
-    local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-update.XXXXXX")"
-    trap 'rm -rf "$tmp"' EXIT
+    # (A global for the temp folder: the EXIT trap runs after this function's locals are gone.)
+    UPDATE_TMP="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-update.XXXXXX")"
+    trap 'rm -rf "${UPDATE_TMP:-}"' EXIT
     say "fetching the installer from $INSTALL_URL"
-    curl -fsSL --proto '=https' --tlsv1.2 -o "$tmp/install.sh" "$INSTALL_URL" || die "could not download $INSTALL_URL"
-    bash "$tmp/install.sh" ${flags[@]+"${flags[@]}"}
+    fetch_installer "$UPDATE_TMP/install.sh" || die "could not download $INSTALL_URL"
+    bash "$UPDATE_TMP/install.sh" ${flags[@]+"${flags[@]}"}
   fi
 }
 
@@ -264,6 +302,47 @@ cmd_doctor() {
   return "$bad"
 }
 
+cmd_logs() {
+  local what=panel n=50 follow=0
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      panel|herdr|routines) what="$1"; shift ;;
+      -f|--follow) follow=1; shift ;;
+      -n) n="${2:-}"; shift 2 ;;
+      -n*) n="${1#-n}"; shift ;;
+      -h|--help) printf '%s\n' 'operio-orca logs [panel|herdr|routines] [-n LINES] [-f]'; return 0 ;;
+      *) die "unknown logs option: $1 (panel, herdr, routines, -n LINES, -f)" ;;
+    esac
+  done
+  case "$n" in ''|*[!0-9]*) die "-n needs a number of lines" ;; esac
+  local file="" unit=""
+  case "$what" in
+    panel)
+      if use_service && [ "$SERVICE" = systemd ]; then unit="$UNIT"
+      elif use_service && [ "$SERVICE" = launchd ]; then file="$CONFIG_DIR/logs/$LABEL.log"
+      else file="$LOG_FILE"; fi ;;
+    herdr)
+      if use_service && [ "$SERVICE" = systemd ]; then unit="operio-orca-herdr.service"
+      elif use_service && [ "$SERVICE" = launchd ]; then file="$CONFIG_DIR/logs/$LABEL-herdr.log"
+      else file="$CONFIG_DIR/logs/herdr.log"; fi ;;
+    routines) file="$CONFIG_DIR/logs/routines.jsonl" ;;
+  esac
+  if [ -n "$unit" ]; then
+    say "$what log: journalctl --user -u $unit"
+    if [ "$follow" = 1 ]; then exec journalctl --user -u "$unit" -n "$n" -f --no-pager; fi
+    journalctl --user -u "$unit" -n "$n" --no-pager; return 0
+  fi
+  [ -f "$file" ] || { say "no $what log yet ($file)"; return 0; }
+  say "$what log: $file"
+  if [ "$what" = routines ]; then
+    # One run per line: time, routine, state, trigger, error.
+    local pretty='const rl=require("readline").createInterface({input:process.stdin});rl.on("line",l=>{try{const e=JSON.parse(l);const t=String(e.ts||"").replace("T"," ").slice(0,19);let s=`${t}  ${e.routine||"?"}  ${e.state||"?"}`;if(e.trigger)s+=` (${e.trigger})`;if(e.error)s+=`  ${e.error}${e.detail?": "+e.detail:""}`;console.log(s)}catch{console.log(l)}})'
+    if [ "$follow" = 1 ]; then tail -n "$n" -f "$file" | "$NODE_BIN" -e "$pretty"; else tail -n "$n" "$file" | "$NODE_BIN" -e "$pretty"; fi
+  elif [ "$follow" = 1 ]; then exec tail -n "$n" -f "$file"
+  else tail -n "$n" "$file"
+  fi
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -367,11 +446,12 @@ case "${1:-help}" in
   status) cmd_status ;;
   open) cmd_open ;;
   doctor) cmd_doctor ;;
+  logs) shift; cmd_logs "$@" ;;
   update) shift; cmd_update "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,16p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,18p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

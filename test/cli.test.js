@@ -77,6 +77,26 @@ test('open hands the panel URL to the browser opener', () => {
   assert.equal(fs.readFileSync(path.join(HOME, 'opened.txt'), 'utf8').trim(), `http://127.0.0.1:${PORT}`);
 });
 
+test('logs: panel file, routines pretty-printed, missing herdr log', () => {
+  let r = run(['logs']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /panel log: .*server\.log/);
+  assert.match(r.out, /panel log line two/);
+  r = run(['logs', 'panel', '-n', '1']);
+  assert.doesNotMatch(r.out, /line one/);
+  r = run(['logs', 'routines']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /2026-11-13 08:00:00  morning-brief  started \(manual\)/);
+  assert.match(r.out, /morning-brief  failed  no_agent: no idle agent/);
+  assert.match(r.out, /review-reply-desk  draft_ready/);
+  r = run(['logs', 'herdr']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /no herdr log yet/);
+  r = run(['logs', 'nope']);
+  assert.notEqual(r.code, 0);
+  assert.match(r.out, /unknown logs option/);
+});
+
 test('doctor: stopped panel and a loose file mode fail with the fix; a healthy install passes', async () => {
   let r = run(['doctor']);
   assert.equal(r.code, 1, r.out);
@@ -110,4 +130,37 @@ test('doctor: stopped panel and a loose file mode fail with the fix; a healthy i
   assert.match(r.out, /✓ allowed hosts: my-laptop\.example-tailnet\.ts\.net/);
   assert.match(r.out, /✓ vapid\.json \(mode 600\)/, 'the panel created its push keys with mode 600');
   assert.doesNotMatch(r.out, /✗/);
+});
+
+test('update --check compares with the installer and installs nothing', async () => {
+  // The file server is its own process: spawnSync below blocks this one.
+  const srvDir = path.join(HOME, 'srv');
+  fs.mkdirSync(srvDir, { recursive: true });
+  const srv = spawn(process.execPath, ['-e',
+    "const http=require('http'),fs=require('fs'),p=require('path');const d=process.argv[1];" +
+    "http.createServer((q,s)=>{const f=p.join(d,'install.sh');if(q.url!=='/install.sh'||!fs.existsSync(f)){s.statusCode=404;return s.end('no')}s.setHeader('Content-Type','text/plain');s.end(fs.readFileSync(f))})" +
+    ".listen(0,'127.0.0.1',function(){console.log(this.address().port)})", srvDir], { stdio: ['ignore', 'pipe', 'inherit'] });
+  const sport = await new Promise(resolve => srv.stdout.once('data', d => resolve(Number(String(d).trim()))));
+  const url = `http://127.0.0.1:${sport}/install.sh`;
+  const serve = (text) => { if (text === null) fs.rmSync(path.join(srvDir, 'install.sh'), { force: true }); else fs.writeFileSync(path.join(srvDir, 'install.sh'), text); };
+  try {
+    serve(installer);
+    let r = run(['update', '--check'], { OPERIO_ORCA_INSTALL_URL: url });
+    assert.equal(r.code, 0, r.out);
+    assert.match(r.out, new RegExp(`installed: panel ${pkg.version.replace(/\./g, '\\.')}, herdr ${pin('HERDR_VERSION').replace(/\./g, '\\.')}`));
+    assert.match(r.out, new RegExp(`available: panel ${pkg.version.replace(/\./g, '\\.')}, herdr .* \\(panel sha256 ${pin('PANEL_SHA256').slice(0, 12)}`));
+    assert.match(r.out, /up to date/);
+    serve(installer.replace(/^PANEL_VERSION="[^"]*"/m, 'PANEL_VERSION="9.9.9"'));
+    r = run(['update', '--check'], { OPERIO_ORCA_INSTALL_URL: url });
+    assert.equal(r.code, 2, r.out);
+    assert.match(r.out, /available: panel 9\.9\.9/);
+    assert.match(r.out, /update available: run  operio-orca update/);
+    serve(null);
+    r = run(['update', '--check'], { OPERIO_ORCA_INSTALL_URL: url });
+    assert.equal(r.code, 1, r.out);
+    assert.match(r.out, /could not download/);
+    assert.ok(!fs.existsSync(path.join(PREFIX, 'app')), 'nothing was installed');
+    r = run(['update', '--check'], { OPERIO_ORCA_INSTALL_URL: 'http://192.0.2.1/install.sh' });
+    assert.equal(r.code, 1, 'plain http is only allowed to this computer');
+  } finally { srv.kill(); }
 });

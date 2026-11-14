@@ -179,6 +179,10 @@ Screenshots are in `demo/screenshots/` (Spanish: `demo/screenshots/es/`).
 prints the exact fix under anything wrong and exits 1 if there is one; send its output with any
 support request. `operio-orca open` opens the panel in your browser.
 
+`operio-orca logs` shows the panel log (`logs herdr`, `logs routines`; `-n 200`, `-f` to follow).
+`operio-orca update --check` only compares the installed panel and herdr with the versions the
+installer pins, installs nothing, and exits 2 when an update is available.
+
 ## Uninstall
 
 `operio-orca uninstall` (add `--purge` to also delete `~/.config/operio-orca`). It never stops your

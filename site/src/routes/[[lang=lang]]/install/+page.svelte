@@ -159,6 +159,8 @@
       <h2>{i.updateTitle}</h2>
       <CopyCommand cmd="operio-orca update" strings={t.copy} />
       <p>{i.updateBody}</p>
+      <p>{i.updateCheck}</p>
+      <CopyCommand cmd="operio-orca update --check" strings={t.copy} />
     </section>
 
     <section id="demo">
