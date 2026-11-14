@@ -6,6 +6,7 @@ The installer pins one panel release and one herdr release together; `operio-orc
 ## [Unreleased]
 
 ### Panel
+- `/api/meta` reports the panel `version`.
 - An agent's full history is read once per state change; while nothing changed, polls read only
   its screen. Stops full-screen agents (Claude Code) from visibly scrolling their transcript
   in the terminal on every poll.

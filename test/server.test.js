@@ -171,3 +171,9 @@ test("an agent's history is read once per state; after that only its screen", as
   assert.equal((await read(true)).status, 200);
   assert.equal(sources().at(-1), 'recent', 'a new state reads the history again');
 });
+
+test('/api/meta reports the panel version', async () => {
+  const r = await req('GET', '/api/meta');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.version, require('../package.json').version);
+});

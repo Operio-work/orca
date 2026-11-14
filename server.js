@@ -12,6 +12,7 @@
 // There is no login: anyone who can reach the port can drive your agents.
 
 const http = require('http');
+const PANEL_VERSION = require('./package.json').version;
 const fs   = require('fs');
 const path = require('path');
 const zlib = require('zlib');
@@ -1394,7 +1395,7 @@ async function api(req, res, url) {
     const [tabsOut, wsOut] = await Promise.all([herdrJson(['tab', 'list']), herdrJson(['workspace', 'list'])]);
     const tabs = (tabsOut.result?.tabs || []).map(t => ({ id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null }));
     const workspaces = (wsOut.result?.workspaces || []).map(shapeWorkspace);
-    return send(res, 200, { vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, access: accessView() });
+    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, access: accessView() });
   }
 
   if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/reply$/.test(pathname)) {
