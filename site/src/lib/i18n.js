@@ -297,7 +297,9 @@ const en = {
       ['operio-orca status', 'Is it running, and where'],
       ['operio-orca restart', 'Restart after changing settings'],
       ['operio-orca stop', 'Stop it until you start it again'],
-      ['operio-orca start', 'Start it again']
+      ['operio-orca start', 'Start it again'],
+      ['operio-orca open', 'Open it in your browser'],
+      ['operio-orca doctor', 'Check the install and print the fix for anything wrong']
     ],
     commandsWhyQ: 'Why operio-orca and not just orca?',
     commandsWhyA: 'Ubuntu and many Linux desktops already ship a program called orca: the GNOME screen reader. A distinct name keeps the two apart.',
@@ -630,7 +632,9 @@ vsTitle: 'Cómo se compara ORCA',
       ['operio-orca status', 'Si está corriendo, y dónde'],
       ['operio-orca restart', 'Reinicia después de cambiar la configuración'],
       ['operio-orca stop', 'Lo detiene hasta que lo inicies de nuevo'],
-      ['operio-orca start', 'Lo inicia de nuevo']
+      ['operio-orca start', 'Lo inicia de nuevo'],
+      ['operio-orca open', 'Lo abre en tu navegador'],
+      ['operio-orca doctor', 'Revisa la instalación y muestra cómo arreglar lo que falle']
     ],
     commandsWhyQ: '¿Por qué operio-orca y no solo orca?',
     commandsWhyA: 'Ubuntu y muchos escritorios Linux ya traen un programa llamado orca: el lector de pantalla de GNOME. Un nombre distinto evita que se confundan.',

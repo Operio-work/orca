@@ -5,6 +5,8 @@
 #   operio-orca stop        stop the panel (your agents keep running in herdr)
 #   operio-orca restart     stop, then start
 #   operio-orca status      is it running, where, which versions
+#   operio-orca open        open the panel in your browser
+#   operio-orca doctor      check the install and print the fix for anything wrong
 #   operio-orca update      move the panel and herdr together to the versions the installer pins
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
@@ -159,6 +161,109 @@ cmd_update() {
   fi
 }
 
+cmd_open() {
+  local u; u="$(panel_url)"
+  say "opening $u"
+  if is_wsl && command -v wslview >/dev/null 2>&1; then wslview "$u" >/dev/null 2>&1 && return 0; fi
+  if is_wsl && command -v explorer.exe >/dev/null 2>&1; then explorer.exe "$u" >/dev/null 2>&1 || true; return 0; fi
+  if [ "$(uname -s)" = Darwin ] && command -v open >/dev/null 2>&1; then open "$u" && return 0; fi
+  if command -v xdg-open >/dev/null 2>&1; then xdg-open "$u" >/dev/null 2>&1 && return 0; fi
+  say "no browser opener found here; open $u yourself"
+}
+
+# ── doctor: one line per check, the exact fix under every ✗ ──────────────────
+cmd_doctor() {
+  local bad=0 m f
+  ok()   { printf '  ✓ %s\n' "$1"; }
+  no()   { printf '  ✗ %s\n      fix: %s\n' "$1" "$2"; bad=1; }
+  info() { printf '  · %s\n' "$1"; }
+  printf '%s\n' "operio-orca doctor ($(uname -s) $(uname -m)$(is_wsl && printf ', WSL'))"
+
+  if [ -z "$NODE_BIN" ]; then
+    no "Node.js not found in PATH" "install Node.js 20 or newer (https://nodejs.org), then open a new terminal"
+    printf '%s\n' "Send this output with any support request."; return 1
+  fi
+  local nv; nv="$("$NODE_BIN" -p 'process.versions.node' 2>/dev/null || echo 0)"
+  if [ "${nv%%.*}" -ge 20 ] 2>/dev/null; then ok "Node.js $nv ($NODE_BIN)"
+  else no "Node.js $nv is too old" "install Node.js 20 or newer (https://nodejs.org)"; fi
+
+  local app_v man_panel="" man_herdr=""
+  app_v="$("$NODE_BIN" -p "require('$APP_DIR/package.json').version" 2>/dev/null || echo '?')"
+  if [ -f "$PREFIX/manifest.json" ]; then
+    man_panel="$("$NODE_BIN" -p "require('$PREFIX/manifest.json').panel" 2>/dev/null || true)"
+    man_herdr="$("$NODE_BIN" -p "require('$PREFIX/manifest.json').herdr" 2>/dev/null || true)"
+    if [ "$app_v" = "$man_panel" ]; then ok "panel $app_v in $APP_DIR"
+    else no "panel files are $app_v but the install record says $man_panel (an update did not finish)" "operio-orca update"; fi
+  else info "panel $app_v from a checkout ($APP_DIR), no install record"; fi
+
+  if [ "${OPERIO_ORCA_SKIP_HERDR:-0}" = 1 ]; then info "herdr checks skipped (OPERIO_ORCA_SKIP_HERDR=1)"
+  elif [ ! -x "$HERDR_BIN" ]; then no "herdr not found at $HERDR_BIN" "run the installer again: operio-orca update"
+  else
+    local hv; hv="$("$HERDR_BIN" --version 2>/dev/null | awk '{print $2}' || true)"
+    if [ -n "$man_herdr" ] && [ "$hv" != "$man_herdr" ]; then no "herdr is ${hv:-?}, ORCA expects $man_herdr" "operio-orca update"
+    else ok "herdr ${hv:-?} ($HERDR_BIN)"; fi
+    if herdr_running; then ok "herdr server running"; else no "no herdr server running" "operio-orca start"; fi
+  fi
+
+  local p; p="$(port)"
+  if healthy; then ok "panel answering at http://127.0.0.1:$p"
+  elif "$NODE_BIN" -e "require('net').connect($p,'127.0.0.1').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))" 2>/dev/null; then
+    no "port $p is taken by another program, not ORCA" "set OPERIO_ORCA_PORT=<a free port> in $ENV_FILE, then: operio-orca restart"
+  else no "panel not running (port $p is free)" "operio-orca start"; fi
+
+  case "$SERVICE" in
+    systemd)
+      if [ "$SERVICE_ENABLED" != 1 ]; then info "service installed but not enabled (--no-service); after a reboot: operio-orca start"
+      elif ! command -v systemctl >/dev/null 2>&1 || ! systemctl --user show-environment >/dev/null 2>&1; then
+        no "systemd --user session not reachable" "log in again, or start by hand: operio-orca start"
+      else
+        local en ac; en="$(systemctl --user is-enabled "$UNIT" 2>/dev/null || true)"; ac="$(systemctl --user is-active "$UNIT" 2>/dev/null || true)"
+        if [ "$en" = enabled ] && [ "$ac" = active ]; then ok "systemd service enabled and active ($UNIT)"
+        else no "systemd service is ${en:-missing} / ${ac:-inactive}" "systemctl --user enable --now $UNIT   (then: operio-orca logs)"; fi
+        if command -v loginctl >/dev/null 2>&1 && [ "$(loginctl show-user "$(id -un)" -p Linger --value 2>/dev/null || echo no)" != yes ]; then
+          info "to keep it running after you log out: loginctl enable-linger $(id -un)"; fi
+      fi ;;
+    launchd)
+      if [ "$SERVICE_ENABLED" != 1 ]; then info "launchd agent written but not loaded (--no-service); after a reboot: operio-orca start"
+      elif launchctl print "gui/$(id -u)/$LABEL" >/dev/null 2>&1; then ok "launchd agent loaded ($LABEL)"
+      else no "launchd agent not loaded" "launchctl bootstrap gui/$(id -u) $HOME/Library/LaunchAgents/$LABEL.plist"; fi ;;
+    *)
+      if is_wsl; then info "no service (WSL2 without systemd): after Windows restarts run operio-orca start. To start with Ubuntu: printf '[boot]\\nsystemd=true\\n' | sudo tee -a /etc/wsl.conf, then wsl --shutdown, then install again"
+      else info "no service: after a reboot run operio-orca start"; fi ;;
+  esac
+
+  if [ ! -d "$CONFIG_DIR" ]; then no "settings folder missing: $CONFIG_DIR" "operio-orca start creates it; or run the installer again"
+  else
+    m="$(mode_of "$CONFIG_DIR")"
+    if [ "$m" = 700 ]; then ok "settings folder $CONFIG_DIR (mode 700)"; else no "settings folder $CONFIG_DIR has mode $m" "chmod 700 $CONFIG_DIR"; fi
+    for f in env vapid.json state.json; do
+      [ -e "$CONFIG_DIR/$f" ] || continue
+      m="$(mode_of "$CONFIG_DIR/$f")"
+      if [ "$m" = 600 ]; then ok "$f (mode 600)"; else no "$f has mode $m" "chmod 600 $CONFIG_DIR/$f"; fi
+    done
+    if [ -d "$CONFIG_DIR/journal" ]; then
+      m="$(mode_of "$CONFIG_DIR/journal")"
+      if [ "$m" = 700 ]; then ok "journal folder (mode 700)"; else no "journal folder has mode $m" "chmod 700 $CONFIG_DIR/journal"; fi
+    fi
+    load_env
+    local h; h="${OPERIO_ORCA_HOST:-127.0.0.1}"
+    if [ "$h" = 127.0.0.1 ]; then ok "listens on 127.0.0.1 only"
+    else no "OPERIO_ORCA_HOST=$h: other machines can reach it, and there is no login" "set OPERIO_ORCA_HOST=127.0.0.1 in $ENV_FILE; use Tailscale or an SSH tunnel for your phone"; fi
+    local hosts="${OPERIO_ORCA_ALLOWED_HOSTS:-}" badh=""
+    if [ -n "$hosts" ]; then
+      badh="$(printf '%s' "$hosts" | tr ',' '\n' | sed 's/[[:space:]]//g' | grep . | grep -v -E '^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?$' | head -1 || true)"
+      if [ -z "$badh" ]; then ok "allowed hosts: $hosts"
+      else no "OPERIO_ORCA_ALLOWED_HOSTS has an entry that is not a plain host name: $badh" "in $ENV_FILE use lowercase names only, comma separated, e.g. my-laptop.example-tailnet.ts.net (no http://, no path)"; fi
+    fi
+    local freek; freek="$(df -Pk "$CONFIG_DIR" 2>/dev/null | awk 'NR==2{print $4}')"
+    if [ -n "$freek" ] && [ "$freek" -lt 102400 ] 2>/dev/null; then no "only $((freek / 1024)) MB free where settings and the journal are written" "free some disk space on $(df -Pk "$CONFIG_DIR" | awk 'NR==2{print $6}')"
+    else ok "disk: $((${freek:-0} / 1024)) MB free for settings and the journal"; fi
+  fi
+  info "logs: operio-orca logs (panel) · operio-orca logs herdr · operio-orca logs routines"
+  printf '%s\n' "Send this output with any support request."
+  return "$bad"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -260,11 +365,13 @@ case "${1:-help}" in
   stop) cmd_stop ;;
   restart) cmd_stop; cmd_start ;;
   status) cmd_status ;;
+  open) cmd_open ;;
+  doctor) cmd_doctor ;;
   update) shift; cmd_update "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,14p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,16p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

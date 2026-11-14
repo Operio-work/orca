@@ -69,3 +69,45 @@ test('status without a service says the panel is started by hand', () => {
   assert.match(r.out, /panel:\s+stopped/);
   assert.match(r.out, /service: none \(started by hand; after a reboot: operio-orca start\)/);
 });
+
+test('open hands the panel URL to the browser opener', () => {
+  const r = run(['open']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, new RegExp(`opening http://127\\.0\\.0\\.1:${PORT}`));
+  assert.equal(fs.readFileSync(path.join(HOME, 'opened.txt'), 'utf8').trim(), `http://127.0.0.1:${PORT}`);
+});
+
+test('doctor: stopped panel and a loose file mode fail with the fix; a healthy install passes', async () => {
+  let r = run(['doctor']);
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /✓ Node\.js \d+/);
+  assert.match(r.out, new RegExp(`✓ panel ${pkg.version.replace(/\./g, '\\.')} in `));
+  assert.match(r.out, /· herdr checks skipped/);
+  assert.match(r.out, new RegExp(`✗ panel not running \\(port ${PORT} is free\\)\\n\\s+fix: operio-orca start`));
+  assert.match(r.out, /· no service: after a reboot run operio-orca start/);
+  assert.match(r.out, /✓ settings folder .* \(mode 700\)/);
+  assert.match(r.out, /✓ env \(mode 600\)/);
+  assert.match(r.out, /✓ journal folder \(mode 700\)/);
+  assert.match(r.out, /✓ listens on 127\.0\.0\.1 only/);
+  assert.match(r.out, /✓ disk: \d+ MB free/);
+  assert.match(r.out, /Send this output with any support request\.$/m);
+
+  fs.chmodSync(path.join(CONFIG, 'env'), 0o644);
+  fs.appendFileSync(path.join(CONFIG, 'env'), 'OPERIO_ORCA_ALLOWED_HOSTS=http://bad.example.com\n');
+  r = run(['doctor']);
+  assert.equal(r.code, 1);
+  assert.match(r.out, new RegExp(`✗ env has mode 644\\n\\s+fix: chmod 600 ${path.join(CONFIG, 'env').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.match(r.out, /✗ OPERIO_ORCA_ALLOWED_HOSTS has an entry that is not a plain host name: http:\/\/bad\.example\.com/);
+  fs.writeFileSync(path.join(CONFIG, 'env'), '# test settings\nOPERIO_ORCA_ALLOWED_HOSTS=my-laptop.example-tailnet.ts.net\n', { mode: 0o600 });
+  fs.chmodSync(path.join(CONFIG, 'env'), 0o600);
+
+  r = run(['start']);
+  assert.equal(r.code, 0, r.out);
+  assert.equal(await healthz(), 200);
+  r = run(['doctor']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, new RegExp(`✓ panel answering at http://127\\.0\\.0\\.1:${PORT}`));
+  assert.match(r.out, /✓ allowed hosts: my-laptop\.example-tailnet\.ts\.net/);
+  assert.match(r.out, /✓ vapid\.json \(mode 600\)/, 'the panel created its push keys with mode 600');
+  assert.doesNotMatch(r.out, /✗/);
+});

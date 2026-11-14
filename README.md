@@ -173,6 +173,12 @@ operio-orca demo --stop       stop it
 
 Screenshots are in `demo/screenshots/` (Spanish: `demo/screenshots/es/`).
 
+## Check, logs, backup
+
+`operio-orca doctor` checks Node, herdr, the port, the service, file permissions and settings,
+prints the exact fix under anything wrong and exits 1 if there is one; send its output with any
+support request. `operio-orca open` opens the panel in your browser.
+
 ## Uninstall
 
 `operio-orca uninstall` (add `--purge` to also delete `~/.config/operio-orca`). It never stops your

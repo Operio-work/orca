@@ -15,6 +15,11 @@ The installer pins one panel release and one herdr release together; `operio-orc
   installer now starts the panel by hand so the install ends with it running, and on WSL prints the
   recipe that makes ORCA start with Ubuntu (`[boot] systemd=true` in `/etc/wsl.conf`,
   `wsl --shutdown`, install again). `operio-orca status` says "service: none (started by hand)".
+
+### CLI
+- `operio-orca doctor`: one line per check (Node, panel files, herdr, port, service, file modes,
+  settings, disk) with the exact fix under every ✗; exit 1 when something is wrong.
+  `operio-orca open` opens the panel in the browser (xdg-open, open, or wslview/explorer.exe on WSL).
 ## [0.1.0] - 2026-11-09
 
 First public release.
