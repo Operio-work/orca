@@ -7,9 +7,9 @@
 # Installs, for the current user only (no sudo, no Docker):
 #   ~/.local/share/operio-orca/app       the ORCA panel (Node >= 20)
 #   ~/.local/share/operio-orca/bin/herdr  herdr, pinned to one release and checked by sha256
-#   ~/.local/bin/operio-orca              the CLI (start | stop | status | update | demo | uninstall)
-#   a systemd --user unit (Linux) or a launchd agent (macOS)
-# Your settings, routines and logs live in ~/.config/operio-orca and are never overwritten.
+#   ~/.local/bin/operio-orca              the CLI (start | stop | status | update | llm | demo | uninstall)
+#   a systemd --user unit (Linux) or a launchd agent (macOS); both load ~/.config/operio-orca/llm.env
+# Your settings, routines, API keys and logs live in ~/.config/operio-orca and are never overwritten.
 #
 # ORCA is MIT (c) 2026 Operio. herdr is a separate project by its authors, Apache-2.0
 # (https://github.com/herdrdev/herdr); this script downloads its official release binary.
@@ -300,6 +300,12 @@ fi
 
 # ─── 6. service ───────────────────────────────────────────────────────────────
 SVC_PATH="$BIN_DIR:$(dirname "$NODE_BIN"):/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+# API keys for the agents (operio-orca llm set NAME) go into herdr's environment every way it
+# starts. The file may not exist yet: systemd's "-" and the launchd test make that fine.
+# Written as %h / $HOME when the settings folder is the default one under the home folder.
+LLM_ENV_UNIT="${CONFIG_DIR/#"$HOME"/%h}/llm.env"
+LLM_ENV_SH="${CONFIG_DIR/#"$HOME"/\$HOME}/llm.env"
+LLM_SH="set -a; [ -f \"$LLM_ENV_SH\" ] && . \"$LLM_ENV_SH\"; set +a; "
 if [ "$PLATFORM" = linux ]; then
   mkdir -p "$SYSTEMD_DIR"
   cat > "$SYSTEMD_DIR/operio-orca-herdr.service" <<EOF
@@ -309,6 +315,8 @@ Description=herdr server for ORCA (skipped when a herdr server is already runnin
 [Service]
 Type=simple
 Environment=PATH=$SVC_PATH
+# API keys for the agents (operio-orca llm); herdr's panes inherit them.
+EnvironmentFile=-$LLM_ENV_UNIT
 ExecCondition=/bin/sh -c '! "$HERDR_BIN" status server 2>/dev/null | grep -q "status: running"'
 ExecStart=$HERDR_BIN server
 Restart=on-failure
@@ -328,6 +336,7 @@ After=operio-orca-herdr.service
 [Service]
 Type=simple
 Environment=PATH=$SVC_PATH
+EnvironmentFile=-$LLM_ENV_UNIT
 ExecStart=$PREFIX/app/bin/operio-orca run
 Restart=on-failure
 RestartSec=3
@@ -359,6 +368,7 @@ EOF
   fi
 else
   mkdir -p "$LAUNCHD_DIR" "$CONFIG_DIR/logs"
+  xml() { printf '%s' "$1" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'; } # text inside <string>
   plist() { # keepalive(0|1) label program-args...
     local keep="$1" label="$2"; shift 2
     {
@@ -367,7 +377,7 @@ else
       printf '<plist version="1.0">\n<dict>\n'
       printf '  <key>Label</key><string>%s</string>\n' "$label"
       printf '  <key>ProgramArguments</key>\n  <array>\n'
-      for a in "$@"; do printf '    <string>%s</string>\n' "$a"; done
+      for a in "$@"; do printf '    <string>%s</string>\n' "$(xml "$a")"; done
       printf '  </array>\n'
       printf '  <key>EnvironmentVariables</key>\n  <dict><key>PATH</key><string>%s</string></dict>\n' "$SVC_PATH"
       printf '  <key>RunAtLoad</key><true/>\n'
@@ -378,9 +388,9 @@ else
     } > "$LAUNCHD_DIR/$label.plist"
   }
   # herdr server: started once at login (it exits if one is already running); never kept alive
-  # by launchd, so unloading ORCA leaves your agents alone.
-  plist 0 "$LAUNCHD_LABEL-herdr" /bin/sh -c "\"$HERDR_BIN\" status server 2>/dev/null | grep -q 'status: running' || exec \"$HERDR_BIN\" server"
-  plist 1 "$LAUNCHD_LABEL" "$PREFIX/app/bin/operio-orca" run   # restarts if it crashes
+  # by launchd, so unloading ORCA leaves your agents alone. Both load llm.env first (API keys).
+  plist 0 "$LAUNCHD_LABEL-herdr" /bin/sh -c "$LLM_SH\"$HERDR_BIN\" status server 2>/dev/null | grep -q 'status: running' || exec \"$HERDR_BIN\" server"
+  plist 1 "$LAUNCHD_LABEL" /bin/sh -c "${LLM_SH}exec \"$PREFIX/app/bin/operio-orca\" run"   # restarts if it crashes
   if [ "$WITH_SERVICE" -eq 1 ]; then
     # herdr: load once, never reload (that would end every running agent).
     launchctl print "gui/$(id -u)/$LAUNCHD_LABEL-herdr" >/dev/null 2>&1 \
@@ -402,8 +412,9 @@ cat <<EOF
   ORCA ${SRC_VERSION} is installed (runs on herdr ${HERDR_VERSION}).
 
   Open:      http://127.0.0.1:${PORT}
-  Commands:  operio-orca status | start | stop | update | doctor | logs | backup | uninstall
+  Commands:  operio-orca status | start | stop | update | doctor | logs | backup | llm | uninstall
   Settings:  ${ENV_FILE}
+  API keys:  operio-orca llm set ANTHROPIC_API_KEY   (or sign in inside each agent's own terminal)
   Routines:  ${CONFIG_DIR}/routines (examples are off until you turn them on)
 EOF
 if [ "$IS_WSL" = 1 ] && [ "$NO_SYSTEMD" = 1 ]; then

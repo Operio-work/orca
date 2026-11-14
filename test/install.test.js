@@ -67,6 +67,13 @@ test('install.sh without systemd (WSL2) starts the panel by hand and prints the 
       assert.match(out, /wsl --shutdown/);
       assert.match(out, /curl -fsSL https:\/\/make\.operio\.work\/install\.sh \| bash/);
       assert.match(fs.readFileSync(path.join(HOME, '.local', 'share', 'operio-orca', 'install.env'), 'utf8'), /^SERVICE="none"$/m);
+      // Both units load the agents' API keys (operio-orca llm); "-" so a missing file is fine.
+      for (const unit of ['operio-orca-herdr.service', 'operio-orca.service']) {
+        const text = fs.readFileSync(path.join(HOME, '.config', 'systemd', 'user', unit), 'utf8');
+        assert.match(text, /^EnvironmentFile=-%h\/\.config\/operio-orca\/llm\.env$/m, `${unit} loads llm.env`);
+        assert.ok(text.indexOf('EnvironmentFile=') < text.indexOf('ExecStart='), `${unit}: EnvironmentFile before ExecStart`);
+      }
+      assert.match(out, /API keys:\s+operio-orca llm set ANTHROPIC_API_KEY/);
       assert.equal(await healthz(), 200);
       const st = spawnSync('bash', [cli, 'status'], { env, encoding: 'utf8' });
       assert.match(st.stdout, /service: none \(started by hand; after a reboot: operio-orca start\)/);
