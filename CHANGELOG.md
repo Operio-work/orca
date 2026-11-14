@@ -14,8 +14,20 @@ The installer pins one panel release and one herdr release together; `operio-orc
 - An agent's full history is read once per state change; while nothing changed, polls read only
   its screen. Stops full-screen agents (Claude Code) from visibly scrolling their transcript
   in the terminal on every poll.
+- **LLM keys** (key icon in the header): add or remove API keys for your agents
+  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, …) and **Apply** to restart herdr so
+  they get them; refused, naming the agents, while one is working or asking you. Endpoints
+  `GET /api/llm` (names and last 4 characters only), `POST /api/llm/set | unset | apply`
+  (same-origin, localhost). Values never come back and never reach the log; the Journal
+  redacts key values by name (`*_API_KEY`, `*_TOKEN`, `*_SECRET`) and by shape (`sk-…`,
+  `AIza…`, `gsk_…`).
 
 ### Install
+- Both service files load the agents' API keys from `~/.config/operio-orca/llm.env`: the systemd
+  units through `EnvironmentFile=-%h/.config/operio-orca/llm.env`, the launchd agents through
+  `/bin/sh -c 'set -a; . llm.env; set +a; exec …'`. Agents run inside herdr, so every agent sees
+  them. **Existing installs get the new service files with `operio-orca update`** (or by running
+  the installer again); until then the keys load only through `operio-orca start`.
 - Without a systemd user session (Ubuntu under WSL2 before systemd is turned on, containers), the
   installer now starts the panel by hand so the install ends with it running, and on WSL prints the
   recipe that makes ORCA start with Ubuntu (`[boot] systemd=true` in `/etc/wsl.conf`,
@@ -34,6 +46,16 @@ The installer pins one panel release and one herdr release together; `operio-orc
   routines, drafts, journal, push keys; not the logs). `operio-orca restore FILE` puts it back with
   the panel stopped (or `--force`), keeps the current folder as `…before-restore-<stamp>`, restores
   700/600 modes and never touches the service files or herdr.
+- `operio-orca llm set NAME | unset NAME | list | apply | test KIND`: API keys for the agents in
+  `~/.config/operio-orca/llm.env` (`NAME=value`, mode 600). `set` takes the value from a hidden
+  prompt or stdin, never an argument; `list` shows names and the last 4 characters; `apply`
+  restarts herdr only when no agent is working or waiting on you (systemd restart, launchd
+  kickstart, or by the pid of the herdr ORCA started by hand); `test claude|codex|opencode|gemini`
+  runs that agent once with the keys loaded and prints `ok` or the last stderr line, redacted.
+  `operio-orca start` and `run` load the file before starting herdr and the panel; `doctor` shows
+  its mode and the names set (✗ with the fix when the mode is not 600). `OPERIO_ORCA_HERDR_BIN`
+  now also names the herdr the CLI talks to. Subscription logins stay the agents' own (sign in
+  inside the agent's terminal); ORCA stores nothing for them.
 ## [0.1.0] - 2026-11-09
 
 First public release.

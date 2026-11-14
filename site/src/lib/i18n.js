@@ -302,7 +302,11 @@ const en = {
       ['operio-orca doctor', 'Check the install and print the fix for anything wrong'],
       ['operio-orca logs', 'The panel log (logs herdr, logs routines; -f to follow)'],
       ['operio-orca backup', 'Save settings, routines, drafts and the journal to one file'],
-      ['operio-orca restore FILE', 'Put a backup back (keeps a copy of what was there)']
+      ['operio-orca restore FILE', 'Put a backup back (keeps a copy of what was there)'],
+      ['operio-orca llm set NAME', 'Save an API key for your agents (typed hidden or piped in, never an argument)'],
+      ['operio-orca llm list', 'The keys set, by name and last 4 characters (llm unset NAME removes one)'],
+      ['operio-orca llm apply', 'Restart herdr so the agents get the keys (only when none is working)'],
+      ['operio-orca llm test claude', 'One tiny prompt with the keys loaded: ok, or why not (claude, codex, opencode, gemini)']
     ],
     commandsWhyQ: 'Why operio-orca and not just orca?',
     commandsWhyA: 'Ubuntu and many Linux desktops already ship a program called orca: the GNOME screen reader. A distinct name keeps the two apart.',
@@ -641,7 +645,11 @@ vsTitle: 'Cómo se compara ORCA',
       ['operio-orca doctor', 'Revisa la instalación y muestra cómo arreglar lo que falle'],
       ['operio-orca logs', 'El registro del panel (logs herdr, logs routines; -f para seguirlo)'],
       ['operio-orca backup', 'Guarda configuración, rutinas, borradores y bitácora en un archivo'],
-      ['operio-orca restore ARCHIVO', 'Regresa un respaldo (conserva una copia de lo que había)']
+      ['operio-orca restore ARCHIVO', 'Regresa un respaldo (conserva una copia de lo que había)'],
+      ['operio-orca llm set NOMBRE', 'Guarda una clave de API para tus agentes (oculta al escribirla o por tubería, nunca como argumento)'],
+      ['operio-orca llm list', 'Las claves guardadas, por nombre y últimos 4 caracteres (llm unset NOMBRE quita una)'],
+      ['operio-orca llm apply', 'Reinicia herdr para que los agentes reciban las claves (solo si ninguno está trabajando)'],
+      ['operio-orca llm test claude', 'Una prueba mínima con las claves cargadas: ok, o por qué no (claude, codex, opencode, gemini)']
     ],
     commandsWhyQ: '¿Por qué operio-orca y no solo orca?',
     commandsWhyA: 'Ubuntu y muchos escritorios Linux ya traen un programa llamado orca: el lector de pantalla de GNOME. Un nombre distinto evita que se confundan.',

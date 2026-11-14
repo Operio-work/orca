@@ -44,7 +44,7 @@ El instalador:
 Puedes correrlo de nuevo sin problema. Luego abre **http://127.0.0.1:7171**.
 
 ```
-operio-orca start | stop | restart | status | update | uninstall
+operio-orca start | stop | restart | status | open | doctor | logs | update | backup | restore | llm | uninstall
 ```
 
 ¿Por qué `operio-orca` y no `orca`? Ubuntu y muchos escritorios Linux ya traen `/usr/bin/orca`,
@@ -74,10 +74,10 @@ sesión. Lo que lo protege es que solo tú puedes llegar a él:
 - Toda petición que cambia algo necesita un encabezado `Origin` del mismo origen, lo que
   impide que otros sitios web le envíen peticiones (CSRF).
 - Abrir o crear una terminal pide una confirmación primero, que dura 15 minutos.
-- Ajustes, llaves VAPID, estado y registros viven en `~/.config/operio-orca` con permisos solo
-  para ti. Las instrucciones y respuestas de los agentes nunca se escriben en el registro. La
-  Bitácora guarda lo que enviaste y lo que respondieron los agentes durante 90 días, con llaves
-  y tokens ocultos antes de escribir nada.
+- Ajustes, claves de API (`llm.env`), llaves VAPID, estado y registros viven en
+  `~/.config/operio-orca` con permisos solo para ti. Las instrucciones y respuestas de los agentes
+  nunca se escriben en el registro. La Bitácora guarda lo que enviaste y lo que respondieron los
+  agentes durante 90 días, con llaves y tokens ocultos antes de escribir nada.
 
 Cualquiera con acceso a tu cuenta de usuario, o a un dispositivo desde el que abras el túnel, puede usarlo.
 
@@ -140,6 +140,41 @@ La lista completa, con las rutinas que Operio opera por ti, está en `catalog/ca
 `OPERIO_ORCA_HOST` (127.0.0.1), `OPERIO_ORCA_ALLOWED_HOSTS`, `OPERIO_ORCA_FOLDERS` (carpetas que se
 ofrecen para agentes nuevos, por defecto `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15),
 `OPERIO_ORCA_JOURNAL_DAYS` (90).
+
+## Claves LLM y suscripciones
+
+Cada agente necesita un modelo. Los cuatro que ORCA conoce (Claude Code, Codex, opencode, Gemini
+CLI) aceptan una **suscripción** o una **clave de API**:
+
+- **Suscripción**: inicia sesión una vez, en la terminal del propio agente en esta computadora
+  (`claude` y luego `/login`; `codex login`; `opencode auth login`; `gemini` y elige su inicio de
+  sesión). El agente guarda esa sesión por su cuenta; ORCA no almacena nada.
+- **Clave de API**: `operio-orca llm set ANTHROPIC_API_KEY`. El valor se escribe en un aviso oculto
+  o llega por tubería (`printf '%s' "$KEY" | operio-orca llm set OPENAI_API_KEY`); nunca va como
+  argumento, así que no queda en el historial de tu shell. Usa el nombre que lee el agente:
+  `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `GEMINI_API_KEY` o cualquier otro.
+
+Las claves viven en `~/.config/operio-orca/llm.env`, un `NOMBRE=valor` por línea, modo 600. Todas
+las formas de arrancar herdr cargan ese archivo en su entorno (las unidades de systemd con
+`EnvironmentFile=`, los agentes de launchd, `operio-orca start`), y los agentes corren dentro de
+herdr, así que todos la ven.
+
+- `operio-orca llm list`: los nombres guardados, cada uno con sus últimos 4 caracteres.
+  `llm unset NOMBRE` quita uno.
+- `operio-orca llm apply`: reinicia herdr para que un herdr en marcha tome las claves. Reiniciar
+  cierra todos los paneles de agentes, así que se niega, diciendo cuáles, mientras alguno esté
+  trabajando o esperándote; los inactivos se cierran y los vuelves a iniciar. Sin servicio
+  (arrancado a mano) reinicia el herdr que ORCA arrancó; uno que arrancaste tú se deja en paz y te
+  lo dice.
+- `operio-orca llm test claude|codex|opencode|gemini`: corre ese agente una vez, en una carpeta
+  vacía, con las claves cargadas y una instrucción mínima; imprime `ok` o `failed: <última línea
+  de error>`, nunca la clave. `not installed: <tipo>` si falta el CLI.
+- `operio-orca doctor` muestra el modo del archivo y los nombres guardados. El panel tiene lo
+  mismo bajo el icono de llave en la cabecera (agregar, quitar, Aplicar). La Bitácora oculta los
+  valores de las claves por nombre y por forma.
+
+Instalaciones existentes: `operio-orca update` (o correr el instalador de nuevo) reescribe los
+archivos de servicio con la línea `EnvironmentFile=`.
 
 ## Demo
 

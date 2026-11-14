@@ -44,7 +44,7 @@ The installer:
 It is safe to run again. Then open **http://127.0.0.1:7171**.
 
 ```
-operio-orca start | stop | restart | status | open | doctor | logs | update | backup | restore | uninstall
+operio-orca start | stop | restart | status | open | doctor | logs | update | backup | restore | llm | uninstall
 ```
 
 Why `operio-orca` and not `orca`? Ubuntu and many Linux desktops already ship `/usr/bin/orca`,
@@ -79,9 +79,10 @@ it safe is that only you can reach it:
 - Every request that changes something needs a same-origin `Origin` header, which blocks
   other websites from posting to it (CSRF).
 - Opening or creating a shell asks for a confirmation first, which lasts 15 minutes.
-- Settings, VAPID keys, state and logs live in `~/.config/operio-orca` with owner-only permissions.
-  Agent prompts and replies are never written to the log. The Journal keeps what you sent and
-  what agents answered, with keys and tokens redacted before anything is written, for 90 days.
+- Settings, API keys (`llm.env`), VAPID keys, state and logs live in `~/.config/operio-orca` with
+  owner-only permissions. Agent prompts and replies are never written to the log. The Journal
+  keeps what you sent and what agents answered, with keys and tokens redacted before anything
+  is written, for 90 days.
 
 Anyone with access to your user account, or to a device you tunnel from, can use it.
 
@@ -152,6 +153,37 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
 `~/.config/operio-orca/env`, one `KEY=value` per line: `OPERIO_ORCA_PORT` (7171),
 `OPERIO_ORCA_HOST` (127.0.0.1), `OPERIO_ORCA_ALLOWED_HOSTS`, `OPERIO_ORCA_FOLDERS` (folders offered
 for new agents, default `~`), `OPERIO_ORCA_SHELL_CONFIRM_MIN` (15), `OPERIO_ORCA_JOURNAL_DAYS` (90).
+
+## LLM keys and subscriptions
+
+Each agent needs a model. The four ORCA knows (Claude Code, Codex, opencode, Gemini CLI) take
+either a **subscription login** or an **API key**:
+
+- **Subscription**: sign in once, inside the agent's own terminal on this computer (`claude`
+  then `/login`; `codex login`; `opencode auth login`; `gemini` and pick its sign-in). The agent
+  keeps that session itself; ORCA stores nothing.
+- **API key**: `operio-orca llm set ANTHROPIC_API_KEY`. The value is typed at a hidden prompt, or
+  piped in (`printf '%s' "$KEY" | operio-orca llm set OPENAI_API_KEY`); it is never a command-line
+  argument, so it stays out of your shell history. Use the name the agent reads:
+  `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `GEMINI_API_KEY`, or any other.
+
+Keys live in `~/.config/operio-orca/llm.env`, one `NAME=value` per line, mode 600. Every way herdr
+starts loads that file into its environment (the systemd units through `EnvironmentFile=`, the
+launchd agents, `operio-orca start`), and agents run inside herdr, so every agent sees them.
+
+- `operio-orca llm list`: the names set, each with its last 4 characters. `llm unset NAME` removes one.
+- `operio-orca llm apply`: restarts herdr so a running herdr picks the keys up. A restart ends every
+  agent pane, so it refuses, naming them, while any agent is working or waiting on you; idle
+  agents are closed and you start them again. Without a service (started by hand) it restarts the
+  herdr ORCA started; a herdr you started yourself is left alone and it tells you.
+- `operio-orca llm test claude|codex|opencode|gemini`: runs that agent once, in an empty folder,
+  with the keys loaded and a tiny prompt; prints `ok` or `failed: <last error line>`, never the key.
+  `not installed: <kind>` when the CLI is missing.
+- `operio-orca doctor` shows the file's mode and the names set. The panel has the same under the
+  key icon in the header (add, remove, Apply). The Journal redacts key values by name and shape.
+
+Existing installs: `operio-orca update` (or running the installer again) rewrites the service
+files with the `EnvironmentFile=` line.
 
 ## Demo
 
