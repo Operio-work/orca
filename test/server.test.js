@@ -177,3 +177,27 @@ test('/api/meta reports the panel version', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.json.version, require('../package.json').version);
 });
+
+test("a Claude agent's model is switched from its card, only while it is free", async () => {
+  const f = path.join(FAKE, 'state.json');
+  const st = JSON.parse(fs.readFileSync(f, 'utf8'));
+  st.agents.push(
+    { pane_id: 'w1:p91', tab_id: 'w1:t91', terminal_id: 'term91', name: 'free', agent: 'claude', agent_status: 'idle', cwd: HOME },
+    { pane_id: 'w1:p92', tab_id: 'w1:t92', terminal_id: 'term92', name: 'busy', agent: 'claude', agent_status: 'working', cwd: HOME },
+    { pane_id: 'w1:p93', tab_id: 'w1:t93', terminal_id: 'term93', name: 'other', agent: 'codex', agent_status: 'idle', cwd: HOME },
+  );
+  fs.writeFileSync(f, JSON.stringify(st));
+  await until(async () => (await req('GET', '/api/agents')).json?.agents?.some(a => a.pane === 'w1:p93'));
+  const model = (pane, m) => post(`/api/agents/${encodeURIComponent(pane)}/model`, { model: m });
+  assert.deepEqual((await req('GET', '/api/meta')).json.models.claude.includes('sonnet'), true);
+  assert.equal((await model('w1:p91', 'not-a-model')).status, 400);
+  assert.equal((await model('w1:p92', 'sonnet')).json.error, 'busy');
+  assert.equal((await model('w1:p93', 'sonnet')).json.error, 'no_models');
+  const ok = await model('w1:p91', 'sonnet');
+  assert.equal(ok.status, 200);
+  const sent = fs.readFileSync(path.join(FAKE, 'prompts.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(p => p.pane === 'w1:p91');
+  assert.deepEqual(sent.map(p => p.text), ['/model sonnet']);
+  const agents = (await req('GET', '/api/agents')).json.agents;
+  assert.equal(agents.find(a => a.pane === 'w1:p91').model, 'sonnet');
+  assert.equal(agents.find(a => a.pane === 'w1:p92').model, null);
+});

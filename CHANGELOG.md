@@ -7,6 +7,10 @@ The installer pins one panel release and one herdr release together; `operio-orc
 
 ### Panel
 - `/api/meta` reports the panel `version`.
+- Switch a Claude agent's model from its card: ⋯ → Model (Fable, Opus, Sonnet, Haiku). Works while
+  the agent is idle; the choice is remembered and written to the Journal.
+- Fixed: on a card that needs you, the "other" answer field lost the cursor on every refresh, so
+  you could not finish typing. The answers are now redrawn only when the question changes.
 - An agent's full history is read once per state change; while nothing changed, polls read only
   its screen. Stops full-screen agents (Claude Code) from visibly scrolling their transcript
   in the terminal on every poll.

@@ -705,6 +705,13 @@ body.sheet-open { overflow: hidden; } /* phone: the agent page owns the screen *
 .jlist li.now .jsaid { color: var(--text-secondary); }
 
 .tags { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* Model: one chip per model the agent can switch to (⋯ More) */
+.model { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.model[hidden] { display: none; }
+.model .chip { text-transform: capitalize; }
+.model .chip:disabled { opacity: 0.5; cursor: default; }
+.model-hint { flex-basis: 100%; font: 400 var(--text-xs)/1.4 var(--font-sans); color: var(--text-muted); }
+.model-hint:empty { display: none; }
 .tag {
   display: inline-flex; align-items: center; gap: 2px; min-height: 30px; padding: 0 2px 0 var(--space-2);
   border-radius: 999px; font: 400 var(--text-xs) var(--font-mono);

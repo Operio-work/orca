@@ -56,6 +56,8 @@ const T = {
     details: 'Details', asks: 'Asks: {0}', shellTabs: '{0} shell tabs, no agent',
     k_enter: 'Enter', k_esc: 'Esc', 'k_ctrl+c': 'Ctrl C', k_up: 'Up', k_down: 'Down', k_tab: 'Tab',
     e_blocked: 'It’s waiting on a question — answer it with a key first.',
+    modelTitle: 'Model', modelSet: '{0} now runs on {1}', modelWait: 'You can switch once it stops working.', modelAsk: 'Answer its question first, then switch.', modelUnknown: 'Not set from here yet — it runs on its starting model.',
+    e_busy: 'It’s working — switch the model when it stops.', e_no_models: 'This kind of agent can’t switch models from here.',
     e_gone: 'That agent is gone — the map will catch up in a moment.',
     e_question_gone: 'The question changed on screen — nothing was sent. Look again.',
     e_claimed_by_other: 'Someone else is on it — use Take over.',
@@ -130,6 +132,8 @@ const T = {
     details: 'Detalles', asks: 'Pregunta: {0}', shellTabs: '{0} pestañas de terminal sin agente',
     k_enter: 'Enter', k_esc: 'Esc', 'k_ctrl+c': 'Ctrl C', k_up: 'Arriba', k_down: 'Abajo', k_tab: 'Tab',
     e_blocked: 'Está esperando una respuesta — contéstale primero con una tecla.',
+    modelTitle: 'Modelo', modelSet: '{0} ahora usa {1}', modelWait: 'Podrás cambiarlo cuando termine de trabajar.', modelAsk: 'Contesta primero su pregunta y luego cámbialo.', modelUnknown: 'Aún no se eligió aquí — usa el modelo con el que inició.',
+    e_busy: 'Está trabajando — cambia el modelo cuando termine.', e_no_models: 'Este tipo de agente no puede cambiar de modelo desde aquí.',
     e_gone: 'Ese agente ya no está — el mapa se actualiza en un momento.',
     e_question_gone: 'La pregunta cambió en pantalla — no se envió nada. Vuelve a mirar.',
     e_claimed_by_other: 'Otra persona lo lleva — usa Tomar control.',
@@ -609,6 +613,7 @@ function renderSheet() {
   sBtn.textContent = t('suggest', sug);
   $('#sheet-clear').hidden = !a.name;
   renderTags(a);
+  renderModel(a);
   renderCtx();
   renderCrew();
   renderLinks(a);
@@ -1016,7 +1021,7 @@ function renderReply() {
   const showing = !!(qs?.length || menu?.options?.length);
   dock.classList.toggle('asking', showing);
   box.hidden = !showing;
-  if (!showing) { ans.sig = ''; if (!box.hidden) box.replaceChildren(); }
+  if (!showing) { ans.sig = ''; box.replaceChildren(); }
   else {
     const sig = selected + JSON.stringify(qs || menu);
     if (sig !== ans.sig) { ans = { sig, qi: 0, picks: [], multi: new Set(), other: false, armed: null, busy: false }; }
@@ -1058,6 +1063,11 @@ function optButton(n, label, desc, { on = false, risky = false, key, onTap }) {
   return b;
 }
 function drawAnswers(box, qs, menu) {
+  // Redraw only when something changed: the panel refreshes every few seconds, and a rebuilt
+  // "other" field loses the cursor (on a phone, the keyboard) in the middle of a word.
+  const drawn = JSON.stringify([ans.sig, ans.qi, [...ans.multi], ans.other, ans.armed, ans.busy, lang, $('.dock').classList.contains('keys-open')]);
+  if (box.dataset.drawn === drawn && box.childElementCount) return;
+  box.dataset.drawn = drawn;
   const parts = [];
   if (menu) {
     if (menu.question) parts.push(el('p', 'ans-q', menu.question));
@@ -1593,6 +1603,40 @@ function closeTagPicker(a, commit) {
   if (typed.length) addTags(a, typed); else render();
 }
 
+// Model (⋯ More): one chip per model this kind of agent can switch to. The lit one is the last
+// choice made from a card; an agent started on another model shows none until someone picks.
+let modelBusy = false;
+function renderModel(a) {
+  const box = $('#sheet-model');
+  const list = meta.models?.[a.agent] || [];
+  box.hidden = !list.length;
+  if (!list.length) return;
+  const locked = a.status === 'working' || a.status === 'blocked';
+  const key = [a.pane, a.model, a.status, modelBusy, lang, list].join('|');
+  if (box.dataset.key === key) return;
+  box.dataset.key = key;
+  box.querySelector('.model-hint').textContent = a.status === 'working' ? t('modelWait') : a.status === 'blocked' ? t('modelAsk') : a.model ? '' : t('modelUnknown');
+  box.querySelector('.crew-chips').replaceChildren(...list.map(m => {
+    const b = el('button', 'chip small', m);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', String(a.model === m));
+    b.disabled = locked || modelBusy;
+    b.addEventListener('click', async () => {
+      const pane = a.pane;
+      modelBusy = true; renderModel(a);
+      try {
+        await post(`/api/agents/${enc(pane)}/model`, { model: m });
+        const now = byPane.get(pane);
+        if (now) now.model = m;
+        sfx('sent');
+        toast(t('modelSet', label(now || a), m[0].toUpperCase() + m.slice(1)));
+        setTimeout(() => { loadOutput(true); refresh(); }, 900);
+      } catch (err) { toast(errText(err), true); }
+      finally { modelBusy = false; if (selected === pane && byPane.get(pane)) renderModel(byPane.get(pane)); }
+    });
+    return b;
+  }));
+}
 function renderTags(a) {
   const box = $('#sheet-tags');
   const editing = tagEditing === a.pane;

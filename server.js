@@ -42,6 +42,9 @@ const MIN_WORK_MS = CFG.MIN_WORK_MS; // shorter turns don't alert
 const FOLDERS = CFG.FOLDERS;
 const KINDS = ['claude', 'codex', 'opencode', 'hermes', 'agy', 'shell'];
 const KEYS  = ['enter', 'esc', 'ctrl+c', 'up', 'down', 'tab', '1', '2', '3'];
+// Models an agent can be switched to from its card. Claude takes "/model <alias>" as a plain
+// message and switches on the spot; the other kinds only have an on-screen picker, so none here.
+const MODELS = { claude: ['fable', 'opus', 'sonnet', 'haiku'] };
 const SHELL_UNLOCK_MS = CFG.SHELL_UNLOCK_MS;
 
 const PUBLIC = path.join(__dirname, 'public');
@@ -257,6 +260,7 @@ function shapeAgent(a) {
     cwd: shortHome(a.foreground_cwd || a.cwd),
     focused: !!a.focused,
     tags: state.tags[a.terminal_id] || [],
+    model: state.models?.[a.terminal_id]?.model || null, // the last model picked from the card (not read from the agent)
     session: a.agent_session?.value || null,
     since: prev.get(a.pane_id)?.since || null, // ms epoch the current status began (poller-tracked)
     jobs: jobStats(a.terminal_id),
@@ -1150,7 +1154,7 @@ async function termScreen(pane) {
 
 // ─── Journal API: timeline, saved output, export, daily review ────────────────
 const GROUPS = {
-  lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'shell.new'],
+  lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'agent.model', 'shell.new'],
   work: ['agent.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
   coordination: ['link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
   security: ['shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
@@ -1178,6 +1182,7 @@ function describe(e) {
     case 'agent.rename': return `${who} renamed ${e.was || ag} to ${e.name || '(no name)'}`;
     case 'agent.claim': return `${who} ${{ claim: 'claimed', release: 'released', take: 'took over', assign: 'assigned' }[e.mode] || e.mode} ${ag}${e.to ? ` to ${e.to}` : ''}`;
     case 'agent.tags': return `${who} tagged ${ag}: ${(e.tags || []).join(', ') || '(none)'}`;
+    case 'agent.model': return `${who} switched ${ag} to ${e.model}`;
     case 'agent.prompt': return `${who} → ${ag}: ${e.text}`;
     case 'agent.answer': return `${who} answered ${ag}${e.question ? ` “${e.question}”` : ''}: ${(e.picked || []).join(' / ')}`;
     case 'agent.keys': return `${who} pressed ${e.key} on ${ag}`;
@@ -1395,7 +1400,7 @@ async function api(req, res, url) {
     const [tabsOut, wsOut] = await Promise.all([herdrJson(['tab', 'list']), herdrJson(['workspace', 'list'])]);
     const tabs = (tabsOut.result?.tabs || []).map(t => ({ id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null }));
     const workspaces = (wsOut.result?.workspaces || []).map(shapeWorkspace);
-    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, access: accessView() });
+    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, access: accessView() });
   }
 
   if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/reply$/.test(pathname)) {
@@ -1609,7 +1614,7 @@ async function api(req, res, url) {
   }
 
   // ── Per-agent actions
-  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end)$/);
+  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end|model)$/);
   if (!m) return send(res, 404, { error: 'not found' });
   const pane = decodeURIComponent(m[1]);
   const action = m[2];
@@ -1623,6 +1628,25 @@ async function api(req, res, url) {
   }
 
   // Stop interrupts the job (the agent stays); End saves its output, asks it to quit, closes its pane.
+  // Switch the agent's model. Only while it is free: a slash command sent mid-job would queue
+  // behind the job, and one sent into a question would be typed as its answer.
+  if (action === 'model') {
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'gone');
+    const model = String(body.model || '');
+    if (!MODELS[a.agent]) throw new HttpError(409, 'no_models');
+    if (!MODELS[a.agent].includes(model)) throw new HttpError(400, 'bad_request');
+    if (a.status === 'blocked') throw new HttpError(409, 'blocked');
+    if (a.status === 'working') throw new HttpError(409, 'busy');
+    await herdr(['agent', 'prompt', pane, '/model ' + model], 10000);
+    state.models = state.models || {};
+    state.models[a.terminal] = { model, at: Date.now() };
+    saveState();
+    log('agent.model', { pane, model });
+    jr(req, 'agent.model', a, { model });
+    return send(res, 200, { ok: true, model });
+  }
+
   if (action === 'stop' || action === 'end') {
     const a = (await listAgents()).find(x => x.pane === pane);
     if (!a) throw new HttpError(404, 'gone');
@@ -1811,6 +1835,7 @@ async function api(req, res, url) {
   for (const tg of tags) { if (!(tg in state.tagColors)) state.tagColors[tg] = nextTagSlot(); state.tagUsed[tg] = Date.now(); }
   const live = new Set(agents.map(x => x.terminal)); // drop tags of closed terminals
   for (const k of Object.keys(state.tags)) if (!live.has(k)) delete state.tags[k];
+  for (const k of Object.keys(state.models || {})) if (!live.has(k)) delete state.models[k];
   saveState();
   log('agent.tags', { pane, tags });
   jr(req, 'agent.tags', a, { tags });
