@@ -7,6 +7,23 @@ The installer pins one panel release and one herdr release together; `operio-orc
 
 ### Panel
 - `/api/meta` reports the panel `version`.
+- **Map:** every card keeps room for its name and status (a busy map scrolls instead of
+  clipping); a hover card on desktop shows the task, last reply, agent and model, folder, jobs
+  and context; skeleton boxes while the first answer loads, and a loader while an agent's
+  conversation is read.
+- **Drag and drop on the map:** drag a card (long-press on a phone) beside a card of another tab,
+  onto a card of the same tab to swap, onto a tab to add it there, or onto the bar at the bottom
+  for a new tab or a new workspace. Shells move too. `POST /api/agents/:pane/move` gains the
+  modes `beside` and `swap`.
+- **Reorder the map:** drag a tab box by its header. herdr can't reorder tabs, so this is ORCA's
+  own order (`POST /api/map/order`); the desktop keeps its own.
+- **Rename workspaces and tabs** from the pencil on a box header (`POST /api/workspaces/:id/rename`,
+  `POST /api/tabs/:id/rename`); herdr renames them, so the desktop shows the same names.
+- **New agent:** agent cards, a starting model for Claude, folder chips; remembers your last pick.
+  The view button names the current view; the phone header no longer overlaps.
+- **Office view is now a tower:** one floor per workspace in map order, a lift that comes to the
+  floor you hover and carries agents that arrive, leave or move floors, a cheer and a ✓ when a
+  job finishes, a red room and roof flag when one needs you, and a sky that follows your clock.
 - Switch a Claude agent's model from its card: ⋯ → Model (Fable, Opus, Sonnet, Haiku). Works while
   the agent is idle; the choice is remembered and written to the Journal.
 - Fixed: on a card that needs you, the "other" answer field lost the cursor on every refresh, so

@@ -47,6 +47,13 @@ const T = {
     cleared: 'Name cleared', empty: '(no output yet)', sent: 'Sent to {0}', keySent: '{0} sent',
     armCtrlC: 'Tap ⌃C again to stop {0}', addTag: '+ tag', tagPrompt: 'tag, tag', removeTag: 'Remove tag {0}',
     newTitle: 'Start a new agent', name: 'Name', kind: 'Agent', folder: 'Folder', where: 'Where',
+    rnTitle: 'Rename', rnWs: 'Workspace', rnTab: 'Tab', rnSave: 'Save', rnSaving: 'Saving…', rnHint: 'Changes the names on the desktop too.', rnFor: 'Rename {0}', rnDone: 'Renamed to {0}', e_not_admin: 'Only an admin can rename workspaces and tabs.',
+    orderSaved: 'Map order saved', orderTip: 'Drag to reorder the map',
+    dndHint: 'Drop on a card to place it beside it, on a tab to add it there, or:', dndNewTab: 'New tab in {0}', dndNewWs: 'New workspace', dndSwap: 'Swap', dndRight: 'Right', dndBelow: 'Below', dndInto: 'Add here', dndSwapped: '{0} swapped with {1}',
+    namePh: 'e.g. invoices', loadingOut: 'Reading the conversation…', modelDefault: 'Default', modelDefaultHint: 'its usual model',
+    kd_claude: 'Anthropic · Claude Code', kd_hermes: 'Hermes Agent', kd_opencode: 'Open source · any model', kd_agy: 'Google · Antigravity', kd_codex: 'OpenAI · Codex CLI', kd_shell: 'Plain terminal',
+    md_fable: 'frontier', md_opus: 'deep work', md_sonnet: 'balanced', md_haiku: 'fastest',
+    pk_kind: 'Agent', pk_model: 'Model', pk_folder: 'Folder', pk_place: 'Place', pk_task: 'Task', pk_last: 'Last reply', pk_jobs: 'Jobs (24 h)', pk_ctx: 'Context', pk_with: 'With', pk_open: 'Click to open · drag to move', pk_openScene: 'Click to open', pk_shell: 'Shell pane — click to open, drag to move',
     newTab: 'New tab', inTab: 'Split into {0}', newHint: 'Opens a pane in the workspace and starts the agent there. Takes up to a minute.',
     cancel: 'Cancel', start: 'Start', starting: 'Starting…', started: 'Started {0}',
     startedBlocked: 'Started {0} — it’s asking something first. Answer it in the panel.',
@@ -130,6 +137,13 @@ const T = {
     cleared: 'Nombre quitado', empty: '(aún sin salida)', sent: 'Enviado a {0}', keySent: '{0} enviado',
     armCtrlC: 'Toca ⌃C otra vez para detener {0}', addTag: '+ etiqueta', tagPrompt: 'etiqueta, etiqueta', removeTag: 'Quitar etiqueta {0}',
     newTitle: 'Iniciar un agente', name: 'Nombre', kind: 'Agente', folder: 'Carpeta', where: 'Dónde',
+    rnTitle: 'Renombrar', rnWs: 'Espacio de trabajo', rnTab: 'Pestaña', rnSave: 'Guardar', rnSaving: 'Guardando…', rnHint: 'También cambia los nombres en el escritorio.', rnFor: 'Renombrar {0}', rnDone: 'Renombrado a {0}', e_not_admin: 'Solo un administrador puede renombrar espacios y pestañas.',
+    orderSaved: 'Orden del mapa guardado', orderTip: 'Arrastra para reordenar el mapa',
+    dndHint: 'Suéltalo sobre una tarjeta para ponerlo al lado, sobre una pestaña para añadirlo ahí, o:', dndNewTab: 'Pestaña nueva en {0}', dndNewWs: 'Espacio de trabajo nuevo', dndSwap: 'Intercambiar', dndRight: 'Derecha', dndBelow: 'Abajo', dndInto: 'Añadir aquí', dndSwapped: '{0} intercambiado con {1}',
+    namePh: 'p. ej. facturas', loadingOut: 'Leyendo la conversación…', modelDefault: 'Predeterminado', modelDefaultHint: 'su modelo habitual',
+    kd_claude: 'Anthropic · Claude Code', kd_hermes: 'Hermes Agent', kd_opencode: 'Código abierto · cualquier modelo', kd_agy: 'Google · Antigravity', kd_codex: 'OpenAI · Codex CLI', kd_shell: 'Terminal simple',
+    md_fable: 'frontera', md_opus: 'trabajo profundo', md_sonnet: 'equilibrado', md_haiku: 'el más rápido',
+    pk_kind: 'Agente', pk_model: 'Modelo', pk_folder: 'Carpeta', pk_place: 'Lugar', pk_task: 'Tarea', pk_last: 'Última respuesta', pk_jobs: 'Trabajos (24 h)', pk_ctx: 'Contexto', pk_with: 'Con', pk_open: 'Clic para abrir · arrastra para mover', pk_openScene: 'Clic para abrir', pk_shell: 'Terminal — clic para abrir, arrastra para mover',
     newTab: 'Pestaña nueva', inTab: 'Dividir en {0}', newHint: 'Abre un panel en el espacio de trabajo e inicia el agente ahí. Tarda hasta un minuto.',
     cancel: 'Cancelar', start: 'Iniciar', starting: 'Iniciando…', started: 'Iniciado {0}',
     startedBlocked: 'Iniciado {0} — primero pregunta algo. Contéstale en el panel.',
@@ -194,6 +208,7 @@ const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* priva
 
 let lang = safeGet('herdr-lang') || (navigator.language || 'en').slice(0, 2);
 if (!T[lang]) lang = 'en';
+let lastData = null; // first /api/agents answer; null = still loading (skeletons show)
 let view = ['office', 'island', 'holo'].includes(safeGet('orca-view')) ? safeGet('orca-view') : 'map'; // map | office | island | holo
 let offline = false;
 let highlight = safeGet('orca-highlight') || 'all'; // all | blocked | working | idle | unnamed | tag:<x>
@@ -212,6 +227,7 @@ let byPane = new Map();     // pane -> agent
 let tagSlots = {};
 let tagLib = [];              // every saved tag: { tag, n (agents using it), last }
 let access = { admin: true, folders: null, shell: { confirmed: false, unlockedUntil: 0, unlockMs: 900000 } };
+let mapOrder = [], orderPending = false; // the order of the tab boxes on the map (tab ids)
 let links = [], handoffs = [], msgCounts = {}; // agent links (by pane), open hand-offs, message counts
 let clockSkew = 0;          // server now - client now
 let selected = null;        // pane id shown in the sheet
@@ -361,12 +377,26 @@ function makeTile(pane) {
 
 // Fit the whole map in the window: shrink the tile height cap until it fits (or hits a
 // tappable floor). Runs when the layout's shape or the window changes, not on every poll.
+// The per-tab --min-h floor wins over the cap, so a busy map scrolls instead of clipping.
+const TILE_MIN_H = 54, TILE_MIN_W = 96;
 let fitKey = '';
+// A tab whose narrowest pane would be thinner than TILE_MIN_W in one grid column takes a full row.
+function widenNarrow() {
+  const cols = Math.max(1, getComputedStyle(mapEl).gridTemplateColumns.split(' ').length);
+  const gap = parseFloat(getComputedStyle(mapEl).columnGap) || 0;
+  const col = (mapEl.clientWidth - gap * (cols - 1)) / cols;
+  for (const b of mapEl.children) {
+    if (!b.classList.contains('tabblock') || b.classList.contains('wide')) { b.classList?.remove('roomy'); continue; }
+    const w = parseFloat(b.dataset.minW || '1');
+    b.classList.toggle('roomy', cols > 1 && w * (col - 18) < TILE_MIN_W);
+  }
+}
 function fitMap(force) {
   if (view !== 'map' || mapEl.hidden || !mapEl.children.length) return;
   const key = [...mapEl.children].map(n => n.className + (n.querySelector?.('.panes')?.childElementCount ?? '')).join('|') + innerWidth + 'x' + innerHeight;
   if (!force && key === fitKey) return;
-  fitKey = key;
+  widenNarrow();
+  fitKey = [...mapEl.children].map(n => n.className + (n.querySelector?.('.panes')?.childElementCount ?? '')).join('|') + innerWidth + 'x' + innerHeight;
   const top = mapEl.getBoundingClientRect().top + window.scrollY;
   const avail = innerHeight - top - (isPhone() ? 12 : 20);
   let cap = isPhone() ? 130 : 124;
@@ -382,9 +412,15 @@ let fitTimer;
 addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitMap(true), 120); });
 
 function renderMap() {
+  if (!lastData) return; // the skeleton in #map stays until the first answer
+  mapEl.removeAttribute('aria-busy');
   // Tabs with agents first (workspace order), shell-only tabs after.
   const hasAgents = tb => tb.panes.some(p => byPane.has(p.pane)) || agents.some(a => a.tab === tb.id);
-  const order = [...tabs].sort((a, b) => (hasAgents(b) - hasAgents(a)) || ((a.number ?? 0) - (b.number ?? 0)));
+  const base = [...tabs].sort((a, b) => (hasAgents(b) - hasAgents(a)) || ((a.number ?? 0) - (b.number ?? 0)));
+  // The saved map order wins; tabs it doesn't know yet follow in the default order.
+  const pos = new Map(mapOrder.map((id, i) => [id, i]));
+  const rank = (tb, i) => (pos.has(tb.id) ? pos.get(tb.id) : 1e6 + i);
+  const order = base.map((tb, i) => [tb, rank(tb, i)]).sort((x, y) => x[1] - y[1]).map(x => x[0]);
   const frag = [];
   const vacant = [];
   for (const raw of order) {
@@ -394,17 +430,30 @@ function renderMap() {
     if (!block) {
       block = document.createElement('section');
       block.className = 'tabblock';
-      block.innerHTML = '<h2 class="tabhead"><span class="tlabel"></span><span class="tcount"></span></h2><div class="panes"></div>';
+      block.innerHTML = '<h2 class="tabhead"><span class="tlabel"></span><button type="button" class="trename" hidden><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button><span class="tcount"></span></h2><div class="panes"></div>';
+      const tabId = tab.id;
+      block.querySelector('.trename').addEventListener('click', e => { e.stopPropagation(); openRename(tabId); });
       blocks.set(tab.id, block);
     }
+    block.dataset.tab = tab.id;
+    block.querySelector('.tabhead').title = access.admin ? t('orderTip') : '';
     block.classList.toggle('wide', tab.panes.length >= 3 && agentPanes.length > 0);
     block.classList.toggle('vacant', agentPanes.length === 0);
     block.querySelector('.tlabel').textContent = placeName(tab.id);
+    const rb = block.querySelector('.trename');
+    rb.hidden = !access.admin;
+    rb.title = t('rnFor', placeName(tab.id)); rb.setAttribute('aria-label', rb.title);
     block.querySelector('.tcount').textContent = agentPanes.length;
     block.querySelector('.tcount').title = t('agentsIn', agentPanes.length);
     const panesEl = block.querySelector('.panes');
     // Terminal cells are about twice as tall as wide; keep the tab's real proportions.
     panesEl.style.setProperty('--ar', (tab.area.width / (tab.area.height * 2.1)).toFixed(3));
+    // Floor: the shortest pane still gets TILE_MIN_H px, so its name and status always show.
+    // The narrowest pane's share is kept for fitMap, which gives the tab a full row when needed.
+    const minH = Math.min(...tab.panes.map(p => p.h / tab.area.height));
+    const minW = Math.min(...tab.panes.map(p => p.w / tab.area.width));
+    panesEl.style.setProperty('--min-h', Math.ceil(TILE_MIN_H / Math.max(0.05, minH)) + 'px');
+    block.dataset.minW = minW.toFixed(3);
 
     const kids = [];
     for (const p of tab.panes) {
@@ -464,7 +513,7 @@ function setBreakable(node, text) {
 
 function updateTile(el, a) {
   const prevStatus = lastStatus.get(a.pane);
-  el.className = `tile ${a.status}` + (a.name ? '' : ' unnamed') + (selected === a.pane ? ' selected' : '') + (matches(a) ? '' : ' dim') + (el.classList.contains('changed') ? ' changed' : '');
+  el.className = `tile ${a.status}` + (a.name ? '' : ' unnamed') + (selected === a.pane ? ' selected' : '') + (matches(a) ? '' : ' dim') + (el.classList.contains('changed') ? ' changed' : '') + dndCls(a.pane);
   if (prevStatus && prevStatus !== a.status) {
     el.classList.add('changed');
     setTimeout(() => el.classList.remove('changed'), 1400);
@@ -542,6 +591,8 @@ function select(pane) {
     saveBtn.hidden = true;
     outEl.textContent = '';
     outEl.dataset.pane = '';
+    readerEl.replaceChildren();
+    outLoading(true);
   }
   // Phone: the agent page is a full screen, so the system Back closes it.
   if (!sheetOpen && isPhone()) { history.pushState({ orcaSheet: true }, '', '#' + enc(pane)); pushed = true; }
@@ -1279,10 +1330,21 @@ async function loadOutput(toBottom = false) {
       if (!toBottom && !atBottom && outEl.dataset.pane === pane) outEl.scrollTop = outEl.scrollHeight - fromEnd;
     }
   } catch (err) { if (selected === pane) outEl.textContent = errText(err); }
+  if (selected === pane) outLoading(false);
   if (toBottom || atBottom || outEl.dataset.pane !== pane) { outEl.scrollTop = outEl.scrollHeight; stickBottom = true; }
   outEl.dataset.pane = pane;
   renderReader();
   renderAsk();
+}
+
+// Loader over the output while the first read of an agent's conversation is on its way.
+// Shown only if the read takes longer than a blink, so a fast answer never flashes it.
+let outLoadTimer;
+function outLoading(on) {
+  const el = $('#out-loading');
+  clearTimeout(outLoadTimer);
+  if (!on) { el.hidden = true; termBox.classList.remove('loading'); return; }
+  outLoadTimer = setTimeout(() => { el.hidden = false; termBox.classList.add('loading'); }, 120);
 }
 
 // Desktop: the panel fits what is left of the window below where it starts.
@@ -1513,7 +1575,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !selected && view === 'holo' && !document.querySelector('dialog[open]')) window.OrcaHolo?.clearFocus();
   if (e.key === 'Escape' && !selected && view === 'island' && !document.querySelector('dialog[open]')) window.OrcaIsland?.clearFocus();
   // Esc always closes the card, even mid-message (the draft is kept for next time).
-  if (e.key === 'Escape' && selected && !$('#new-dialog').open && !$('#move-dialog').open && !$('#end-dialog').open) { document.activeElement?.blur?.(); closeSheet(); }
+  if (e.key === 'Escape' && selected && !$('#new-dialog').open && !$('#move-dialog').open && !$('#rename-dialog').open && !$('#end-dialog').open) { document.activeElement?.blur?.(); closeSheet(); }
 });
 
 // Reply
@@ -1880,6 +1942,8 @@ function loadScene(name) {
       const m = window[global];
       m.onPick(pick);
       if (name === 'holo') m.onShow((pane, zoom) => showOnDesktop(pane, zoom));
+      // Office tower: hovering a desk opens the same card as the map (rect = the desk on screen).
+      if (name === 'office' && m.onHover) m.onHover((pane, rect) => { if (pane && rect) showPeek({ dataset: { pane }, getBoundingClientRect: () => rect, isConnected: true }); else hidePeek(); });
       resolve(m);
     };
     s.onerror = () => { delete sceneLoads[name]; reject(new Error('unreachable')); };
@@ -1887,6 +1951,8 @@ function loadScene(name) {
   }));
 }
 const viewBtn = $('#view-btn');
+const VIEW_SHORT = { map: 'kMap', office: 'kOffice', island: 'kIslands', holo: 'kHolo' };
+function labelView() { const w = t(VIEW_SHORT[view] || 'kMap'); $('#view-cur').textContent = w.charAt(0).toUpperCase() + w.slice(1); }
 async function setView(v) {
   view = v;
   safeSet('orca-view', v);
@@ -1895,6 +1961,7 @@ async function setView(v) {
   const vb = document.querySelector(`#views [data-view="${v}"]`);
   viewBtn.querySelector('.cur use').setAttribute('href', vb.querySelector('use').getAttribute('href'));
   viewBtn.title = t('views') + ': ' + vb.querySelector('span').textContent; viewBtn.setAttribute('aria-label', viewBtn.title);
+  labelView();
   mapEl.hidden = v !== 'map';
   for (const [k, [, g]] of Object.entries(SCENE_SRC)) if (k !== v) window[g]?.show(false);
   if (v !== 'map') {
@@ -1931,7 +1998,6 @@ const holoBtn = document.querySelector('#views [data-view="holo"]');
 const warmHolo = () => loadScene('holo').then(() => import('/vendor/three/three.module.min.js')).catch(() => {});
 holoBtn.addEventListener('pointerenter', warmHolo, { once: true });
 holoBtn.addEventListener('focus', warmHolo, { once: true });
-let lastData = null;
 
 // An agent that needs you opens its panel by itself — unless a panel or the Routines tab
 // is already open, or you closed this very question already.
@@ -1969,6 +2035,7 @@ async function refresh() {
     tagLib = r.tagLib || [];
     if (r.access) { access = r.access; syncShellLock(); }
     renderJournalBadge(r.journal);
+    if (!orderPending) mapOrder = r.mapOrder || [];
     links = r.links || []; handoffs = r.handoffs || []; msgCounts = r.msgs || {};
     if (r.now) clockSkew = r.now - Date.now();
     byPane = new Map(agents.map(a => [a.pane, a]));
@@ -2364,7 +2431,9 @@ function applyLang() {
   $('#lang').textContent = lang === 'en' ? 'ES' : 'EN';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   fillDialog();
+  labelView();
   renderCheats();
   renderMemory();
   render();
@@ -2414,28 +2483,66 @@ const dialog = $('#new-dialog');
 const form = $('#new-form');
 
 const KIND_LABEL = k => t('kind' + k.charAt(0).toUpperCase() + k.slice(1)) || k;
+const KIND_MARK = { claude: 'C', hermes: 'H', opencode: 'O', agy: 'A', codex: 'X', shell: '$' };
+function radio(name, value, checked, inner, cls) {
+  const l = document.createElement('label');
+  l.className = cls;
+  l.innerHTML = `<input type="radio" name="${name}" value="${value}"${checked ? ' checked' : ''}>${inner}`;
+  return l;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function fillModels() {
+  const kind = form.querySelector('input[name="kind"]:checked')?.value || 'claude';
+  const list = meta.models?.[kind] || [];
+  const group = $('#model-group');
+  group.hidden = !list.length;
+  const prev = form.querySelector('input[name="model"]:checked')?.value ?? safeGet('orca-new-model') ?? '';
+  const pick = list.includes(prev) ? prev : '';
+  $('#model-seg').replaceChildren(
+    radio('model', '', pick === '', `<span class="sg-name">${esc(t('modelDefault'))}</span><small>${esc(t('modelDefaultHint'))}</small>`, 'sg'),
+    ...list.map(m => radio('model', m, pick === m, `<span class="sg-name">${esc(m.charAt(0).toUpperCase() + m.slice(1))}</span><small>${esc(t('md_' + m))}</small>`, 'sg')));
+}
 function fillDialog() {
-  const kind = form.elements.kind;
-  const prevKind = kind.value || 'claude';
+  const prevKind = form.querySelector('input[name="kind"]:checked')?.value || safeGet('orca-new-kind') || 'claude';
   const kinds = meta.kinds || [];
-  kind.replaceChildren(...kinds.map(k => new Option(KIND_LABEL(k), k, false, k === prevKind)));
+  const pickKind = kinds.includes(prevKind) ? prevKind : kinds[0];
+  $('#kind-grid').replaceChildren(...kinds.map(k => radio('kind', k, k === pickKind,
+    `<span class="kc-mark" data-k="${k}" aria-hidden="true">${KIND_MARK[k] || k[0].toUpperCase()}</span><span class="kc-text"><span class="kc-name">${esc(KIND_LABEL(k))}</span><small>${esc(t('kd_' + k))}</small></span>`, 'kc')));
+  fillModels();
   $('#folders').replaceChildren(...meta.folders.map(f => new Option(f, f)));
+  const cur = form.elements.folder.value;
+  $('#folder-chips').replaceChildren(...meta.folders.map(f => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'fchip'; b.textContent = f.replace(/^~\/?/, '~/').replace(/^~\/$/, '~');
+    b.setAttribute('aria-pressed', String(f === cur));
+    b.addEventListener('click', () => { form.elements.folder.value = f; syncFolderChips(); });
+    return b;
+  }));
   const tab = form.elements.tab;
   const prevTab = tab.value || 'new';
   tab.replaceChildren(new Option(t('newTab'), 'new'),
     ...meta.tabs.map(x => new Option(t('inTab', (meta.workspaces.length > 1 ? wsName(x.ws, meta.workspaces) + ' / ' : '') + (x.label || t('tab', x.number))), x.id, false, x.id === prevTab)));
 }
+function syncFolderChips() {
+  const v = form.elements.folder.value.trim();
+  [...$('#folder-chips').children].forEach((b, i) => b.setAttribute('aria-pressed', String(meta.folders[i] === v)));
+}
+form.elements.folder.addEventListener('input', syncFolderChips);
+form.addEventListener('change', e => {
+  if (e.target.name === 'kind') { safeSet('orca-new-kind', e.target.value); fillModels(); }
+  if (e.target.name === 'model') safeSet('orca-new-model', e.target.value);
+});
 
 $('#new').addEventListener('click', async () => {
   try { meta = { ...meta, ...(await call('/api/meta')) }; } catch { /* keep last meta */ }
-  fillDialog();
   form.reset();
   form.elements.folder.value = meta.folders[0] || '~';
+  fillDialog();
   dialog.showModal();
   form.elements.name.focus();
   loadCrew();
 });
-form.querySelector('[value="cancel"]').addEventListener('click', () => dialog.close());
+form.querySelectorAll('[value="cancel"]').forEach(b => b.addEventListener('click', () => dialog.close()));
 form.addEventListener('submit', async e => {
   e.preventDefault();
   const submit = form.querySelector('[type="submit"]');
@@ -2457,6 +2564,423 @@ form.addEventListener('submit', async e => {
     else toast(errText(err), true);
   }
   finally { submit.disabled = false; submit.textContent = t('start'); }
+});
+
+// ─── Peek: hover card on a map tile (desktop pointer only) ───────────────────
+// Everything the tile is too small to say: kind and model, folder, place, the task, the last
+// reply, jobs, context and who is on it. Opens after a short rest, never on touch.
+const peekEl = $('#peek');
+const canHover = matchMedia('(hover: hover) and (pointer: fine)');
+let peekPane = null, peekTimer = 0, peekAnchor = null;
+function peekRow(k, v, cls = '') {
+  if (!v) return null;
+  const r = document.createElement('div');
+  r.className = 'pk-row ' + cls;
+  const dt = document.createElement('span'); dt.className = 'pk-k'; dt.textContent = t(k);
+  const dd = document.createElement('span'); dd.className = 'pk-v'; dd.textContent = v;
+  r.append(dt, dd);
+  return r;
+}
+function fillPeek(tile) {
+  const pane = tile.dataset.pane;
+  const a = byPane.get(pane);
+  const kids = [];
+  const head = document.createElement('div');
+  head.className = 'pk-head';
+  const nm = document.createElement('strong'); nm.className = 'pk-name';
+  const st = document.createElement('span');
+  if (a) {
+    nm.textContent = a.name || suggestName(a.title) || t('unnamed');
+    st.className = 'pk-st ' + a.status;
+    const time = ago(a.since);
+    st.textContent = statusText(a.status) + (time ? ' · ' + time : '');
+  } else {
+    nm.textContent = t('shellTile'); st.className = 'pk-st'; st.textContent = '';
+  }
+  head.append(nm, st);
+  kids.push(head);
+  if (a) {
+    const ctx = ctxSeen.get(pane);
+    kids.push(
+      peekRow('pk_task', a.title, 'wrap'),
+      peekRow('pk_last', a.jobs?.said ? '✓ ' + a.jobs.said : '', 'wrap clamp'),
+      peekRow('pk_kind', KIND_LABEL(a.agent || '') + (a.model ? ' · ' + a.model.charAt(0).toUpperCase() + a.model.slice(1) : '')),
+      peekRow('pk_folder', a.cwd, 'mono'),
+      peekRow('pk_place', placeName(a.tab)),
+      peekRow('pk_jobs', a.jobs?.n ? String(a.jobs.n) + (a.jobs.took ? ' · ' + t('jobTook', dur(a.jobs.took)) : '') : ''),
+      peekRow('pk_ctx', ctx ? ctx.pct + '%' + (ctx.used && ctx.total ? ` (${ctx.used} / ${ctx.total})` : '') : ''),
+      peekRow('pk_with', a.claim?.name || ''),
+    );
+    if (a.tags?.length) {
+      const tg = document.createElement('div'); tg.className = 'pk-tags';
+      for (const x of a.tags) { const i = document.createElement('span'); i.textContent = x; i.style.setProperty('--tag', tagColor(x)); tg.append(i); }
+      kids.push(tg);
+    }
+  }
+  const foot = document.createElement('p'); foot.className = 'pk-foot';
+  foot.textContent = a ? (tile.nodeType ? t('pk_open') : t('pk_openScene')) + ' · D ' + t('kShow') : t('pk_shell');
+  kids.push(foot);
+  peekEl.replaceChildren(...kids.filter(Boolean));
+  peekEl.className = 'peek' + (a ? ' ' + a.status : '') + (peekEl.classList.contains('in') ? ' in' : '');
+}
+function placePeek(tile) {
+  const r = tile.getBoundingClientRect();
+  const w = peekEl.offsetWidth, h = peekEl.offsetHeight, m = 10;
+  const clampY = y => Math.min(Math.max(m, y), innerHeight - h - m);
+  let x, y;
+  if (r.right + m + w <= innerWidth - m) { x = r.right + m; y = clampY(r.top); }        // right of the tile
+  else if (r.left - m - w >= m) { x = r.left - m - w; y = clampY(r.top); }              // left of it
+  else {                                                                                  // below, else above
+    x = Math.min(Math.max(m, r.left), innerWidth - w - m);
+    y = r.bottom + m + h <= innerHeight - m ? r.bottom + m : clampY(r.top - m - h);
+  }
+  peekEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+}
+function showPeek(tile) {
+  if (sheetOpen && isPhone()) return;
+  peekPane = tile.dataset.pane;
+  peekAnchor = tile;
+  fillPeek(tile);
+  peekEl.hidden = false;
+  placePeek(tile);
+  requestAnimationFrame(() => peekEl.classList.add('in'));
+}
+function hidePeek() {
+  clearTimeout(peekTimer);
+  peekPane = null;
+  peekEl.classList.remove('in');
+  peekEl.hidden = true;
+}
+mapEl.addEventListener('pointerover', e => {
+  if (!canHover.matches || e.pointerType !== 'mouse') return;
+  const tile = e.target.closest('.tile[data-pane]');
+  if (!tile || tile.dataset.pane === peekPane) return;
+  clearTimeout(peekTimer);
+  // Moving between tiles while one is open: switch at once; from rest: wait a beat.
+  peekTimer = setTimeout(() => showPeek(tile), peekPane ? 0 : 380);
+});
+mapEl.addEventListener('pointerout', e => {
+  const to = e.relatedTarget?.closest?.('.tile[data-pane]');
+  if (to && mapEl.contains(to)) return;
+  hidePeek();
+});
+mapEl.addEventListener('pointerdown', hidePeek);
+addEventListener('scroll', hidePeek, { passive: true });
+addEventListener('keydown', hidePeek);
+// Keep an open card current as the poll brings news.
+setInterval(() => {
+  if (!peekPane || peekEl.hidden) return;
+  // A map tile is looked up again (it can be rebuilt); a scene's anchor object is kept as is.
+  const tile = peekAnchor?.nodeType ? mapEl.querySelector(`.tile[data-pane="${CSS.escape(peekPane)}"]`) : peekAnchor;
+  if (tile && byPane.has(peekPane)) { fillPeek(tile); placePeek(tile); } else hidePeek();
+}, 1000);
+
+// ─── Drag and drop on the map: move agents and shells between tabs/workspaces ──
+// Mouse: drag after a few pixels. Touch: long-press, then drag (a quick swipe still scrolls).
+// Drop on a card of another tab → beside it (right or below, by where you drop);
+// on a card of the same tab → swap places; on a tab → added to it; on the dock → new tab
+// in a workspace, or a new workspace. herdr keeps the process running; the id may change.
+var drag = null;          // var: render() may read it before this line runs. { pane, tile, x0, y0, pointerId, touch, armed, ghost, timer, target }
+let dragClickBlock = false;
+const DND_SLOP = 6, DND_HOLD = 380;
+const dockEl = (() => {
+  const d = document.createElement('div');
+  d.id = 'dnd-dock'; d.className = 'dnd-dock'; d.hidden = true;
+  document.body.append(d);
+  return d;
+})();
+function dndCls(pane) {
+  if (!drag?.armed) return '';
+  if (drag.pane === pane) return ' dragging';
+  const tg = drag.target;
+  return tg?.kind === 'pane' && tg.pane === pane ? ' drop-' + tg.how : '';
+}
+const tabOfPane = pane => tabs.find(tb => tb.panes.some(p => p.pane === pane));
+function paneLabel(pane) { const a = byPane.get(pane); return a ? label(a) : t('shellTile'); }
+function fillDock() {
+  const own = tabOfPane(drag.pane);
+  const ws = [...workspaces].sort((a, b) => (a.id === own?.ws) - (b.id === own?.ws)); // other workspaces first
+  const chip = (drop, text, icon) => `<button type="button" class="dnd-chip" data-drop="${drop}"><svg class="ic" aria-hidden="true"><use href="#${icon}"/></svg><span>${esc(text)}</span></button>`;
+  dockEl.innerHTML = `<p class="dnd-hint">${esc(t('dndHint'))}</p><div class="dnd-chips">` +
+    ws.map(w => chip('tab:' + w.id, t('dndNewTab', wsName(w.id)), 'i-plus')).join('') +
+    chip('workspace', t('dndNewWs'), 'i-map') + '</div>';
+}
+function startDrag() {
+  drag.armed = true;
+  hidePeek();
+  if (drag.touch && navigator.vibrate) navigator.vibrate(12);
+  const r = drag.tile.getBoundingClientRect();
+  const g = drag.tile.cloneNode(true);
+  g.className = drag.tile.className + ' dnd-ghost';
+  g.removeAttribute('id'); g.setAttribute('aria-hidden', 'true');
+  Object.assign(g.style, { left: '0', top: '0', width: Math.min(r.width, 240) + 'px', height: Math.min(r.height, 110) + 'px' });
+  drag.dx = Math.min(drag.x0 - r.left, Math.min(r.width, 240) - 12);
+  drag.dy = Math.min(drag.y0 - r.top, Math.min(r.height, 110) - 12);
+  document.body.append(g);
+  drag.ghost = g;
+  drag.tile.classList.add('dragging');
+  document.body.classList.add('dnd-on');
+  fillDock();
+  dockEl.hidden = false;
+  requestAnimationFrame(() => dockEl.classList.add('in'));
+  moveGhost(drag.x, drag.y);
+  autoScroll();
+}
+function moveGhost(x, y) { drag.ghost.style.transform = `translate(${Math.round(x - drag.dx)}px, ${Math.round(y - drag.dy)}px) rotate(-1.5deg)`; }
+function findTarget(x, y) {
+  const el = document.elementFromPoint(x, y);
+  if (!el) return null;
+  const chip = el.closest('.dnd-chip');
+  if (chip) return { kind: 'dock', drop: chip.dataset.drop, el: chip };
+  const own = tabOfPane(drag.pane);
+  const tile = el.closest('.tile[data-pane]');
+  if (tile && mapEl.contains(tile) && tile.dataset.pane !== drag.pane && !tile.classList.contains('locked')) {
+    const other = tabOfPane(tile.dataset.pane);
+    if (other && own && other.id === own.id) return { kind: 'pane', pane: tile.dataset.pane, how: 'swap', el: tile };
+    const r = tile.getBoundingClientRect();
+    const rx = (x - r.left) / r.width, ry = (y - r.top) / r.height;
+    return { kind: 'pane', pane: tile.dataset.pane, how: rx - 0.5 > ry - 0.5 ? 'right' : 'down', el: tile };
+  }
+  const block = el.closest('.tabblock[data-tab]');
+  if (block && mapEl.contains(block) && block.dataset.tab !== own?.id) return { kind: 'tab', tab: block.dataset.tab, el: block };
+  return null;
+}
+function paintTarget(tg) {
+  const old = drag.target;
+  if (old?.el === tg?.el && old?.how === tg?.how) return;
+  if (old?.el) { old.el.classList.remove('drop-swap', 'drop-right', 'drop-down', 'drop-into', 'drop-on'); delete old.el.dataset.dropLabel; }
+  drag.target = tg;
+  if (!tg) return;
+  if (tg.kind === 'pane') { tg.el.classList.add('drop-' + tg.how); tg.el.dataset.dropLabel = t(tg.how === 'swap' ? 'dndSwap' : tg.how === 'right' ? 'dndRight' : 'dndBelow'); }
+  else if (tg.kind === 'tab') { tg.el.classList.add('drop-into'); tg.el.dataset.dropLabel = t('dndInto'); }
+  else tg.el.classList.add('drop-on');
+}
+// Near the top of the window, or just above the dock, the page scrolls. Never while the finger
+// is on the dock itself, so the page can't slide a dock button under a resting finger.
+function autoScroll() {
+  if (!drag?.armed) return;
+  const edge = 56, y = drag.y;
+  const dockTop = dockEl.hidden ? innerHeight : dockEl.getBoundingClientRect().top;
+  let v = 0;
+  if (y < edge) v = -(edge - y) / 5;
+  else if (y < dockTop && y > dockTop - edge) v = (y - (dockTop - edge)) / 5;
+  if (v) { scrollBy(0, Math.max(-12, Math.min(12, v))); paintTarget(findTarget(drag.x, drag.y)); }
+  requestAnimationFrame(autoScroll);
+}
+function endDrag(drop) {
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  const d = drag;
+  if (d.armed) {
+    const tg = d.target;
+    paintTarget(null);
+    d.ghost?.remove();
+    d.tile.classList.remove('dragging');
+    document.body.classList.remove('dnd-on');
+    dockEl.classList.remove('in');
+    dockEl.hidden = true;
+    dragClickBlock = true;
+    setTimeout(() => { dragClickBlock = false; }, 0);
+    drag = null;
+    if (drop && tg) dropOn(d.pane, tg);
+    return;
+  }
+  drag = null;
+}
+async function dropOn(pane, tg) {
+  let body, where;
+  if (tg.kind === 'pane') {
+    body = tg.how === 'swap' ? { mode: 'swap', target: tg.pane } : { mode: 'beside', target: tg.pane, dir: tg.how };
+    where = paneLabel(tg.pane);
+  } else if (tg.kind === 'tab') { body = { mode: 'split', tab: tg.tab }; where = placeName(tg.tab); }
+  else if (tg.drop === 'workspace') { body = { mode: 'workspace' }; where = t('dndNewWs'); }
+  else { const ws = tg.drop.slice(4); body = { mode: 'tab', workspace: ws }; where = t('dndNewTab', wsName(ws)); }
+  const name = paneLabel(pane);
+  const tile = tiles.get(pane);
+  tile?.classList.add('moving');
+  try {
+    const r = await post(`/api/agents/${enc(pane)}/move`, body);
+    if (r.pane !== pane) {
+      if (drafts.has(pane)) { drafts.set(r.pane, drafts.get(pane)); drafts.delete(pane); }
+      if (dismissed.has(pane)) { dismissed.set(r.pane, dismissed.get(pane)); dismissed.delete(pane); }
+      if (selected === pane) { selected = r.pane; history.replaceState(null, '', '#' + enc(r.pane)); }
+    }
+    sfx('switch');
+    toast(body.mode === 'swap' ? t('dndSwapped', name, where) : t('moved', name, where));
+    meta = { ...meta, ...(await call('/api/meta').catch(() => ({}))) };
+    await refresh();
+  } catch (err) { toast(errText(err), true); }
+  finally { tile?.classList.remove('moving'); }
+}
+mapEl.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || drag) return;
+  const tile = e.target.closest('.tile[data-pane]');
+  if (!tile || tile.classList.contains('locked')) return;
+  const touch = e.pointerType !== 'mouse';
+  drag = { pane: tile.dataset.pane, tile, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, pointerId: e.pointerId, touch, armed: false, target: null };
+  if (touch) drag.timer = setTimeout(() => { if (drag && !drag.armed) startDrag(); }, DND_HOLD);
+});
+addEventListener('pointermove', e => {
+  if (!drag || e.pointerId !== drag.pointerId) return;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (!drag.armed) {
+    const far = Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > (drag.touch ? 10 : DND_SLOP);
+    if (!far) return;
+    if (drag.touch) { endDrag(false); return; } // moved before the hold: it's a scroll
+    startDrag();
+  }
+  e.preventDefault();
+  moveGhost(e.clientX, e.clientY);
+  paintTarget(findTarget(e.clientX, e.clientY));
+});
+addEventListener('pointerup', e => { if (drag && e.pointerId === drag.pointerId) endDrag(true); });
+addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.pointerId) endDrag(false); });
+// While dragging on a touch screen the page must not scroll under the finger.
+addEventListener('touchmove', e => { if (drag?.armed || bdrag?.armed) e.preventDefault(); }, { passive: false });
+mapEl.addEventListener('contextmenu', e => { if (drag) e.preventDefault(); });
+mapEl.addEventListener('click', e => { if (dragClickBlock) { e.stopPropagation(); e.preventDefault(); } }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape' && drag?.armed) { e.stopPropagation(); endDrag(false); } }, true);
+mapEl.addEventListener('dragstart', e => e.preventDefault()); // no native image/link drag
+
+// ─── Reorder the map: drag a tab box by its header ────────────────────────────
+// Mouse: drag after a few pixels. Touch: long-press the header. Drop on another box: before it
+// (left half) or after it (right half). The order is ORCA's own (herdr can't reorder), saved
+// on the server so every device shows the same map. Admins only.
+var bdrag = null; // { block, tab, x0, y0, x, y, pointerId, touch, armed, ghost, timer, target }
+function bTarget(x, y) {
+  const el = document.elementFromPoint(x, y);
+  const b = el?.closest?.('.tabblock[data-tab]');
+  if (!b || b === bdrag.block || !mapEl.contains(b)) return null;
+  const r = b.getBoundingClientRect();
+  return { el: b, side: x - r.left < r.width / 2 ? 'before' : 'after' };
+}
+function bPaint(tg) {
+  const old = bdrag.target;
+  if (old?.el === tg?.el && old?.side === tg?.side) return;
+  old?.el.classList.remove('bdrop-before', 'bdrop-after');
+  bdrag.target = tg;
+  tg?.el.classList.add('bdrop-' + tg.side);
+}
+function bStart() {
+  bdrag.armed = true;
+  hidePeek();
+  if (bdrag.touch && navigator.vibrate) navigator.vibrate(12);
+  const r = bdrag.block.getBoundingClientRect();
+  const w = Math.min(r.width, 300), h = Math.min(r.height, 150);
+  const g = bdrag.block.cloneNode(true);
+  g.classList.add('bdnd-ghost'); g.setAttribute('aria-hidden', 'true');
+  Object.assign(g.style, { width: w + 'px', height: h + 'px' });
+  bdrag.dx = Math.min(bdrag.x0 - r.left, w - 16); bdrag.dy = Math.min(bdrag.y0 - r.top, 24);
+  document.body.append(g);
+  bdrag.ghost = g;
+  bdrag.block.classList.add('bdragging');
+  document.body.classList.add('dnd-on');
+  bMove();
+  bScroll();
+}
+function bMove() { bdrag.ghost.style.transform = `translate(${Math.round(bdrag.x - bdrag.dx)}px, ${Math.round(bdrag.y - bdrag.dy)}px) rotate(-1deg)`; }
+function bScroll() {
+  if (!bdrag?.armed) return;
+  const edge = 56, y = bdrag.y;
+  const v = y < edge ? -(edge - y) / 5 : y > innerHeight - edge ? (y - (innerHeight - edge)) / 5 : 0;
+  if (v) { scrollBy(0, Math.max(-12, Math.min(12, v))); bPaint(bTarget(bdrag.x, bdrag.y)); }
+  requestAnimationFrame(bScroll);
+}
+function bEnd(drop) {
+  if (!bdrag) return;
+  clearTimeout(bdrag.timer);
+  const d = bdrag;
+  if (d.armed) {
+    const tg = d.target;
+    bPaint(null);
+    d.ghost?.remove();
+    d.block.classList.remove('bdragging');
+    document.body.classList.remove('dnd-on');
+    bdrag = null;
+    if (drop && tg) saveOrder(d.tab, tg.el.dataset.tab, tg.side);
+    return;
+  }
+  bdrag = null;
+}
+async function saveOrder(tab, target, side) {
+  const ids = [...mapEl.children].map(b => b.dataset?.tab).filter(Boolean).filter(id => id !== tab);
+  const at = ids.indexOf(target);
+  if (at < 0) return;
+  ids.splice(side === 'after' ? at + 1 : at, 0, tab);
+  const before = mapOrder;
+  mapOrder = ids; orderPending = true;
+  renderMap(); fitMap(true);
+  try {
+    const r = await post('/api/map/order', { order: ids });
+    mapOrder = r.mapOrder || ids;
+    sfx('switch');
+    toast(t('orderSaved'));
+  } catch (err) { mapOrder = before; renderMap(); toast(errText(err), true); }
+  finally { orderPending = false; }
+}
+mapEl.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || bdrag || drag || !access.admin) return;
+  const head = e.target.closest('.tabhead');
+  if (!head || e.target.closest('.trename')) return;
+  const block = head.closest('.tabblock[data-tab]');
+  if (!block) return;
+  const touch = e.pointerType !== 'mouse';
+  bdrag = { block, tab: block.dataset.tab, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, pointerId: e.pointerId, touch, armed: false, target: null };
+  if (touch) bdrag.timer = setTimeout(() => { if (bdrag && !bdrag.armed) bStart(); }, DND_HOLD);
+});
+addEventListener('pointermove', e => {
+  if (!bdrag || e.pointerId !== bdrag.pointerId) return;
+  bdrag.x = e.clientX; bdrag.y = e.clientY;
+  if (!bdrag.armed) {
+    if (Math.hypot(e.clientX - bdrag.x0, e.clientY - bdrag.y0) <= (bdrag.touch ? 10 : DND_SLOP)) return;
+    if (bdrag.touch) { bEnd(false); return; }
+    bStart();
+  }
+  e.preventDefault();
+  bMove();
+  bPaint(bTarget(e.clientX, e.clientY));
+});
+addEventListener('pointerup', e => { if (bdrag && e.pointerId === bdrag.pointerId) bEnd(true); });
+addEventListener('pointercancel', e => { if (bdrag && e.pointerId === bdrag.pointerId) bEnd(false); });
+addEventListener('keydown', e => { if (e.key === 'Escape' && bdrag?.armed) { e.stopPropagation(); bEnd(false); } }, true);
+
+// ─── Rename a workspace and/or a tab (pencil on a tab's header, admins only) ──
+const renameDialog = $('#rename-dialog');
+const renameForm = $('#rename-form');
+let renameTab = null;
+function openRename(tabId) {
+  const tb = tabs.find(x => x.id === tabId);
+  if (!tb) return;
+  renameTab = tabId;
+  const w = workspaces.find(x => x.id === tb.ws);
+  renameForm.elements.ws.value = w?.label || '';
+  renameForm.elements.ws.placeholder = wsName(tb.ws);
+  renameForm.elements.tab.value = tb.label || '';
+  renameForm.elements.tab.placeholder = tabName(tabId);
+  renameDialog.showModal();
+  renameForm.elements.ws.select();
+}
+renameForm.querySelector('[value="cancel"]').addEventListener('click', () => renameDialog.close());
+renameForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  const tb = tabs.find(x => x.id === renameTab);
+  if (!tb) return renameDialog.close();
+  const wsNew = renameForm.elements.ws.value.trim(), tabNew = renameForm.elements.tab.value.trim();
+  const w = workspaces.find(x => x.id === tb.ws);
+  const jobs = [];
+  if (wsNew && wsNew !== (w?.label || '')) jobs.push(post(`/api/workspaces/${enc(tb.ws)}/rename`, { label: wsNew }));
+  if (tabNew && tabNew !== (tb.label || '')) jobs.push(post(`/api/tabs/${enc(tb.id)}/rename`, { label: tabNew }));
+  if (!jobs.length) return renameDialog.close();
+  const submit = renameForm.querySelector('[type="submit"]');
+  submit.disabled = true; submit.textContent = t('rnSaving');
+  try {
+    await Promise.all(jobs);
+    renameDialog.close();
+    toast(t('rnDone', `${wsNew || wsName(tb.ws)} / ${tabNew || tabName(tb.id)}`));
+    meta = { ...meta, ...(await call('/api/meta').catch(() => ({}))) };
+    await refresh();
+  } catch (err) { toast(errText(err), true); }
+  finally { submit.disabled = false; submit.textContent = t('rnSave'); }
 });
 
 // ─── Move dialog ──────────────────────────────────────────────────────────────

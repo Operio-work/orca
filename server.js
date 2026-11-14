@@ -519,10 +519,13 @@ function resolveFolder(input) {
   return abs;
 }
 
-async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
+async function newAgent({ name, kind, folder, tab, model }, { prepare } = {}) {
   name = String(name || '').trim();
   if (!AGENT_NAME_RE.test(name)) throw new HttpError(400, 'bad_agent_name');
   if (!KINDS.includes(kind)) throw new HttpError(400, 'bad_kind');
+  // Optional starting model (only kinds listed in MODELS; empty = the agent's own default).
+  model = String(model || '');
+  if (model && !(MODELS[kind] || []).includes(model)) throw new HttpError(400, 'bad_request');
   const cwd = resolveFolder(folder);
 
   let pane;
@@ -557,9 +560,10 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
     layoutCache.at = 0;
     return { pane, shell: true, name, kind, cwd: shortHome(cwd) };
   }
+  const extra = model && kind === 'claude' ? ['--', '--model', model] : []; // starting model, if picked
   let blocked = false;
   try {
-    await herdr(['agent', 'start', name, '--kind', kind, '--pane', pane, '--timeout', '60000'], 70000);
+    await herdr(['agent', 'start', name, '--kind', kind, '--pane', pane, '--timeout', '60000', ...extra], 70000);
   } catch (e) {
     // Started but asking something first (e.g. Claude's "trust this folder?"): not a failure.
     if (e.code !== 'blocked' && !/blocked/i.test(e.detail || '')) throw e;
@@ -568,8 +572,12 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
   await herdr(['agent', 'rename', pane, name]).catch(() => {});
   let terminal = null;
   try { const pg = await herdrJson(['pane', 'get', pane]); terminal = pg.result?.pane?.terminal_id || null; applyName(terminal, name); } catch { applyName(null, name); }
-  if (terminal) { state.born[terminal] = { at: Date.now(), kind, seen: Date.now() }; saveState(); }
-  log('agent.new', { pane, name, kind, cwd: shortHome(cwd), tab: tab || 'new', blocked });
+  if (terminal) {
+    state.born[terminal] = { at: Date.now(), kind, seen: Date.now() };
+    if (model) { state.models = state.models || {}; state.models[terminal] = { model, at: Date.now() }; }
+    saveState();
+  }
+  log('agent.new', { pane, name, kind, model: model || null, cwd: shortHome(cwd), tab: tab || 'new', blocked });
   layoutCache.at = 0;
   return { pane, blocked, terminal, name, kind, cwd: shortHome(cwd) };
 }
@@ -578,22 +586,45 @@ async function newAgent({ name, kind, folder, tab }, { prepare } = {}) {
 // The process keeps running; herdr gives the pane a new id. terminal_id stays, so tags
 // follow. Moving the last pane out of a tab/workspace closes it (herdr does that).
 //   { mode: 'split', tab }          beside the panes of an existing tab
+//   { mode: 'beside', target, dir } next to one pane of another tab (dir: right | down)
+//   { mode: 'swap', target }        trade places with a pane of the same tab
 //   { mode: 'tab', workspace }      as a new tab in an existing workspace
 //   { mode: 'workspace', label? }   as a new workspace
+// Works for agents and plain shells alike (drag and drop on the map moves both).
+// herdr only swaps inside one tab and ignores a move within the same tab, hence the split.
 async function moveAgent(pane, body) {
   const agents = await listAgents();
   const a = agents.find(x => x.pane === pane);
-  if (!a) throw new HttpError(404, 'gone');
-  const tabName = a.name || 'agent';
-  const args = ['pane', 'move', pane];
+  const all = (await herdrJson(['pane', 'list'])).result?.panes || [];
+  const me = all.find(p => p.pane_id === pane);
+  if (!me) throw new HttpError(404, 'gone');
+  const tabName = a?.name || 'shell';
   const mode = body.mode;
+  if (mode === 'swap') {
+    const target = all.find(p => p.pane_id === String(body.target || ''));
+    if (!target) throw new HttpError(404, 'tab_gone');
+    if (target.pane_id === pane) throw new HttpError(400, 'same_place');
+    if (target.tab_id !== me.tab_id) throw new HttpError(400, 'bad_request');
+    const r = (await herdrJson(['pane', 'swap', '--source-pane', pane, '--target-pane', target.pane_id], 10000)).result?.swap || {};
+    if (!r.changed) throw new HttpError(502, 'move_failed', 'swap did not change the layout');
+    layoutCache.at = 0;
+    log('agent.move', { from: pane, mode, with: target.pane_id, tab: me.tab_id });
+    return { ok: true, pane, tab: me.tab_id, workspace: me.workspace_id, closedWorkspace: false };
+  }
+  const args = ['pane', 'move', pane];
   if (mode === 'split') {
     const tab = String(body.tab || '');
     if (!TAB_RE.test(tab)) throw new HttpError(400, 'bad_request');
-    if (tab === a.tab) throw new HttpError(400, 'same_place');
-    const inTab = ((await herdrJson(['pane', 'list'])).result?.panes || []).filter(p => p.tab_id === tab);
+    if (tab === me.tab_id) throw new HttpError(400, 'same_place');
+    const inTab = all.filter(p => p.tab_id === tab);
     if (!inTab.length) throw new HttpError(404, 'tab_gone');
     args.push('--tab', tab, '--split', inTab.length % 2 ? 'right' : 'down', '--target-pane', inTab[inTab.length - 1].pane_id);
+  } else if (mode === 'beside') {
+    const target = all.find(p => p.pane_id === String(body.target || ''));
+    if (!target) throw new HttpError(404, 'tab_gone');
+    if (target.tab_id === me.tab_id) throw new HttpError(400, 'same_place');
+    const dir = body.dir === 'down' ? 'down' : 'right';
+    args.push('--tab', target.tab_id, '--split', dir, '--target-pane', target.pane_id);
   } else if (mode === 'tab') {
     const ws = String(body.workspace || '');
     if (!WS_RE.test(ws)) throw new HttpError(400, 'bad_request');
@@ -609,7 +640,7 @@ async function moveAgent(pane, body) {
   const moved = r.pane?.pane_id;
   if (!moved) throw new HttpError(502, 'move_failed', JSON.stringify(r).slice(0, 300));
   // Keep the name and the status clock with the agent, not with the old pane id.
-  if (a.name) await herdr(['agent', 'rename', moved, a.name]).catch(e => log('agent.move.rename_failed', { pane: moved, detail: e.detail }));
+  if (a?.name) await herdr(['agent', 'rename', moved, a.name]).catch(e => log('agent.move.rename_failed', { pane: moved, detail: e.detail }));
   const p = prev.get(pane);
   if (p) { prev.set(moved, p); prev.delete(pane); }
   layoutCache.at = 0;
@@ -1377,7 +1408,7 @@ async function api(req, res, url) {
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), access: accessView(), journal: { toReview }, now: Date.now() });
+    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), access: accessView(), journal: { toReview }, now: Date.now() });
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -1652,6 +1683,31 @@ async function api(req, res, url) {
     jr(req, 'handoff.send', up || null, { to: jAgent(down), note, said: h.said });
     deliverQueued(agents).catch(() => {});
     return send(res, 200, { ok: true, id: m.id, queued: down.status !== 'idle' && down.status !== 'done' });
+  }
+
+  // ── Map order: the order of the tab boxes on the map. herdr can't reorder tabs or
+  // workspaces, so this is ORCA's own order; the desktop keeps its own.
+  if (pathname === '/api/map/order') {
+    const order = Array.isArray(body.order) ? body.order.map(String) : null;
+    if (!order || order.length > 300 || !order.every(id => TAB_RE.test(id))) throw new HttpError(400, 'bad_request');
+    state.mapOrder = [...new Set(order)];
+    saveState();
+    log('map.order', { n: state.mapOrder.length });
+    return send(res, 200, { ok: true, mapOrder: state.mapOrder });
+  }
+
+  // ── Rename a workspace or a tab (herdr renames it, so the desktop shows the same name)
+  const rn = pathname.match(/^\/api\/(workspaces|tabs)\/([^/]+)\/rename$/);
+  if (rn) {
+    const id = decodeURIComponent(rn[2]);
+    const ws = rn[1] === 'workspaces';
+    if (!(ws ? WS_RE : TAB_RE).test(id)) throw new HttpError(400, 'bad_request');
+    const name = String(body.label || '').trim().replace(/\s+/g, ' ');
+    if (!NAME_RE.test(name)) throw new HttpError(400, 'bad_name');
+    await herdr([ws ? 'workspace' : 'tab', 'rename', id, name], 10000);
+    layoutCache.at = 0;
+    log(ws ? 'workspace.rename' : 'tab.rename', { id, name });
+    return send(res, 200, { ok: true, id, label: name });
   }
 
   // ── New agent or shell

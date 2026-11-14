@@ -254,3 +254,24 @@ test('LLM keys: set writes llm.env 0600, the API and log never carry the value, 
   assert.equal((await post('/api/llm/unset', { name: 'nope' })).json.error, 'llm_bad_name');
   assert.equal((fs.statSync(f).mode & 0o777).toString(8), '600');
 });
+
+test('the map order is saved and comes back with the agents', async () => {
+  assert.equal((await post('/api/map/order', { order: ['w1:t2', 'w1:t1', 'w1:t2'] })).status, 200);
+  const r = await req('GET', '/api/agents');
+  assert.deepEqual(r.json.mapOrder, ['w1:t2', 'w1:t1']); // duplicates dropped, order kept
+  assert.equal((await post('/api/map/order', { order: ['not a tab'] })).status, 400);
+  assert.equal((await post('/api/map/order', { order: 'w1:t1' })).status, 400);
+});
+
+test('renaming a workspace or tab checks the id and the name before calling herdr', async () => {
+  assert.equal((await post('/api/workspaces/w1/rename', { label: 'bad/name' })).json.error, 'bad_name');
+  assert.equal((await post('/api/workspaces/nope/rename', { label: 'Office' })).json.error, 'bad_request');
+  assert.equal((await post('/api/tabs/w1/rename', { label: 'Office' })).json.error, 'bad_request'); // a workspace id is not a tab id
+});
+
+test('a new agent can start on a model; a model its kind does not take is refused', async () => {
+  const bad = await post('/api/agents/new', { name: 'm-bad', kind: 'claude', folder: '~', tab: 'new', model: 'gpt' });
+  assert.equal(bad.status, 400);
+  const other = await post('/api/agents/new', { name: 'm-other', kind: 'codex', folder: '~', tab: 'new', model: 'opus' });
+  assert.equal(other.status, 400);
+});
