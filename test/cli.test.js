@@ -29,8 +29,8 @@ const env = (extra = {}) => ({
   OPERIO_ORCA_AGENT_SOCK: path.join(HOME, 'a.sock'),
   ...extra,
 });
-const run = (args, extra = {}, cwd = HOME) => {
-  const r = spawnSync('bash', [CLI, ...args], { env: env(extra), cwd, encoding: 'utf8', timeout: 60000 });
+const run = (args, extra = {}, cwd = HOME, input) => {
+  const r = spawnSync('bash', [CLI, ...args], { env: env(extra), cwd, encoding: 'utf8', timeout: 60000, input });
   return { code: r.status, out: (r.stdout || '') + (r.stderr || ''), stdout: r.stdout || '' };
 };
 const mode = (p) => (fs.statSync(p).mode & 0o777).toString(8);
@@ -61,7 +61,11 @@ test.before(() => {
   // A browser opener that only records the URL it was given.
   fs.writeFileSync(path.join(TOOLS, 'xdg-open'), `#!/bin/sh\nprintf '%s\\n' "$1" > "${path.join(HOME, 'opened.txt')}"\n`, { mode: 0o755 });
 });
-test.after(() => { stopPanel(); fs.rmSync(HOME, { recursive: true, force: true }); });
+test.after(() => {
+  stopPanel();
+  try { process.kill(Number(fs.readFileSync(path.join(CONFIG, 'herdr.pid'), 'utf8'))); } catch { /* none started */ }
+  fs.rmSync(HOME, { recursive: true, force: true });
+});
 
 test('status without a service says the panel is started by hand', () => {
   const r = run(['status']);
@@ -219,4 +223,135 @@ test('backup writes a 0600 tar.gz without the logs; restore puts it back and kee
   r = run(['restore', junk]);
   assert.equal(r.code, 1);
   assert.match(r.out, /is not an ORCA backup/);
+});
+
+// ─── llm: API keys for the agents in <config>/llm.env ─────────────────────────
+const LLM = path.join(CONFIG, 'llm.env');
+const KEY = 'sk-test-abcdefghijklmnop1234'; // the shape of a key, not one
+
+test('llm: usage, set from stdin (never argv) into a 0600 file, list hides values, unset, doctor', () => {
+  let r = run(['llm']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /operio-orca llm set NAME/);
+  assert.match(r.out, /operio-orca llm test KIND/);
+  assert.match(run(['help']).out, /operio-orca llm\s+API keys for your agents/);
+
+  r = run(['llm', 'set', 'ANTHROPIC_API_KEY'], {}, HOME, KEY + '\n');
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /saved ANTHROPIC_API_KEY \(\*\*\*\*1234\) in .*llm\.env \(mode 600\)/);
+  assert.doesNotMatch(r.out, new RegExp(KEY), 'the value is never printed');
+  assert.equal(mode(LLM), '600');
+  assert.equal(fs.readFileSync(LLM, 'utf8').split('\n').filter(l => !l.startsWith('#')).join('\n').trim(), `ANTHROPIC_API_KEY=${KEY}`, 'one trailing newline stripped');
+  r = run(['llm', 'set', 'OPENAI_BASE_URL'], {}, HOME, 'http://127.0.0.1:11434/v1');
+  assert.equal(r.code, 0, r.out);
+  r = run(['llm', 'set', 'ANTHROPIC_API_KEY'], {}, HOME, KEY + '5678\n');
+  assert.equal(r.code, 0, r.out);
+  assert.equal((fs.readFileSync(LLM, 'utf8').match(/^ANTHROPIC_API_KEY=/gm) || []).length, 1, 'set again replaces the line');
+
+  // Refused: a value on the command line, an empty value, a bad name, a value with a space.
+  r = run(['llm', 'set', 'OPENAI_API_KEY', KEY]);
+  assert.equal(r.code, 1); assert.match(r.out, /never given on the command line/);
+  r = run(['llm', 'set', 'OPENAI_API_KEY'], {}, HOME, '\n');
+  assert.equal(r.code, 1); assert.match(r.out, /no value given/);
+  r = run(['llm', 'set', 'openai_key'], {}, HOME, KEY);
+  assert.equal(r.code, 1); assert.match(r.out, /NAME must be upper case/);
+  r = run(['llm', 'set', 'OPENAI_API_KEY'], {}, HOME, 'two words');
+  assert.equal(r.code, 1); assert.match(r.out, /cannot go in llm\.env/);
+  assert.doesNotMatch(fs.readFileSync(LLM, 'utf8'), /OPENAI_API_KEY|two words/);
+
+  r = run(['llm', 'list']);
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.stdout, 'OPENAI_BASE_URL  ****4/v1\nANTHROPIC_API_KEY  ****5678\n', 'file order; a name set again moves to the end');
+
+  r = run(['doctor']);
+  assert.match(r.out, /✓ llm\.env \(mode 600\): OPENAI_BASE_URL, ANTHROPIC_API_KEY/);
+  fs.chmodSync(LLM, 0o644);
+  r = run(['doctor']);
+  assert.match(r.out, new RegExp(`✗ llm\\.env has mode 644 and holds API keys \\(OPENAI_BASE_URL, ANTHROPIC_API_KEY\\)\\n\\s+fix: chmod 600 ${LLM.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+  assert.doesNotMatch(r.out, new RegExp(KEY));
+  fs.chmodSync(LLM, 0o600);
+
+  r = run(['llm', 'unset', 'OPENAI_BASE_URL']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /removed OPENAI_BASE_URL/);
+  assert.match(run(['llm', 'unset', 'OPENAI_BASE_URL']).out, /was not set/);
+  assert.match(run(['llm', 'list']).stdout, /^ANTHROPIC_API_KEY  \*\*\*\*5678\n$/);
+  assert.equal(run(['llm', 'unset', 'ANTHROPIC_API_KEY']).code, 0);
+  assert.match(run(['llm', 'list']).out, /no keys set/);
+  assert.match(run(['llm', 'nope']).out, /unknown llm command: nope/);
+});
+
+test('llm apply: refuses while an agent works or waits, names it; idle with no pid on record says so', () => {
+  const stateFile = path.join(FAKE, 'state.json');
+  const st = { n: 2, agents: [
+    { pane_id: 'w1:p1', tab_id: 'w1:t1', terminal_id: 'term1', name: 'alpha', agent: 'claude', agent_status: 'working', cwd: HOME },
+    { pane_id: 'w1:p2', tab_id: 'w1:t2', terminal_id: 'term2', name: null, agent: 'codex', agent_status: 'blocked', cwd: HOME },
+    { pane_id: 'w1:p3', tab_id: 'w1:t3', terminal_id: 'term3', name: 'gamma', agent: 'claude', agent_status: 'idle', cwd: HOME },
+  ] };
+  fs.writeFileSync(stateFile, JSON.stringify(st));
+  let r = run(['llm', 'apply'], { OPERIO_ORCA_SKIP_HERDR: '0' });
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.out, /not now: alpha, w1:p2 still working or waiting on you/);
+  // With herdr checks skipped nothing is restarted either.
+  r = run(['llm', 'apply']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /nothing restarted/);
+  // Idle agents, SERVICE=none, herdr running but not started by ORCA: no pid to restart.
+  st.agents.forEach(a => { a.agent_status = 'idle'; });
+  fs.writeFileSync(stateFile, JSON.stringify(st));
+  r = run(['llm', 'apply'], { OPERIO_ORCA_SKIP_HERDR: '0' });
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /herdr is running but ORCA did not start it \(no pid on record\), so it was not restarted/);
+  assert.match(r.out, /herdr server stop/);
+});
+
+test('llm test: unknown kind, missing CLI, the key reaches the agent, a failure never shows the key', () => {
+  fs.writeFileSync(path.join(TOOLS, 'claude'), '#!/bin/sh\n[ "$1" = -p ] || { echo "bad args: $*" >&2; exit 2; }\n' +
+    'if [ -n "${ANTHROPIC_API_KEY:-}" ]; then echo ok; exit 0; fi\necho "Not logged in" >&2; exit 1\n', { mode: 0o755 });
+  fs.writeFileSync(path.join(TOOLS, 'codex'), '#!/bin/sh\necho "auth error: invalid key $OPENAI_API_KEY for OPENAI_API_KEY=$OPENAI_API_KEY" >&2; exit 1\n', { mode: 0o755 });
+  // Only the fakes plus what bash and node need: the real claude/gemini on this machine stay out.
+  const PATH = [TOOLS, path.dirname(process.execPath), '/usr/bin', '/bin'].join(':');
+  let r = run(['llm', 'test', 'foo'], { PATH });
+  assert.equal(r.code, 1); assert.match(r.out, /unknown kind: foo \(claude, codex, opencode, gemini\)/);
+  r = run(['llm', 'test'], { PATH });
+  assert.equal(r.code, 1); assert.match(r.out, /usage: operio-orca llm test KIND/);
+  r = run(['llm', 'test', 'gemini'], { PATH });
+  assert.equal(r.code, 1); assert.equal(r.stdout, 'not installed: gemini\n');
+  r = run(['llm', 'test', 'claude'], { PATH });
+  assert.equal(r.code, 1, r.out); assert.equal(r.stdout, 'failed: Not logged in\n');
+  run(['llm', 'set', 'ANTHROPIC_API_KEY'], {}, HOME, KEY);
+  run(['llm', 'set', 'OPENAI_API_KEY'], {}, HOME, KEY);
+  r = run(['llm', 'test', 'claude'], { PATH });
+  assert.equal(r.code, 0, r.out); assert.equal(r.stdout, 'ok\n');
+  r = run(['llm', 'test', 'codex'], { PATH });
+  assert.equal(r.code, 1, r.out);
+  assert.match(r.stdout, /^failed: auth error: invalid key \[secret\] for OPENAI_API_KEY=\[secret\]\n$/);
+  assert.doesNotMatch(r.out, new RegExp(KEY));
+});
+
+test('start by hand records the herdr pid and loads llm.env into it; llm apply restarts it by that pid', async () => {
+  // The panel is stopped and herdr checks are on: start brings up the sleepy herdr with the key.
+  stopPanel();
+  for (let i = 0; i < 20 && await healthz() === 200; i++) await new Promise(res => setTimeout(res, 100));
+  const sleepy = { OPERIO_ORCA_SKIP_HERDR: '0', OPERIO_ORCA_HERDR_BIN: path.join(__dirname, 'fixtures', 'sleepy-herdr') };
+  let r = run(['start'], sleepy);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /starting a herdr server/);
+  const pidFile = path.join(CONFIG, 'herdr.pid');
+  const old = Number(fs.readFileSync(pidFile, 'utf8'));
+  assert.ok(old > 0);
+  assert.equal(fs.readFileSync(path.join(FAKE, 'seen-key'), 'utf8').trim(), KEY, 'herdr started with the key in its environment');
+  r = run(['llm', 'apply'], sleepy);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /restarted herdr \(pid \d+\); agents started from now on see the keys/);
+  const now = Number(fs.readFileSync(pidFile, 'utf8'));
+  assert.notEqual(now, old);
+  assert.throws(() => process.kill(old, 0), 'the old herdr is gone');
+  process.kill(now, 0); // the new one is alive
+  stopPanel();
+  process.kill(now);
+  for (let i = 0; i < 20; i++) { try { process.kill(now, 0); await new Promise(res => setTimeout(res, 100)); } catch { break; } }
+  r = run(['llm', 'apply'], sleepy);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /herdr is not running; the keys load when it starts: operio-orca start/);
 });

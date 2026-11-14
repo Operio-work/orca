@@ -12,6 +12,8 @@
 #                         (--check only compares versions and installs nothing)
 #   operio-orca backup      save settings, routines, drafts and the journal to a tar.gz (mode 600)
 #   operio-orca restore     put a backup back (panel stopped; keeps a copy of what was there)
+#   operio-orca llm         API keys for your agents, kept in ~/.config/operio-orca/llm.env:
+#                         llm set NAME | unset NAME | list | apply | test KIND
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -41,8 +43,12 @@ if [ -f "$PREFIX/install.env" ]; then
   . "$PREFIX/install.env"
 fi
 [ -x "$HERDR_BIN" ] || HERDR_BIN="$(command -v herdr || echo "$HERDR_BIN")"
+# A herdr named in the environment wins: the CLI then talks to the same one as the panel.
+[ -z "${OPERIO_ORCA_HERDR_BIN:-}" ] || HERDR_BIN="$OPERIO_ORCA_HERDR_BIN"
 ENV_FILE="$CONFIG_DIR/env"
+LLM_FILE="$CONFIG_DIR/llm.env"          # API keys for the agents (operio-orca llm), mode 600
 PID_FILE="$CONFIG_DIR/operio-orca.pid"
+HERDR_PID_FILE="$CONFIG_DIR/herdr.pid"  # only when ORCA itself started herdr (no service)
 LOG_FILE="$CONFIG_DIR/logs/server.log"
 UNIT=operio-orca.service
 LABEL=work.operio.orca
@@ -57,6 +63,12 @@ load_env() {
     . "$ENV_FILE"; set +a; fi
   export OPERIO_ORCA_CONFIG_DIR="$CONFIG_DIR"
   export OPERIO_ORCA_HERDR_BIN="${OPERIO_ORCA_HERDR_BIN:-$HERDR_BIN}"
+}
+# The agents' API keys go into this process's environment, so herdr and the panel started
+# from here inherit them (the service files load the same file themselves).
+load_llm_env() {
+  if [ -f "$LLM_FILE" ]; then set -a; # shellcheck disable=SC1090
+    . "$LLM_FILE"; set +a; fi
 }
 port() { load_env; printf '%s' "${OPERIO_ORCA_PORT:-7171}"; }
 host() { load_env; printf '%s' "${OPERIO_ORCA_HOST:-127.0.0.1}"; }
@@ -80,8 +92,13 @@ ensure_herdr() {
   herdr_running && return 0
   say "starting a herdr server"
   mkdir -p "$CONFIG_DIR/logs"
-  nohup "$HERDR_BIN" server >>"$CONFIG_DIR/logs/herdr.log" 2>&1 &
+  ( load_llm_env; nohup "$HERDR_BIN" server >>"$CONFIG_DIR/logs/herdr.log" 2>&1 & echo $! > "$HERDR_PID_FILE" )
   sleep 1
+}
+herdr_pid() { # the herdr ORCA started by hand, if it is still alive
+  [ -f "$HERDR_PID_FILE" ] || return 1
+  local p; p="$(cat "$HERDR_PID_FILE")"
+  kill -0 "$p" 2>/dev/null && printf '%s' "$p"
 }
 
 pid_alive() { [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; }
@@ -92,6 +109,7 @@ use_service() { # true when the installed service should be used
 
 cmd_run() {
   load_env
+  load_llm_env
   [ -n "$NODE_BIN" ] || die "node not found"
   exec "$NODE_BIN" "$APP_DIR/server.js"
 }
@@ -107,8 +125,7 @@ cmd_start() {
     ensure_herdr
     mkdir -p "$CONFIG_DIR/logs"
     load_env
-    nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$LOG_FILE" 2>&1 &
-    echo $! > "$PID_FILE"
+    ( load_llm_env; nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$LOG_FILE" 2>&1 & echo $! > "$PID_FILE" )
   fi
   for _ in 1 2 3 4 5 6 7 8 9 10; do healthy && break; sleep 0.5; done
   if healthy; then say "running at http://127.0.0.1:$(port)"; else die "did not answer on port $(port); see operio-orca status"; fi
@@ -285,6 +302,14 @@ cmd_doctor() {
       m="$(mode_of "$CONFIG_DIR/journal")"
       if [ "$m" = 700 ]; then ok "journal folder (mode 700)"; else no "journal folder has mode $m" "chmod 700 $CONFIG_DIR/journal"; fi
     fi
+    # API keys for the agents: the file must be owner-only and every line loadable (never print a value).
+    if [ -f "$LLM_FILE" ]; then
+      m="$(mode_of "$LLM_FILE")"
+      local names badl; names="$(sed -n 's/^\([A-Z][A-Z0-9_]*\)=.*/\1/p' "$LLM_FILE" | tr '\n' ',' | sed 's/,$//; s/,/, /g')"
+      if [ "$m" = 600 ]; then ok "llm.env (mode 600): ${names:-no keys set}"; else no "llm.env has mode $m and holds API keys (${names:-no keys set})" "chmod 600 $LLM_FILE"; fi
+      badl="$(grep -n -v -E '^(#.*|[[:space:]]*|[A-Z][A-Z0-9_]*=[A-Za-z0-9._:/+=@,%-]+)$' "$LLM_FILE" | cut -d: -f1 | head -1 || true)"
+      [ -z "$badl" ] || no "llm.env line $badl is not a plain NAME=value line, so herdr cannot load the file" "fix that line, or set the key again: operio-orca llm set NAME"
+    else info "llm.env: none (API keys for your agents: operio-orca llm set NAME)"; fi
     load_env
     local h; h="${OPERIO_ORCA_HOST:-127.0.0.1}"
     if [ "$h" = 127.0.0.1 ]; then ok "listens on 127.0.0.1 only"
@@ -389,6 +414,152 @@ cmd_restore() {
   rm -f "${CONFIG_DIR:?}"/*.pid
   say "restored $file into $CONFIG_DIR (the service files and herdr were not touched)"
   say "start the panel: operio-orca start"
+}
+
+# ── llm: API keys for the agents, in $CONFIG_DIR/llm.env (NAME=value, mode 600) ──────────
+# The value is never an argument (it would land in the shell history and in `ps`): it is piped
+# in, or typed at a hidden prompt. lib/llm.js validates it and writes the file 0600.
+llm_help() {
+  printf '%s\n' \
+    'operio-orca llm set NAME      save a key: the value is typed hidden, or piped in (never an argument)' \
+    'operio-orca llm unset NAME    remove it' \
+    'operio-orca llm list          the names set, each with its last 4 characters' \
+    'operio-orca llm apply         restart herdr so the agents get the keys (only when no agent is working)' \
+    'operio-orca llm test KIND     run that agent once with the keys loaded: claude | codex | opencode | gemini' \
+    '' \
+    "Keys live in $LLM_FILE (mode 600) and load into herdr, so every agent sees them." \
+    'Names are upper case, e.g. ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENAI_BASE_URL, GEMINI_API_KEY.' \
+    'Signed in with a subscription instead? Nothing to set here: log in inside the agent'"'"'s own terminal.'
+}
+llm_node() { "$NODE_BIN" "$APP_DIR/lib/llm.js" "$LLM_FILE" "$@"; }
+llm_read_value() { # NAME → the value on stdout. A hidden prompt on a terminal, stdin otherwise.
+  local v=""
+  if [ -t 0 ]; then
+    printf 'Value for %s (hidden): ' "$1" >&2
+    IFS= read -r -s v || true
+    printf '\n' >&2
+  else
+    IFS= read -r -d '' v || true # all of stdin; lib/llm.js drops one trailing newline
+  fi
+  printf '%s' "$v"
+}
+cmd_llm_set() {
+  local name="${1:-}"
+  [ $# -le 1 ] || die "llm set takes only the NAME; the value is piped in or typed at the prompt, never given on the command line"
+  [ -n "$name" ] || die "usage: operio-orca llm set NAME   (e.g. ANTHROPIC_API_KEY; the value is piped in or typed hidden)"
+  [ -n "$NODE_BIN" ] || die "node not found"
+  local h; h="$(llm_read_value "$name" | llm_node set "$name")" || exit 1
+  say "saved $name ($h) in $LLM_FILE (mode 600)"
+  say "agents get it after: operio-orca llm apply   (check with: operio-orca llm test claude)"
+}
+cmd_llm_unset() {
+  local name="${1:-}"
+  [ -n "$name" ] || die "usage: operio-orca llm unset NAME"
+  [ -n "$NODE_BIN" ] || die "node not found"
+  local r; r="$(llm_node unset "$name")" || exit 1
+  if [ "$r" = removed ]; then say "removed $name from $LLM_FILE (agents keep it until: operio-orca llm apply)"
+  else say "$name was not set"; fi
+}
+cmd_llm_list() {
+  [ -n "$NODE_BIN" ] || die "node not found"
+  local out; out="$(llm_node list)" || exit 1
+  if [ -n "$out" ]; then printf '%s\n' "$out"; else say "no keys set (operio-orca llm set NAME)"; fi
+}
+llm_busy() { # agents working or waiting on a question, comma separated (a restart would cut them off)
+  "$HERDR_BIN" agent list 2>/dev/null | "$NODE_BIN" -e '
+    let s = ""; process.stdin.on("data", c => { s += c; }).on("end", () => {
+      let a = []; try { a = JSON.parse(s).result.agents || []; } catch { /* no list */ }
+      process.stdout.write(a.filter(x => x.agent_status === "working" || x.agent_status === "blocked").map(x => x.name || x.pane_id).join(", "));
+    });'
+}
+cmd_llm_apply() {
+  [ -n "$NODE_BIN" ] || die "node not found"
+  [ -f "$LLM_FILE" ] || say "note: $LLM_FILE does not exist yet (operio-orca llm set NAME); restarting anyway"
+  if [ "${OPERIO_ORCA_SKIP_HERDR:-0}" = 1 ]; then say "herdr is not managed here (OPERIO_ORCA_SKIP_HERDR=1); nothing restarted"; return 0; fi
+  [ -x "$HERDR_BIN" ] || die "herdr not found at $HERDR_BIN (run the installer again)"
+  if ! herdr_running; then say "herdr is not running; the keys load when it starts: operio-orca start"; return 0; fi
+  local busy; busy="$(llm_busy)"
+  [ -z "$busy" ] || die "not now: $busy still working or waiting on you. Run it again when they are idle (restarting herdr would cut them off)"
+  local uid; uid="$(id -u)"
+  if use_service && [ "$SERVICE" = systemd ]; then
+    systemctl --user restart operio-orca-herdr.service || die "systemctl could not restart operio-orca-herdr.service (see: operio-orca logs herdr)"
+    for _ in 1 2 3 4 5 6 7 8 9 10; do herdr_running && break; sleep 0.5; done
+    if [ "$(systemctl --user is-active operio-orca-herdr.service 2>/dev/null || true)" != active ]; then
+      say "herdr is running but not under ORCA's service, so it was not restarted; stop it yourself (herdr server stop), then: operio-orca start"; return 0
+    fi
+    say "restarted herdr (systemd); agents started from now on see the keys"
+  elif use_service && [ "$SERVICE" = launchd ]; then
+    launchctl kickstart -k "gui/$uid/$LABEL-herdr" || die "launchctl could not restart $LABEL-herdr"
+    for _ in 1 2 3 4 5 6 7 8 9 10; do herdr_running && break; sleep 0.5; done
+    say "restarted herdr (launchd); agents started from now on see the keys"
+  else
+    local pid; pid="$(herdr_pid || true)"
+    if [ -z "$pid" ]; then
+      say "herdr is running but ORCA did not start it (no pid on record), so it was not restarted; stop it yourself (herdr server stop), then: operio-orca start"; return 0
+    fi
+    kill "$pid"
+    for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do kill -0 "$pid" 2>/dev/null || break; sleep 0.5; done
+    kill -0 "$pid" 2>/dev/null && die "herdr (pid $pid) did not stop; see operio-orca logs herdr"
+    rm -f "$HERDR_PID_FILE"
+    for _ in 1 2 3 4 5 6; do herdr_running || break; sleep 0.5; done
+    herdr_running && die "herdr (pid $pid) stopped but another herdr server still answers; stop it yourself (herdr server stop), then: operio-orca start"
+    ensure_herdr
+    say "restarted herdr (pid $(herdr_pid || echo '?')); agents started from now on see the keys"
+  fi
+}
+run_timeout() { # SECONDS cmd… — exit 124 when it ran out of time
+  local secs="$1"; shift
+  if command -v timeout >/dev/null 2>&1; then timeout -k 5 "$secs" "$@"; return $?; fi
+  if command -v gtimeout >/dev/null 2>&1; then gtimeout -k 5 "$secs" "$@"; return $?; fi
+  "$@" & local pid=$!
+  ( sleep "$secs"; kill "$pid" 2>/dev/null ) & local wd=$!
+  local rc=0; wait "$pid" || rc=$?
+  if kill -0 "$wd" 2>/dev/null; then kill "$wd" 2>/dev/null; wait "$wd" 2>/dev/null || true; else rc=124; fi
+  return "$rc"
+}
+cmd_llm_test() {
+  local kind="${1:-}" prompt='Reply with the single word ok' bin
+  case "$kind" in
+    claude|codex|opencode|gemini) ;;
+    '') die "usage: operio-orca llm test KIND   (claude, codex, opencode, gemini)" ;;
+    *) die "unknown kind: $kind (claude, codex, opencode, gemini)" ;;
+  esac
+  [ -n "$NODE_BIN" ] || die "node not found"
+  bin="$(command -v "$kind" || true)"
+  if [ -z "$bin" ]; then printf '%s\n' "not installed: $kind"; return 1; fi
+  local cmd
+  case "$kind" in
+    claude)   cmd=("$bin" -p "$prompt" --max-turns 1) ;;
+    codex)    cmd=("$bin" exec "$prompt") ;;
+    opencode) cmd=("$bin" run "$prompt") ;;
+    gemini)   cmd=("$bin" -p "$prompt") ;;
+  esac
+  # In an empty folder (no project files, hooks or instructions get pulled in), as this user,
+  # with the keys loaded. stdout is thrown away; only the last stderr line is shown, redacted.
+  local work rc=0
+  work="$(mktemp -d "${TMPDIR:-/tmp}/operio-orca-llm-test.XXXXXX")"
+  ( load_llm_env; cd "$work" && run_timeout 90 "${cmd[@]}" >/dev/null 2>"$work/err" ) </dev/null || rc=$?
+  if [ "$rc" = 0 ]; then printf 'ok\n'; rm -rf "$work"; return 0; fi
+  local last; last="$(grep -v '^[[:space:]]*$' "$work/err" 2>/dev/null | tail -n 1 | cut -c1-240 || true)"
+  rm -rf "$work"
+  [ "$rc" != 124 ] || last="timed out after 90 s${last:+ ($last)}"
+  [ -n "$last" ] || last="exit $rc, nothing on stderr"
+  last="$("$NODE_BIN" -e 'process.stdout.write(require(process.argv[1]).redact(process.argv[2]))' "$APP_DIR/lib/journal.js" "$last")"
+  printf 'failed: %s\n' "$last"
+  return 1
+}
+cmd_llm() {
+  local sub="${1:-}"
+  [ $# -eq 0 ] || shift
+  case "$sub" in
+    set) cmd_llm_set "$@" ;;
+    unset) cmd_llm_unset "$@" ;;
+    list) cmd_llm_list ;;
+    apply) cmd_llm_apply ;;
+    test) cmd_llm_test "$@" ;;
+    ''|help|-h|--help) llm_help ;;
+    *) die "unknown llm command: $sub (set, unset, list, apply, test)" ;;
+  esac
 }
 
 cmd_uninstall() {
@@ -498,10 +669,11 @@ case "${1:-help}" in
   update) shift; cmd_update "$@" ;;
   backup) shift; cmd_backup "$@" ;;
   restore) shift; cmd_restore "$@" ;;
+  llm) shift; cmd_llm "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,20p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,22p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

@@ -1,0 +1,15 @@
+#!/bin/sh
+# A herdr stand-in whose `server` is a real, long-lived process (for the CLI's start and
+# `llm apply` paths): status follows that process, and it records the key it was started
+# with in $FAKE_HERDR_DIR/seen-key so a test can check the environment it got.
+case "$1 $2" in
+  "server ")
+    printf '%s\n' "${ANTHROPIC_API_KEY:-nokey}" > "$FAKE_HERDR_DIR/seen-key"
+    printf '%s' "$$" > "$FAKE_HERDR_DIR/server.pid"
+    exec sleep 300 ;;
+  "status server")
+    p="$(cat "$FAKE_HERDR_DIR/server.pid" 2>/dev/null)"
+    if [ -n "$p" ] && kill -0 "$p" 2>/dev/null; then echo "status: running"; else echo "status: stopped"; fi ;;
+  "agent list") echo '{"result":{"agents":[]}}' ;;
+  *) echo '{"result":{}}' ;;
+esac
