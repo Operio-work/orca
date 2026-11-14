@@ -312,6 +312,7 @@ const JOBS_KEEP = 8;
 const JOB_TTL = 14 * 864e5;
 const sentAsk = new Map(); // terminal -> { text, at }: what ORCA sent, in case the output has no prompt line
 const work = new Map();    // pane -> { from } while a job runs (from = null when the start is unknown)
+const deepRead = new Map(); // pane -> 'seq:status' of the last full history read (see /read)
 
 state.seen = state.seen || {}; // terminal -> end of the last job someone opened
 // Claims: who is on an agent (anyone can still act on it). terminal -> { login, at }. Never expire.
@@ -1441,6 +1442,15 @@ async function api(req, res, url) {
     const pane = decodeURIComponent(m[1]);
     if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
     const lines = Math.min(Math.max(Number(url.searchParams.get('lines')) || 40, 5), 2000);
+    // A deep read of an idle full-screen agent (Claude Code) makes herdr scroll its transcript
+    // up and back down, which shows in the terminal as a scrolling mess on every poll.
+    // So read the history once per agent state; while nothing changed and this browser already
+    // holds it (have=1), send only the screen and let the panel merge it.
+    const ag = agentCache.get(pane);
+    const key = ag ? `${ag.seq}:${ag.status}` : '';
+    if (url.searchParams.get('have') === '1' && key && deepRead.get(pane) === key) {
+      return send(res, 200, { text: await herdr(['agent', 'read', pane, '--source', 'visible', '--format', 'text']) });
+    }
     // Full-screen agents (alternate screen) can't have their history read while they work or
     // wait on a question; show what is on their screen instead of an error.
     let text;
@@ -1452,6 +1462,7 @@ async function api(req, res, url) {
         const again = await read();
         if (again.length > text.length) text = again;
       }
+      if (key) deepRead.set(pane, key);
     }
     catch (err) {
       if (!/alternate-screen|not idle|while .* is (working|blocked)/i.test(err.detail || err.message || '')) throw err;

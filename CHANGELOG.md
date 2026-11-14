@@ -3,6 +3,13 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Panel
+- An agent's full history is read once per state change; while nothing changed, polls read only
+  its screen. Stops full-screen agents (Claude Code) from visibly scrolling their transcript
+  in the terminal on every poll.
+
 ## [0.1.0] - 2026-11-09
 
 First public release.

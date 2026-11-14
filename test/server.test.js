@@ -148,3 +148,26 @@ test('the first agent on a fresh herdr opens a workspace for itself', async () =
   assert.equal(ws[0].cwd, HOME);
   assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).noWorkspace, undefined);
 });
+
+test("an agent's history is read once per state; after that only its screen", async () => {
+  const f = path.join(FAKE, 'state.json');
+  const st = JSON.parse(fs.readFileSync(f, 'utf8'));
+  const pane = 'w1:p90';
+  st.agents.push({ pane_id: pane, tab_id: 'w1:t90', terminal_id: 'term90', name: 'deep', agent: 'claude', agent_status: 'idle', state_change_seq: 5, cwd: HOME });
+  fs.writeFileSync(f, JSON.stringify(st));
+  await until(async () => (await req('GET', '/api/agents')).json?.agents?.some(a => a.pane === pane));
+  const log = path.join(FAKE, 'reads.jsonl');
+  const sources = () => fs.readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(r => r.pane === pane).map(r => r.source);
+  const read = have => req('GET', `/api/agents/${encodeURIComponent(pane)}/read?lines=40${have ? '&have=1' : ''}`);
+  assert.equal((await read(false)).status, 200);
+  assert.equal((await read(true)).status, 200);
+  assert.deepEqual(sources(), ['recent', 'visible'], 'same state + have=1 reads only the screen');
+  assert.equal((await read(false)).status, 200);
+  assert.equal(sources().at(-1), 'recent', 'without have=1 the history is read again');
+  const st2 = JSON.parse(fs.readFileSync(f, 'utf8'));
+  st2.agents.find(a => a.pane_id === pane).state_change_seq = 6;
+  fs.writeFileSync(f, JSON.stringify(st2));
+  await until(async () => (await req('GET', '/api/agents')).json?.agents?.find(a => a.pane === pane)?.seq === 6);
+  assert.equal((await read(true)).status, 200);
+  assert.equal(sources().at(-1), 'recent', 'a new state reads the history again');
+});

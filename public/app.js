@@ -1238,7 +1238,7 @@ async function loadOutput(toBottom = false) {
   const pane = selected;
   const atBottom = stickBottom;
   try {
-    const { text } = await call(`/api/agents/${enc(pane)}/read?lines=1000`);
+    const { text } = await call(`/api/agents/${enc(pane)}/read?lines=1000${outSeen.has(pane) ? '&have=1' : ''}`);
     if (selected !== pane) return;
     const rc = parseRecap(text);
     if (rc) recapSeen.set(pane, rc);

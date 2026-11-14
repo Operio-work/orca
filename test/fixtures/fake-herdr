@@ -54,6 +54,6 @@ else if (cmd === 'tab create' && st.noWorkspace) {
   let text = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
   const n = Number(flag('--lines')) || 40;
   if (text) text = text.split('\n').slice(-n).join('\n');
-  fs.appendFileSync(path.join(dir, 'reads.jsonl'), JSON.stringify({ pane: rest[0], lines: n }) + '\n');
+  fs.appendFileSync(path.join(dir, 'reads.jsonl'), JSON.stringify({ pane: rest[0], lines: n, source: flag('--source') }) + '\n');
   process.stdout.write(text);
 } else out({ result: {} });
