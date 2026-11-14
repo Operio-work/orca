@@ -20,6 +20,39 @@ test('journal: secrets are redacted before anything is written', () => {
   assert.equal(redact('press Enter to go on'), 'press Enter to go on');
 });
 
+test('journal: llm.env keys never reach the disk, whatever the name or shape', () => {
+  // The shapes of keys, not keys. Names stay (they tell you what was set); values go.
+  const lines = [
+    'ANTHROPIC_API_KEY=sk-test-abcdefghijklmnopqrstuvwxyz0123',
+    'export OPENAI_API_KEY=sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZ9876',
+    'GEMINI_API_KEY=AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake12',
+    'GROQ_API_KEY=gsk_FAKEfakeFAKEfakeFAKEfakeFAKEfake',
+    'OPENAI_BASE_URL=http://127.0.0.1:11434/v1',
+    'anthropic_api_key: plainvalue123456',
+    'MY_TOKEN: tok-abcdef123456', 'CLIENT_SECRET=hunter22hunter22', 'Some_Vendor_Token=zzzz-9999-yyyy',
+    'please set OPENAI_API_KEY and press Enter', 'keys: Enter, Esc',
+  ];
+  const out = redact(lines.join('\n'));
+  for (const v of ['abcdefghijklmnopqrstuvwxyz0123', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9876', 'AIzaSyFAKE', 'gsk_FAKE', 'plainvalue123456', 'tok-abcdef123456', 'hunter22', 'zzzz-9999']) {
+    assert.ok(!out.includes(v), `value hidden: ${v}`);
+  }
+  for (const n of ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY', 'GROQ_API_KEY', 'OPENAI_BASE_URL=http://127.0.0.1:11434/v1', 'anthropic_api_key', 'MY_TOKEN', 'CLIENT_SECRET']) {
+    assert.ok(out.includes(n), `name kept: ${n}`);
+  }
+  assert.ok(out.includes('please set OPENAI_API_KEY and press Enter') && out.includes('keys: Enter, Esc'), 'prose is left alone');
+
+  // The same through an entry and a saved pane output.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'operio-orca-journal-llm-'));
+  const j = createJournal({ dir: path.join(dir, 'journal') });
+  j.write('agent.prompt', { who: 'local', agent: { name: 'alpha', terminal: 't1' }, text: 'use ANTHROPIC_API_KEY=sk-test-abcdefghijklmnopqrstuvwxyz0123' });
+  const id = j.snapshot('alpha', '$ env | grep KEY\nGEMINI_API_KEY=AIzaSyFAKEfakeFAKEfakeFAKEfakeFAKEfake12\nGROQ_API_KEY=gsk_FAKEfakeFAKEfakeFAKEfakeFAKEfake\n');
+  const disk = fs.readFileSync(path.join(dir, 'journal', dayOf() + '.jsonl'), 'utf8') + j.readSnapshot(id);
+  assert.doesNotMatch(disk, /abcdefghijklmnopqrstuvwxyz0123|AIzaSyFAKE|gsk_FAKE/);
+  assert.match(disk, /ANTHROPIC_API_KEY=\[secret\]/);
+  assert.match(j.readSnapshot(id), /GEMINI_API_KEY=\[secret\]\nGROQ_API_KEY=\[secret\]/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 test('journal: append-only day files and snapshots, owner-only, digest and review', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'operio-orca-journal-'));
   const j = createJournal({ dir: path.join(dir, 'journal'), keepDays: 30 });
