@@ -17,6 +17,7 @@ const FAKE = path.join(HOME, 'fake-herdr');
 const PORT = 20000 + Math.floor(Math.random() * 20000);
 const BASE = `127.0.0.1:${PORT}`;
 let child;
+let serverLog = ''; // everything the server printed (its JSON log): secrets must never be in it
 
 function req(method, p, { host = BASE, origin, body } = {}) {
   return new Promise((resolve, reject) => {
@@ -47,7 +48,7 @@ test.before(async () => {
   });
   await new Promise((resolve, reject) => {
     let out = '';
-    child.stdout.on('data', c => { out += c; if (out.includes('"event":"listen"')) resolve(); });
+    child.stdout.on('data', c => { out += c; serverLog += c; if (out.includes('"event":"listen"')) resolve(); });
     child.on('exit', code => reject(new Error('server exited ' + code + ' ' + out)));
   });
 });
@@ -200,4 +201,56 @@ test("a Claude agent's model is switched from its card, only while it is free", 
   const agents = (await req('GET', '/api/agents')).json.agents;
   assert.equal(agents.find(a => a.pane === 'w1:p91').model, 'sonnet');
   assert.equal(agents.find(a => a.pane === 'w1:p92').model, null);
+});
+
+test('LLM keys: set writes llm.env 0600, the API and log never carry the value, unset, apply refuses while an agent works', async () => {
+  const KEY = 'sk-test-abcdefghijklmnop1234'; // the shape of a key, not one
+  const f = path.join(CFG, 'llm.env');
+  let r = await req('GET', '/api/llm');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json.keys, []);
+  assert.equal(r.json.demo, false);
+  assert.equal(r.json.file, '~/.config/operio-orca/llm.env');
+  // Writes need a same-origin Origin, like every other write.
+  assert.equal((await req('POST', '/api/llm/set', { body: { name: 'ANTHROPIC_API_KEY', value: KEY } })).status, 403);
+  assert.ok(!fs.existsSync(f));
+
+  r = await post('/api/llm/set', { name: 'ANTHROPIC_API_KEY', value: KEY + '\n' });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(r.json.keys, [{ name: 'ANTHROPIC_API_KEY', hint: '****1234' }]);
+  assert.equal((fs.statSync(f).mode & 0o777).toString(8), '600');
+  assert.match(fs.readFileSync(f, 'utf8'), new RegExp(`^ANTHROPIC_API_KEY=${KEY}$`, 'm'), 'one trailing newline dropped');
+  assert.equal((await post('/api/llm/set', { name: 'bad name', value: KEY })).json.error, 'llm_bad_name');
+  assert.equal((await post('/api/llm/set', { name: 'OPENAI_API_KEY', value: '' })).json.error, 'llm_empty');
+  assert.equal((await post('/api/llm/set', { name: 'OPENAI_API_KEY', value: 'two words' })).json.error, 'llm_bad_value');
+  assert.equal((await post('/api/llm/set', { name: 'OPENAI_BASE_URL', value: 'http://127.0.0.1:11434/v1' })).status, 200);
+  r = await req('GET', '/api/llm');
+  assert.deepEqual(r.json.keys, [{ name: 'ANTHROPIC_API_KEY', hint: '****1234' }, { name: 'OPENAI_BASE_URL', hint: '****4/v1' }]);
+  assert.doesNotMatch(r.text, new RegExp(KEY), 'values never come back');
+  await until(() => serverLog.includes('"event":"llm.set"'));
+  assert.doesNotMatch(serverLog, new RegExp(KEY), 'the value is not in the server log');
+
+  // Apply: an agent is still working (from the model test), so nothing is restarted.
+  r = await post('/api/llm/apply', {});
+  assert.equal(r.status, 409, r.text);
+  assert.equal(r.json.error, 'busy');
+  assert.ok(r.json.agents.includes('busy'), `names the agent: ${r.text}`);
+  // All idle: the CLI runs; this herdr is the fake and was not started by ORCA (no pid), so it says so.
+  const stf = path.join(FAKE, 'state.json');
+  const st = JSON.parse(fs.readFileSync(stf, 'utf8'));
+  st.agents.forEach(a => { a.agent_status = 'idle'; });
+  fs.writeFileSync(stf, JSON.stringify(st));
+  await until(async () => !(await req('GET', '/api/agents')).json.agents.some(a => a.status === 'working' || a.status === 'blocked'));
+  r = await post('/api/llm/apply', {});
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.result, 'not_managed');
+  assert.match(r.json.detail, /no pid on record/);
+
+  r = await post('/api/llm/unset', { name: 'ANTHROPIC_API_KEY' });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(r.json.keys, [{ name: 'OPENAI_BASE_URL', hint: '****4/v1' }]);
+  assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /ANTHROPIC_API_KEY/);
+  assert.equal((await post('/api/llm/unset', { name: 'ANTHROPIC_API_KEY' })).status, 200, 'unset is idempotent');
+  assert.equal((await post('/api/llm/unset', { name: 'nope' })).json.error, 'llm_bad_name');
+  assert.equal((fs.statSync(f).mode & 0o777).toString(8), '600');
 });

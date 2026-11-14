@@ -24,6 +24,7 @@ const routinesLib = require('./lib/routines');
 const { Scheduler } = require('./lib/scheduler');
 const cronLib = require('./lib/cron');
 const { createJournal } = require('./lib/journal');
+const llm = require('./lib/llm');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = require('./lib/config').load();
@@ -37,6 +38,8 @@ const ALLOWED_HOSTS = guard.makeAllowed({ host: HOST, port: PORT, allowedHosts: 
 const STATE_DIR  = CFG.CONFIG_DIR;
 const STATE_FILE = CFG.STATE_FILE;
 const VAPID_FILE = CFG.VAPID_FILE;
+const LLM_FILE   = CFG.LLM_FILE; // the agents' API keys (lib/llm.js); values never leave the server
+const CLI        = path.join(__dirname, 'bin', 'operio-orca');
 const POLL_MS    = CFG.POLL_MS;
 const MIN_WORK_MS = CFG.MIN_WORK_MS; // shorter turns don't alert
 const FOLDERS = CFG.FOLDERS;
@@ -649,6 +652,22 @@ async function stopAgent(a) {
 }
 
 const execFileP = (cmd, args, opts = {}) => new Promise(resolve => execFile(cmd, args, { timeout: 3000, maxBuffer: 1024 * 1024, ...opts }, (err, stdout) => resolve(err ? null : stdout)));
+
+// ─── LLM keys: apply = `operio-orca llm apply` (the CLI knows the service and the pid) ─────
+// The panel checks for busy agents first and answers 409 with their names; the CLI checks
+// again (a race) and does the restart. Its last line says what happened; mapped to a code.
+const LLM_RESULTS = [[/^restarted herdr/, 'restarted'], [/not running/, 'not_running'], [/not restarted|nothing restarted|not managed/, 'not_managed']];
+function llmApply() {
+  return new Promise(resolve => {
+    const env = { ...process.env, OPERIO_ORCA_CONFIG_DIR: STATE_DIR, OPERIO_ORCA_HERDR_BIN: HERDR };
+    execFile('bash', [CLI, 'llm', 'apply'], { env, timeout: 90000, maxBuffer: 1024 * 1024 }, (err, stdout, stderr) => {
+      const lines = ((stdout || '') + (stderr || '')).split('\n').map(l => l.replace(/^operio-orca: (?:ERROR: )?/, '').trim()).filter(Boolean);
+      const line = lines.at(-1) || '';
+      const busy = line.match(/^not now: (.+?) still working or waiting/);
+      resolve({ ok: !err, line, busy: busy ? busy[1].split(', ') : null, result: (LLM_RESULTS.find(([re]) => re.test(line)) || [null, 'unknown'])[1] });
+    });
+  });
+}
 const WORKTREE_RE = /\/\.claude\/worktrees\/[^/]+|\/\.worktrees\/[^/]+/;
 
 // What ending this agent would lose — shown in the confirm box before anything happens.
@@ -1403,6 +1422,11 @@ async function api(req, res, url) {
     return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, access: accessView() });
   }
 
+  // ── LLM keys: names and last 4 characters only; the values stay in llm.env (0600).
+  if (req.method === 'GET' && pathname === '/api/llm') {
+    return send(res, 200, { keys: llm.list(LLM_FILE), file: shortHome(LLM_FILE), demo: DEMO });
+  }
+
   if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/reply$/.test(pathname)) {
     const pane = decodeURIComponent(pathname.split('/')[3]);
     if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
@@ -1513,6 +1537,33 @@ async function api(req, res, url) {
   if (pathname === '/api/push/test') {
     const sent = await pushAll({ tag: 'test', url: '/', kind: 'test' });
     return send(res, 200, { ok: true, sent });
+  }
+
+  // ── LLM keys (localhost + same origin like every write; the value is never logged or echoed)
+  if (pathname === '/api/llm/set' || pathname === '/api/llm/unset') {
+    if (DEMO) throw new HttpError(403, 'demo');
+    const name = String(body.name || '').trim();
+    try {
+      if (pathname === '/api/llm/set') llm.set(LLM_FILE, name, String(body.value ?? ''));
+      else llm.unset(LLM_FILE, name);
+    } catch (e) { throw new HttpError(400, 'llm_' + e.message); }
+    const ev = pathname === '/api/llm/set' ? 'llm.set' : 'llm.unset';
+    log(ev, { name });
+    jr(req, ev, null, { name });
+    return send(res, 200, { ok: true, keys: llm.list(LLM_FILE) });
+  }
+  if (pathname === '/api/llm/apply') {
+    if (DEMO) throw new HttpError(403, 'demo');
+    const busy = (await listAgents()).filter(a => a.status === 'working' || a.status === 'blocked').map(a => a.name || a.pane);
+    if (busy.length) { log('llm.apply_busy', { agents: busy }); return send(res, 409, { error: 'busy', agents: busy }); }
+    const r = await llmApply();
+    if (!r.ok) {
+      if (r.busy) { log('llm.apply_busy', { agents: r.busy }); return send(res, 409, { error: 'busy', agents: r.busy }); }
+      throw new HttpError(502, 'apply_failed', r.line);
+    }
+    log('llm.apply', { result: r.result });
+    jr(req, 'llm.apply', null, { result: r.result });
+    return send(res, 200, { ok: true, result: r.result, detail: r.line });
   }
 
   // ── Tag library: forget a tag no agent uses (tags are created by putting them on an agent)

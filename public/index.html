@@ -58,6 +58,7 @@
     <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
     <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.8 0"/></symbol>
     <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4.5"/><path d="m11.3 12.2 9.2-9.2M16 7.5l3 3M18.5 5l2.5 2.5"/></symbol>
   </svg>
 
   <div class="shell">
@@ -78,6 +79,7 @@
             <button type="button" data-view="holo" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-holo"/></svg><span data-i18n="holoView">Holo</span><kbd>3</kbd></button>
           </div>
         </div>
+        <button id="llm-btn" class="chip icon" type="button" data-i18n-title="llmKeys"><svg class="ic" aria-hidden="true"><use href="#i-key"/></svg></button>
         <button id="bell" class="chip icon" type="button" aria-pressed="false" data-i18n-title="alerts"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></button>
         <button id="theme" class="chip icon" type="button" data-i18n-title="themeToggle"><svg class="ic" aria-hidden="true"><use href="#i-theme"/></svg></button>
         <button id="lang" class="chip icon lang" type="button" aria-label="Español / English">ES</button>
@@ -292,6 +294,27 @@
       <div class="dialog-row">
         <button type="button" class="btn" value="cancel" data-i18n="cancel">Cancel</button>
         <button type="submit" class="btn primary" data-i18n="move">Move</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- LLM keys: API keys for the agents, kept in ~/.config/operio-orca/llm.env (values never come back) -->
+  <dialog id="llm-dialog" aria-labelledby="llm-title">
+    <form id="llm-form" method="dialog">
+      <h2 id="llm-title" data-i18n="llmTitle">LLM keys</h2>
+      <p class="hint" id="llm-intro"></p>
+      <ul id="llm-list" class="llm-list" aria-live="polite"></ul>
+      <label><span data-i18n="llmName">Name</span>
+        <input name="name" required maxlength="64" pattern="[A-Za-z][A-Za-z0-9_]*" placeholder="ANTHROPIC_API_KEY" autocomplete="off" spellcheck="false" autocapitalize="characters">
+      </label>
+      <label><span data-i18n="llmValue">Value</span>
+        <input name="value" type="password" required maxlength="4096" autocomplete="off" spellcheck="false">
+      </label>
+      <p class="hint" data-i18n="llmApplyHint"></p>
+      <div class="dialog-row">
+        <button type="button" class="btn" value="cancel" data-i18n="close">Close</button>
+        <button type="button" id="llm-apply" class="btn" data-i18n="llmApply">Apply</button>
+        <button type="submit" class="btn primary" data-i18n="llmAdd">Add key</button>
       </div>
     </form>
   </dialog>

@@ -52,6 +52,13 @@ const T = {
     startedBlocked: 'Started {0} — it’s asking something first. Answer it in the panel.',
     alerts: 'Phone alerts', alertsOn: 'Alerts on — a test alert is on its way', alertsOff: 'Alerts off on this device',
     alertsNeedHttps: 'Alerts need the installed app over HTTPS (for example through tailscale serve).', alertsDenied: 'Notifications are blocked for this site in the browser settings.',
+    llmKeys: 'LLM keys', llmTitle: 'LLM keys', llmIntro: 'API keys your agents use, kept in {0} (owner-only) and loaded into herdr. Signed in with a subscription? Nothing to add here: log in inside the agent’s own terminal.',
+    llmNone: 'No keys set', llmName: 'Name', llmValue: 'Value', llmAdd: 'Add key', llmRemove: 'Remove', llmRemoveOf: 'Remove {0}', llmSaved: 'Saved {0} — press Apply so agents get it', llmRemoved: 'Removed {0}',
+    llmApply: 'Apply', llmApplying: 'Applying…', llmApplyHint: 'Apply restarts herdr so running agents get the keys. It closes every agent pane, so it waits until none is working or asking you.',
+    llmApplied: 'herdr restarted — agents started from now on see the keys', llmNotRunning: 'herdr is not running; the keys load when it starts', llmNotManaged: 'herdr was not started by ORCA, so it was not restarted — restart it yourself (herdr server stop, then operio-orca start)',
+    llmBusy: 'Not now: {0} still working or waiting on you. Apply when they are idle.', llmDemo: 'Not available in the demo.',
+    e_llm_bad_name: 'Name: upper case letters, digits and _, starting with a letter (ANTHROPIC_API_KEY).', e_llm_empty: 'Paste the key first.', e_llm_bad_value: 'That value has a character that cannot go in llm.env (no spaces or quotes; one line).',
+    e_demo: 'Not available in the demo.', e_apply_failed: 'The restart did not finish. Check: operio-orca logs herdr',
     themeToggle: 'Light / dark', agentsIn: '{0} agents', paneOf: 'pane {0}',
     details: 'Details', asks: 'Asks: {0}', shellTabs: '{0} shell tabs, no agent',
     k_enter: 'Enter', k_esc: 'Esc', 'k_ctrl+c': 'Ctrl C', k_up: 'Up', k_down: 'Down', k_tab: 'Tab',
@@ -128,6 +135,13 @@ const T = {
     startedBlocked: 'Iniciado {0} — primero pregunta algo. Contéstale en el panel.',
     alerts: 'Alertas al teléfono', alertsOn: 'Alertas activas — va una alerta de prueba', alertsOff: 'Alertas desactivadas en este dispositivo',
     alertsNeedHttps: 'Las alertas requieren la app instalada por HTTPS (por ejemplo con tailscale serve).', alertsDenied: 'Las notificaciones están bloqueadas para este sitio en el navegador.',
+    llmKeys: 'Claves LLM', llmTitle: 'Claves LLM', llmIntro: 'Claves de API que usan tus agentes, guardadas en {0} (solo tu usuario) y cargadas en herdr. ¿Entras con suscripción? No hay nada que agregar aquí: inicia sesión en la terminal del propio agente.',
+    llmNone: 'Sin claves', llmName: 'Nombre', llmValue: 'Valor', llmAdd: 'Agregar clave', llmRemove: 'Quitar', llmRemoveOf: 'Quitar {0}', llmSaved: 'Guardada {0} — pulsa Aplicar para que los agentes la reciban', llmRemoved: 'Quitada {0}',
+    llmApply: 'Aplicar', llmApplying: 'Aplicando…', llmApplyHint: 'Aplicar reinicia herdr para que los agentes en marcha reciban las claves. Cierra todos los paneles de agentes, así que espera a que ninguno esté trabajando o preguntándote.',
+    llmApplied: 'herdr reiniciado — los agentes que inicies desde ahora ven las claves', llmNotRunning: 'herdr no está corriendo; las claves se cargan cuando arranque', llmNotManaged: 'ORCA no inició herdr, así que no lo reinició — reinícialo tú (herdr server stop y luego operio-orca start)',
+    llmBusy: 'Ahora no: {0} sigue trabajando o esperándote. Aplica cuando estén libres.', llmDemo: 'No disponible en la demo.',
+    e_llm_bad_name: 'Nombre: mayúsculas, dígitos y _, empezando con letra (ANTHROPIC_API_KEY).', e_llm_empty: 'Pega primero la clave.', e_llm_bad_value: 'Ese valor tiene un carácter que no puede ir en llm.env (sin espacios ni comillas; una sola línea).',
+    e_demo: 'No disponible en la demo.', e_apply_failed: 'El reinicio no terminó. Revisa: operio-orca logs herdr',
     themeToggle: 'Claro / oscuro', agentsIn: '{0} agentes', paneOf: 'panel {0}',
     details: 'Detalles', asks: 'Pregunta: {0}', shellTabs: '{0} pestañas de terminal sin agente',
     k_enter: 'Enter', k_esc: 'Esc', 'k_ctrl+c': 'Ctrl C', k_up: 'Arriba', k_down: 'Abajo', k_tab: 'Tab',
@@ -2516,6 +2530,74 @@ moveForm.addEventListener('submit', async e => {
     await refresh();
   } catch (err) { toast(errText(err), true); }
   finally { submit.disabled = false; submit.textContent = t('move'); }
+});
+
+// ─── LLM keys (header): API keys for the agents in ~/.config/operio-orca/llm.env ─────
+// The server only ever returns names and the last 4 characters. Apply = `operio-orca llm
+// apply`: a herdr restart, refused (409 with the names) while any agent works or asks.
+const llmDlg = $('#llm-dialog');
+let llmKeys = [], llmDemo = false, llmFile = '~/.config/operio-orca/llm.env';
+function renderLlm() {
+  const ul = $('#llm-list');
+  $('#llm-intro').textContent = t('llmIntro', llmFile);
+  ul.replaceChildren(...(llmKeys.length ? llmKeys.map(k => {
+    const li = el('li', 'llm-row');
+    li.append(el('code', null, k.name), el('span', 'llm-hint', k.hint));
+    const rm = el('button', 'btn small', t('llmRemove'));
+    rm.type = 'button';
+    rm.setAttribute('aria-label', t('llmRemoveOf', k.name));
+    rm.addEventListener('click', async () => {
+      rm.disabled = true;
+      try { llmKeys = (await post('/api/llm/unset', { name: k.name })).keys || []; toast(t('llmRemoved', k.name)); renderLlm(); }
+      catch (err) { rm.disabled = false; toast(errText(err), true); }
+    });
+    li.append(rm);
+    return li;
+  }) : [el('li', 'llm-empty', t(llmDemo ? 'llmDemo' : 'llmNone'))]));
+  for (const x of llmDlg.querySelectorAll('input, .primary, #llm-apply')) x.disabled = llmDemo;
+}
+async function openLlm() {
+  try { const r = await call('/api/llm'); llmKeys = r.keys || []; llmDemo = !!r.demo; if (r.file) llmFile = r.file; }
+  catch (err) { toast(errText(err), true); return; }
+  $('#llm-form').reset();
+  renderLlm();
+  llmDlg.showModal();
+}
+$('#llm-btn').addEventListener('click', openLlm);
+$('#llm-form [value=cancel]').addEventListener('click', () => llmDlg.close());
+document.addEventListener('operio-orca:lang', () => { if (llmDlg.open) renderLlm(); }); // the intro and list are drawn here, not by data-i18n
+$('#llm-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target;
+  const fd = new FormData(f);
+  const name = String(fd.get('name') || '').trim().toUpperCase();
+  const value = String(fd.get('value') || '');
+  const btn = f.querySelector('.primary');
+  btn.disabled = true;
+  try {
+    llmKeys = (await post('/api/llm/set', { name, value })).keys || [];
+    f.reset();
+    toast(t('llmSaved', name));
+    renderLlm();
+  } catch (err) { toast(errText(err), true); }
+  finally { btn.disabled = llmDemo; }
+});
+$('#llm-apply').addEventListener('click', async () => {
+  const b = $('#llm-apply');
+  b.disabled = true;
+  b.textContent = t('llmApplying');
+  try {
+    const res = await fetch('/api/llm/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const j = await res.json().catch(() => ({}));
+    if (res.status === 409 && j.error === 'busy') toast(t('llmBusy', (j.agents || []).join(', ')), true, 7000);
+    else if (!res.ok) toast(errText(new Error(j.error || 'generic')), true);
+    else {
+      const key = { restarted: 'llmApplied', not_running: 'llmNotRunning', not_managed: 'llmNotManaged' }[j.result] || 'llmApplied';
+      toast(t(key), j.result === 'not_managed', 7000);
+      if (j.result === 'restarted') { sfx('sent'); setTimeout(refresh, 1500); }
+    }
+  } catch { toast(t('offline'), true); }
+  finally { b.disabled = llmDemo; b.textContent = t('llmApply'); }
 });
 
 // ─── Phone alerts (Web Push) ─────────────────────────────────────────────────
