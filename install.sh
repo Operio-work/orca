@@ -190,7 +190,7 @@ if [ -n "$SOURCE" ]; then
   say "installing the panel from ${SOURCE}"
   mkdir -p "$SRC_DIR"
   # Copy without git history, local deps, tests, the demo screenshots or the website.
-  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots --exclude=./site --exclude=./dist . ) | (cd "$SRC_DIR" && tar -xf -)
+  (cd "$SOURCE" && tar -cf - --exclude=./.git --exclude=./.claude --exclude=./node_modules --exclude=./test --exclude=./demo/screenshots --exclude=./site --exclude=./dist . ) | (cd "$SRC_DIR" && tar -xf -)
 else
   mkdir -p "$SRC_DIR"
   tar -xzf "$TMP/panel.tar.gz" -C "$SRC_DIR" --strip-components=1
