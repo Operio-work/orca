@@ -102,6 +102,10 @@ esac
 HERDR_ASSET="herdr-${PLATFORM}-${HARCH}"
 sha_var="HERDR_SHA256_${PLATFORM}_${HARCH}"
 HERDR_SHA256="${!sha_var}"
+# Windows: Ubuntu under WSL2 (systemd is off there until /etc/wsl.conf turns it on).
+IS_WSL=0
+if [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null; then IS_WSL=1; fi
+NO_SYSTEMD=0
 
 # ─── Tools ────────────────────────────────────────────────────────────────────
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -342,8 +346,13 @@ EOF
       have loginctl && [ "$(loginctl show-user "$(id -un)" -p Linger --value 2>/dev/null || echo no)" = yes ] \
         || say "tip: to keep it running after you log out: loginctl enable-linger $(id -un)"
     else
-      warn "no systemd --user session here; start it by hand: operio-orca start"
+      # No systemd --user session (WSL2 without systemd, a container, a bare shell): the panel
+      # cannot start with the computer, so start it by hand now and say how to fix that.
+      NO_SYSTEMD=1
       sed -i.bak 's/^SERVICE="systemd"/SERVICE="none"/' "$PREFIX/install.env" && rm -f "$PREFIX/install.env.bak"
+      if [ "$IS_WSL" = 1 ]; then warn "WSL without systemd: ORCA cannot start with Ubuntu yet (see the end); starting it by hand now"
+      else warn "no systemd --user session here; starting the panel by hand (after a reboot: operio-orca start)"; fi
+      "$PREFIX/app/bin/operio-orca" start || warn "the panel did not start; see: operio-orca doctor"
     fi
   else
     say "service files written to $SYSTEMD_DIR (not enabled: --no-service)"
@@ -393,9 +402,28 @@ cat <<EOF
   ORCA ${SRC_VERSION} is installed (runs on herdr ${HERDR_VERSION}).
 
   Open:      http://127.0.0.1:${PORT}
-  Commands:  operio-orca status | start | stop | update | uninstall
+  Commands:  operio-orca status | start | stop | update | doctor | logs | backup | uninstall
   Settings:  ${ENV_FILE}
   Routines:  ${CONFIG_DIR}/routines (examples are off until you turn them on)
+EOF
+if [ "$IS_WSL" = 1 ] && [ "$NO_SYSTEMD" = 1 ]; then
+cat <<EOF
+
+  Windows (WSL2): systemd is off, so ORCA will not start with Ubuntu until you turn it on once:
+    1. In Ubuntu:     printf '[boot]\nsystemd=true\n' | sudo tee -a /etc/wsl.conf
+    2. In PowerShell: wsl --shutdown
+    3. Open Ubuntu again and run the install line once more:
+         curl -fsSL https://make.operio.work/install.sh | bash
+  Until then, after Windows restarts run:  operio-orca start
+EOF
+elif [ "$NO_SYSTEMD" = 1 ]; then
+cat <<EOF
+
+  No systemd user session here, so ORCA does not start with the computer: after a reboot run
+  operio-orca start. (operio-orca doctor shows the state at any time.)
+EOF
+fi
+cat <<EOF
 
   It listens on this computer only, and there is no login: anyone who can reach the port
   can drive your agents. To use it from your phone, keep it on 127.0.0.1 and use either:

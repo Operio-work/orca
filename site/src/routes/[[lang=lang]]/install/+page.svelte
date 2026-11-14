@@ -21,6 +21,7 @@
     ['uninstall', i.uninstallTitle]
   ]);
   const READ_FIRST = 'curl -fsSLo install.sh https://make.operio.work/install.sh\nless install.sh\nbash install.sh';
+  const WSL_SYSTEMD = "printf '[boot]\\nsystemd=true\\n' | sudo tee -a /etc/wsl.conf";
   const FROM_GIT = `git clone ${GITHUB_URL}\ncd orca && bash install.sh`;
 </script>
 
@@ -84,6 +85,28 @@
         <li>
           <div class="step-body">
             <span>{i.wslSteps[2]}</span>
+            <CopyCommand cmd={INSTALL_CMD} strings={t.copy} />
+          </div>
+        </li>
+      </ol>
+      <h3>{i.wslSystemdTitle}</h3>
+      <p>{i.wslSystemdBody}</p>
+      <ol class="steps-list">
+        <li>
+          <div class="step-body">
+            <span>{i.wslSystemdSteps[0]}</span>
+            <CopyCommand cmd={WSL_SYSTEMD} strings={t.copy} />
+          </div>
+        </li>
+        <li>
+          <div class="step-body">
+            <span>{i.wslSystemdSteps[1]}</span>
+            <CopyCommand cmd="wsl --shutdown" strings={t.copy} prompt={false} />
+          </div>
+        </li>
+        <li>
+          <div class="step-body">
+            <span>{i.wslSystemdSteps[2]}</span>
             <CopyCommand cmd={INSTALL_CMD} strings={t.copy} />
           </div>
         </li>

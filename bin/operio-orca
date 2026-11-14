@@ -63,6 +63,9 @@ healthy() {
 }
 
 herdr_running() { "$HERDR_BIN" status server 2>/dev/null | grep -q 'status: running'; }
+is_wsl() { [ -n "${WSL_DISTRO_NAME:-}" ] || grep -qi microsoft /proc/version 2>/dev/null; }
+mode_of() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1" 2>/dev/null || echo '?'; }
+panel_url() { printf 'http://127.0.0.1:%s' "$(port)"; }
 
 ensure_herdr() {
   [ "${OPERIO_ORCA_SKIP_HERDR:-0}" = 1 ] && return 0
@@ -123,7 +126,10 @@ cmd_status() {
   if [ "${OPERIO_ORCA_SKIP_HERDR:-0}" != 1 ] && [ -x "$HERDR_BIN" ]; then
     if herdr_running; then say "herdr:   server running ($HERDR_BIN)"; else say "herdr:   no server running"; fi
   fi
-  say "service: $SERVICE$( [ "$SERVICE_ENABLED" = 1 ] || printf ' (not enabled)')"
+  case "$SERVICE" in
+    none) say "service: none (started by hand; after a reboot: operio-orca start)" ;;
+    *) say "service: $SERVICE$( [ "$SERVICE_ENABLED" = 1 ] || printf ' (not enabled)')" ;;
+  esac
   if [ -f "$PREFIX/manifest.json" ]; then
     say "versions: $("$NODE_BIN" -p "const m=require('$PREFIX/manifest.json'); 'panel ' + m.panel + ', herdr ' + m.herdr")"
   fi

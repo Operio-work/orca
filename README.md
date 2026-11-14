@@ -50,6 +50,11 @@ operio-orca start | stop | restart | status | update | uninstall
 Why `operio-orca` and not `orca`? Ubuntu and many Linux desktops already ship `/usr/bin/orca`,
 the GNOME screen reader. A distinct name keeps the two apart.
 
+**Windows (WSL2):** install Ubuntu (`wsl --install -d Ubuntu` in PowerShell as administrator),
+then run the same line inside Ubuntu. New WSL2 installs have systemd off, so the installer starts
+ORCA by hand and prints the recipe that makes it start with Ubuntu: `[boot] systemd=true` in
+`/etc/wsl.conf`, `wsl --shutdown` from PowerShell, then the install line once more.
+
 ## Use it from your phone
 
 ORCA listens on `127.0.0.1` only. Keep it that way and reach it through one of these:

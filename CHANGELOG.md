@@ -10,6 +10,11 @@ The installer pins one panel release and one herdr release together; `operio-orc
   its screen. Stops full-screen agents (Claude Code) from visibly scrolling their transcript
   in the terminal on every poll.
 
+### Install
+- Without a systemd user session (Ubuntu under WSL2 before systemd is turned on, containers), the
+  installer now starts the panel by hand so the install ends with it running, and on WSL prints the
+  recipe that makes ORCA start with Ubuntu (`[boot] systemd=true` in `/etc/wsl.conf`,
+  `wsl --shutdown`, install again). `operio-orca status` says "service: none (started by hand)".
 ## [0.1.0] - 2026-11-09
 
 First public release.

@@ -274,6 +274,10 @@ const en = {
       'Open Ubuntu from the Start menu and create your user. Inside Ubuntu, install Node.js 20 or newer and your AI assistant.',
       'Run the same one-line install inside Ubuntu:'
     ],
+    wslSystemdTitle: 'Make it start with Ubuntu',
+    wslSystemdBody:
+      'New WSL2 installs have systemd off, so the installer starts ORCA by hand and prints this recipe. Turn systemd on once, restart WSL, then run the install line again: from then on ORCA starts with Ubuntu.',
+    wslSystemdSteps: ['In Ubuntu:', 'In PowerShell:', 'Open Ubuntu again and run the install line once more:'],
     wslNote: 'WSL2 support is new. If something does not work,',
     wslIssue: 'tell us on GitHub.',
     phoneTitle: 'Use it from your phone',
@@ -603,6 +607,10 @@ vsTitle: 'Cómo se compara ORCA',
       'Abre Ubuntu desde el menú Inicio y crea tu usuario. Dentro de Ubuntu, instala Node.js 20 o más reciente y tu asistente de IA.',
       'Corre la misma instalación de una línea dentro de Ubuntu:'
     ],
+    wslSystemdTitle: 'Que arranque con Ubuntu',
+    wslSystemdBody:
+      'Las instalaciones nuevas de WSL2 traen systemd apagado, así que el instalador arranca ORCA a mano y muestra esta receta. Activa systemd una vez, reinicia WSL y corre de nuevo la línea de instalación: desde entonces ORCA arranca con Ubuntu.',
+    wslSystemdSteps: ['En Ubuntu:', 'En PowerShell:', 'Abre Ubuntu de nuevo y corre la línea de instalación otra vez:'],
     wslNote: 'El soporte para WSL2 es nuevo. Si algo no funciona,',
     wslIssue: 'cuéntanos en GitHub.',
     phoneTitle: 'Úsalo desde tu celular',
