@@ -164,3 +164,59 @@ test('update --check compares with the installer and installs nothing', async ()
     assert.equal(r.code, 1, 'plain http is only allowed to this computer');
   } finally { srv.kill(); }
 });
+
+test('backup writes a 0600 tar.gz without the logs; restore puts it back and keeps what was there', async () => {
+  const before = fs.readFileSync(path.join(CONFIG, 'env'), 'utf8');
+  let r = run(['backup']);
+  assert.equal(r.code, 0, r.out);
+  const defs = fs.readdirSync(HOME).filter(n => /^operio-orca-backup-\d{4}-\d{2}-\d{2}\.tar\.gz$/.test(n));
+  assert.equal(defs.length, 1, 'default name (dated) in the current folder');
+  const def = path.join(HOME, defs[0]);
+  assert.equal(mode(def), '600');
+  assert.match(r.out, /backup written: .*operio-orca-backup-.*\.tar\.gz \(.*, mode 600\)/);
+  const members = tarList(def);
+  for (const m of ['operio-orca/env', 'operio-orca/routines/demo-pack/routine.json', 'operio-orca/journal/2026-11-13.jsonl', 'operio-orca/vapid.json']) {
+    assert.ok(members.includes(m), `${m} in the backup`);
+  }
+  assert.ok(!members.some(m => m.startsWith('operio-orca/logs')), 'logs are not in the backup');
+  assert.ok(!members.some(m => m.endsWith('.pid')), 'the pid file is not in the backup');
+  const named = path.join(HOME, 'named.tgz');
+  r = run(['backup', 'named.tgz']);
+  assert.equal(r.code, 0, r.out);
+  assert.equal(mode(named), '600');
+
+  // Running panel: restore refuses.
+  assert.equal(await healthz(), 200);
+  r = run(['restore', named]);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /the panel is running; stop it first/);
+  stopPanel();
+  for (let i = 0; i < 20 && await healthz() === 200; i++) await new Promise(res => setTimeout(res, 100));
+
+  // Change things, then restore.
+  fs.appendFileSync(path.join(CONFIG, 'env'), 'OPERIO_ORCA_FOLDERS=~/changed\n');
+  fs.rmSync(path.join(CONFIG, 'routines'), { recursive: true });
+  fs.chmodSync(path.join(CONFIG, 'journal'), 0o755);
+  r = run(['restore', named]);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /restored .*named\.tgz into /);
+  assert.equal(fs.readFileSync(path.join(CONFIG, 'env'), 'utf8'), before);
+  assert.ok(fs.existsSync(path.join(CONFIG, 'routines', 'demo-pack', 'routine.json')));
+  assert.equal(mode(CONFIG), '700');
+  assert.equal(mode(path.join(CONFIG, 'journal')), '700');
+  assert.equal(mode(path.join(CONFIG, 'env')), '600');
+  assert.equal(mode(path.join(CONFIG, 'vapid.json')), '600');
+  assert.ok(fs.existsSync(path.join(CONFIG, 'logs')), 'a fresh logs folder');
+  const kept = fs.readdirSync(path.dirname(CONFIG)).filter(n => n.startsWith('operio-orca.before-restore-'));
+  assert.equal(kept.length, 1, 'the previous folder is kept once');
+  assert.match(fs.readFileSync(path.join(path.dirname(CONFIG), kept[0], 'env'), 'utf8'), /changed/);
+
+  // Not a backup.
+  const junk = path.join(HOME, 'junk.tgz');
+  fs.mkdirSync(path.join(HOME, 'junkdir'), { recursive: true });
+  fs.writeFileSync(path.join(HOME, 'junkdir', 'x.txt'), 'x');
+  spawnSync('tar', ['-czf', junk, '-C', HOME, 'junkdir']);
+  r = run(['restore', junk]);
+  assert.equal(r.code, 1);
+  assert.match(r.out, /is not an ORCA backup/);
+});

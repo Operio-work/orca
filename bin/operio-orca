@@ -10,6 +10,8 @@
 #   operio-orca logs        show the panel log (logs herdr | routines; -n LINES, -f to follow)
 #   operio-orca update      move the panel and herdr together to the versions the installer pins
 #                         (--check only compares versions and installs nothing)
+#   operio-orca backup      save settings, routines, drafts and the journal to a tar.gz (mode 600)
+#   operio-orca restore     put a backup back (panel stopped; keeps a copy of what was there)
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -343,6 +345,52 @@ cmd_logs() {
   fi
 }
 
+# ── backup / restore: ~/.config/operio-orca as one tar.gz (mode 600) ─────────
+cmd_backup() {
+  local file="${1:-}"
+  [ -d "$CONFIG_DIR" ] || die "nothing to back up: $CONFIG_DIR does not exist"
+  [ -n "$file" ] || file="$PWD/operio-orca-backup-$(date +%Y-%m-%d).tar.gz"
+  case "$file" in /*) ;; *) file="$PWD/$file" ;; esac
+  case "$file" in "$CONFIG_DIR"/*) die "write the backup outside $CONFIG_DIR" ;; esac
+  local parent base; parent="$(dirname "$CONFIG_DIR")"; base="$(basename "$CONFIG_DIR")"
+  # Settings, routines, drafts, journal, push keys, state. Not the logs, pid or socket files.
+  ( umask 077; tar -czf "$file" -C "$parent" --exclude="$base/logs" --exclude='*.pid' --exclude='*.sock' "$base" ) || die "could not write $file"
+  chmod 600 "$file"
+  say "backup written: $file ($(du -h "$file" | cut -f1 | tr -d ' '), mode 600)"
+  say "it holds your settings, routines, drafts, journal and push keys (not the logs)"
+  say "put it back with: operio-orca restore $file"
+}
+
+cmd_restore() {
+  local file="" force=0
+  while [ $# -gt 0 ]; do
+    case "$1" in --force) force=1; shift ;; -*) die "unknown restore option: $1" ;; *) file="$1"; shift ;; esac
+  done
+  [ -n "$file" ] || die "usage: operio-orca restore FILE.tar.gz [--force]"
+  [ -f "$file" ] || die "no such file: $file"
+  if healthy && [ "$force" != 1 ]; then die "the panel is running; stop it first (operio-orca stop) or add --force"; fi
+  local top; top="$(tar -tzf "$file" 2>/dev/null | head -1 || true)"; top="${top%%/*}"
+  case "$top" in ''|.|..|*/*) die "$file is not an ORCA backup" ;; esac
+  tar -tzf "$file" | grep -q -E "^$top/(env|routines/|journal/|state\.json|vapid\.json)" || die "$file is not an ORCA backup (no settings, routines or journal inside)"
+  local parent stamp tmp; parent="$(dirname "$CONFIG_DIR")"; stamp="$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$parent"
+  tmp="$(mktemp -d "$parent/.operio-orca-restore.XXXXXX")"
+  tar -xzf "$file" -C "$tmp" || { rm -rf "${tmp:?}"; die "could not extract $file"; }
+  [ -d "$tmp/$top" ] || { rm -rf "${tmp:?}"; die "could not find $top in $file"; }
+  if [ -d "$CONFIG_DIR" ]; then
+    mv "$CONFIG_DIR" "$CONFIG_DIR.before-restore-$stamp"
+    say "kept what was there as $CONFIG_DIR.before-restore-$stamp"
+  fi
+  mv "$tmp/$top" "$CONFIG_DIR"; rm -rf "${tmp:?}"
+  mkdir -p "$CONFIG_DIR/logs"
+  chmod 700 "$CONFIG_DIR"
+  find "$CONFIG_DIR" -type d -exec chmod 700 {} +
+  find "$CONFIG_DIR" -type f -exec chmod 600 {} +
+  rm -f "${CONFIG_DIR:?}"/*.pid
+  say "restored $file into $CONFIG_DIR (the service files and herdr were not touched)"
+  say "start the panel: operio-orca start"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -448,10 +496,12 @@ case "${1:-help}" in
   doctor) cmd_doctor ;;
   logs) shift; cmd_logs "$@" ;;
   update) shift; cmd_update "$@" ;;
+  backup) shift; cmd_backup "$@" ;;
+  restore) shift; cmd_restore "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,18p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,20p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

@@ -25,6 +25,10 @@ The installer pins one panel release and one herdr release together; `operio-orc
   installed panel and herdr with the installer's pins, installs nothing, exits 2 when behind.
 - `operio-orca update` no longer ends with "tmp: unbound variable" (exit 1) after a successful
   update: the temp folder's cleanup ran after the function's variable was gone.
+- `operio-orca backup [FILE]` writes a mode-600 tar.gz of `~/.config/operio-orca` (settings,
+  routines, drafts, journal, push keys; not the logs). `operio-orca restore FILE` puts it back with
+  the panel stopped (or `--force`), keeps the current folder as `…before-restore-<stamp>`, restores
+  700/600 modes and never touches the service files or herdr.
 ## [0.1.0] - 2026-11-09
 
 First public release.

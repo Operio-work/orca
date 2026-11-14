@@ -300,7 +300,9 @@ const en = {
       ['operio-orca start', 'Start it again'],
       ['operio-orca open', 'Open it in your browser'],
       ['operio-orca doctor', 'Check the install and print the fix for anything wrong'],
-      ['operio-orca logs', 'The panel log (logs herdr, logs routines; -f to follow)']
+      ['operio-orca logs', 'The panel log (logs herdr, logs routines; -f to follow)'],
+      ['operio-orca backup', 'Save settings, routines, drafts and the journal to one file'],
+      ['operio-orca restore FILE', 'Put a backup back (keeps a copy of what was there)']
     ],
     commandsWhyQ: 'Why operio-orca and not just orca?',
     commandsWhyA: 'Ubuntu and many Linux desktops already ship a program called orca: the GNOME screen reader. A distinct name keeps the two apart.',
@@ -637,7 +639,9 @@ vsTitle: 'Cómo se compara ORCA',
       ['operio-orca start', 'Lo inicia de nuevo'],
       ['operio-orca open', 'Lo abre en tu navegador'],
       ['operio-orca doctor', 'Revisa la instalación y muestra cómo arreglar lo que falle'],
-      ['operio-orca logs', 'El registro del panel (logs herdr, logs routines; -f para seguirlo)']
+      ['operio-orca logs', 'El registro del panel (logs herdr, logs routines; -f para seguirlo)'],
+      ['operio-orca backup', 'Guarda configuración, rutinas, borradores y bitácora en un archivo'],
+      ['operio-orca restore ARCHIVO', 'Regresa un respaldo (conserva una copia de lo que había)']
     ],
     commandsWhyQ: '¿Por qué operio-orca y no solo orca?',
     commandsWhyA: 'Ubuntu y muchos escritorios Linux ya traen un programa llamado orca: el lector de pantalla de GNOME. Un nombre distinto evita que se confundan.',

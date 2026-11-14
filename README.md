@@ -44,7 +44,7 @@ The installer:
 It is safe to run again. Then open **http://127.0.0.1:7171**.
 
 ```
-operio-orca start | stop | restart | status | update | uninstall
+operio-orca start | stop | restart | status | open | doctor | logs | update | backup | restore | uninstall
 ```
 
 Why `operio-orca` and not `orca`? Ubuntu and many Linux desktops already ship `/usr/bin/orca`,
@@ -182,6 +182,11 @@ support request. `operio-orca open` opens the panel in your browser.
 `operio-orca logs` shows the panel log (`logs herdr`, `logs routines`; `-n 200`, `-f` to follow).
 `operio-orca update --check` only compares the installed panel and herdr with the versions the
 installer pins, installs nothing, and exits 2 when an update is available.
+
+`operio-orca backup [FILE]` writes a `0600` tar.gz of `~/.config/operio-orca` (settings, routines,
+drafts, journal, push keys; not the logs). `operio-orca restore FILE` puts it back, here or on
+another computer: stop the panel first, the current folder is kept as
+`~/.config/operio-orca.before-restore-<stamp>`, and the service files and herdr are not touched.
 
 ## Uninstall
 
