@@ -1,7 +1,7 @@
 'use strict';
 // A hosted panel behind ORCA Host: people come from the signed X-Orca-User header. Roles decide
 // what each can do (viewers comment only), Operio staff see the chat only when the client lets
-// them, a forged header is nobody, and translation goes through ORCA Host's relay.
+// them, a forged header is nobody, and translation runs on the client's own key (llm.env).
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
@@ -9,7 +9,7 @@ const os = require('os');
 const path = require('path');
 const http = require('http');
 const { spawn } = require('child_process');
-const { sign, verifyBody } = require('../lib/identity');
+const { sign } = require('../lib/identity');
 
 const ROOT = path.join(__dirname, '..');
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'operio-orca-host-'));
@@ -17,7 +17,8 @@ const FAKE = path.join(HOME, 'fake-herdr');
 const PORT = 20000 + Math.floor(Math.random() * 20000);
 const BASE = `127.0.0.1:${PORT}`;
 const SECRET = 'test-instance-secret';
-let child, relay, relayCalls = [], serverLog = '';
+const LLM_ENV = path.join(HOME, '.config', 'operio-orca', 'llm.env');
+let child, api, apiCalls = [], serverLog = '';
 
 const who = (u, n, r, c = 0) => sign(SECRET, { u, n, r, c });
 const ADMIN = () => who('ana1', 'Ana', 'client_admin');
@@ -49,22 +50,28 @@ test.before(async () => {
   fs.writeFileSync(path.join(FAKE, 'state.json'), JSON.stringify({ n: 1, agents: [
     { pane_id: 'w1:p1', tab_id: 'w1:t1', terminal_id: 'term1', name: 'writer', agent: 'claude', agent_status: 'idle', cwd: HOME },
   ] }));
-  // ORCA Host's translation relay, as a stub: checks the body signature, answers in Spanish.
-  relay = http.createServer((q, s) => {
+  // The Anthropic API, as a stub: records which key called it; a revoked key gets a 401.
+  api = http.createServer((q, s) => {
     let body = '';
     q.on('data', c => { body += c; });
     q.on('end', () => {
-      relayCalls.push({ url: q.url, ok: verifyBody(SECRET, q.headers['x-orca-sign'], body), body: JSON.parse(body) });
+      const key = q.headers['x-api-key'] || String(q.headers.authorization || '').replace(/^Bearer /, '');
+      apiCalls.push({ url: q.url, key, body: JSON.parse(body) });
+      if (key === 'sk-ant-revoked') {
+        s.writeHead(401, { 'Content-Type': 'application/json' });
+        return s.end(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }));
+      }
       s.writeHead(200, { 'Content-Type': 'application/json' });
-      s.end(JSON.stringify({ text: '¿Puedes revisar el pedido antes del mediodía, por favor?' }));
+      s.end(JSON.stringify({ id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-haiku-5-5', stop_reason: 'end_turn',
+        content: [{ type: 'text', text: '¿Puedes revisar el pedido antes del mediodía, por favor?' }], usage: { input_tokens: 1, output_tokens: 1 } }));
     });
   });
-  await new Promise(r => relay.listen(0, '127.0.0.1', r));
+  await new Promise(r => api.listen(0, '127.0.0.1', r));
   child = spawn(process.execPath, [path.join(ROOT, 'server.js')], {
     env: {
       PATH: process.env.PATH, HOME, OPERIO_ORCA_PORT: String(PORT), OPERIO_ORCA_HERDR_BIN: path.join(__dirname, 'fixtures', 'fake-herdr'),
       FAKE_HERDR_DIR: FAKE, OPERIO_ORCA_POLL_MS: '200', OPERIO_ORCA_HOSTED: '1', OPERIO_ORCA_IDENTITY_SECRET: SECRET,
-      OPERIO_ORCA_TRANSLATE_URL: `http://127.0.0.1:${relay.address().port}/api/relay/acme/translate`,
+      ANTHROPIC_BASE_URL: `http://127.0.0.1:${api.address().port}`,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -73,13 +80,13 @@ test.before(async () => {
     child.on('exit', code => reject(new Error('server exited ' + code + ' ' + serverLog)));
   });
 });
-test.after(() => { child?.kill(); relay?.close(); });
+test.after(() => { child?.kill(); api?.close(); });
 
 test('hosted identity: the signed person is who the panel sees', async () => {
   const r = await req('GET', '/api/agents', { user: ADMIN() });
   assert.equal(r.json.me.name, 'Ana');
   assert.equal(r.json.access.admin, true);
-  assert.equal(r.json.chat.translate, true); // the relay is configured
+  assert.equal(r.json.chat.translate, false); // no Anthropic key in the client's llm.env yet
   const v = await req('GET', '/api/agents', { user: VIEWER() });
   assert.equal(v.json.me.name, 'Victor');
   assert.equal(v.json.access.admin, false);
@@ -127,17 +134,35 @@ test('hosted identity: Operio staff see the team chat only when the client invit
   assert.equal(p.json.message.who.name, 'Operio — Leo');
 });
 
-test('hosted identity: translation goes through the relay, signed', async () => {
+test('hosted identity: translation runs on the client\'s own key, read from llm.env', async () => {
+  const setKey = v => {
+    fs.mkdirSync(path.dirname(LLM_ENV), { recursive: true });
+    fs.writeFileSync(LLM_ENV, v ? `ANTHROPIC_API_KEY=${v}\n` : '# no keys\n', { mode: 0o600 });
+    const later = new Date(Date.now() + (apiCalls.length + 1) * 2000);
+    fs.utimesSync(LLM_ENV, later, later); // a new mtime, even within the same millisecond
+  };
   const m = await req('POST', '/api/chat/room', { user: ADMIN(), body: { text: 'Can you check the order before noon please?' } });
+  assert.equal((await req('POST', '/api/chat/room/translate', { user: VIEWER(), body: { id: m.json.message.id, to: 'es' } })).status, 404);
+
+  setKey('sk-ant-client-own');
+  assert.equal((await req('GET', '/api/agents', { user: VIEWER() })).json.chat.translate, true);
   const t = await req('POST', '/api/chat/room/translate', { user: VIEWER(), body: { id: m.json.message.id, to: 'es' } });
   assert.equal(t.status, 200);
   assert.equal(t.json.text, '¿Puedes revisar el pedido antes del mediodía, por favor?');
-  assert.equal(relayCalls.length, 1);
-  assert.equal(relayCalls[0].ok, true);
-  assert.equal(relayCalls[0].url, '/api/relay/acme/translate');
-  assert.equal(relayCalls[0].body.to, 'es');
-});
+  assert.equal(apiCalls.length, 1);
+  assert.equal(apiCalls[0].url, '/v1/messages');
+  assert.equal(apiCalls[0].key, 'sk-ant-client-own');
+  assert.equal(apiCalls[0].body.model, 'claude-haiku-5-5');
 
-test('hosted identity: the secret never reaches the log', () => {
-  assert.ok(!serverLog.includes(SECRET));
+  // A refused key says so (the client fixes it in Model access).
+  setKey('sk-ant-revoked');
+  const m2 = await req('POST', '/api/chat/room', { user: ADMIN(), body: { text: 'Thanks, see you tomorrow.' } });
+  const bad = await req('POST', '/api/chat/room/translate', { user: VIEWER(), body: { id: m2.json.message.id, to: 'es' } });
+  assert.equal(bad.status, 502);
+  assert.equal(bad.json.error, 'translate_key');
+  assert.equal(apiCalls.at(-1).key, 'sk-ant-revoked');
+
+  // The key removed: translation is off again, without a restart.
+  setKey('');
+  assert.equal((await req('GET', '/api/agents', { user: VIEWER() })).json.chat.translate, false);
 });

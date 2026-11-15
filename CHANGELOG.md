@@ -10,7 +10,8 @@ The installer pins one panel release and one herdr release together; `operio-orc
   room, unread badges, @mentions with alerts, and `@agent` to send a message to an agent as work
   (with the thread's recent messages); the answer is posted back. Limits: 5 requests per person
   and per agent an hour, 5 waiting per agent. EN ⇄ ES translation of messages with Claude Haiku
-  5.5 (`ANTHROPIC_API_KEY`) or a local Ollama model. On when `OPERIO_ORCA_HOSTED=1`; settings
+  5.5 on the client's own key (`ANTHROPIC_API_KEY` in llm.env, read on each use; no key = no
+  Translate links) or a local Ollama model. On when `OPERIO_ORCA_HOSTED=1`; settings
   `OPERIO_ORCA_TRANSLATE` (anthropic | ollama | off), `OPERIO_ORCA_TRANSLATE_MODEL`,
   `OPERIO_ORCA_TRANSLATE_URL`, `OPERIO_ORCA_CHAT_ASKS_PERSON`, `OPERIO_ORCA_CHAT_ASKS_AGENT`,
   `OPERIO_ORCA_CHAT_QUEUE`. The demo seeds a chat for both businesses when run that way.
@@ -18,10 +19,8 @@ The installer pins one panel release and one herdr release together; `operio-orc
 - **People on a hosted panel:** ORCA Host signs who each request is from (`X-Orca-User`, HMAC with
   `OPERIO_ORCA_IDENTITY_SECRET`, lib/identity.js); the panel trusts nothing else. Names show in the
   chat, claims and Journal. Viewers comment in the chat and turn alerts on, nothing more; Operio
-  staff read a client's chat only when the client allows it. Translation can go through ORCA Host
-  (`OPERIO_ORCA_TRANSLATE=relay`, signed requests to `OPERIO_ORCA_TRANSLATE_URL`), so no model key
-  sits on the client's machine; `OPERIO_ORCA_TRANSLATE_KEY` for a direct key. Both secrets are
-  removed from the environment the agents inherit. Alerts open the right page under a proxy prefix.
+  staff read a client's chat only when the client allows it. `OPERIO_ORCA_TRANSLATE_KEY` overrides the
+  translation key. Both secrets are removed from the environment the agents inherit. Alerts open the right page under a proxy prefix.
 - `/api/meta` reports the panel `version`.
 - **Map:** every card keeps room for its name and status (a busy map scrolls instead of
   clipping); a hover card on desktop shows the task, last reply, agent and model, folder, jobs

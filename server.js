@@ -173,9 +173,21 @@ const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL
 // lib/chat.js. Off (null) unless OPERIO_ORCA_HOSTED=1: the free panel has no chat UI or API.
 let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
+// The model runs on the client's own Anthropic key: the one their Claude agents use (llm.env,
+// set in ORCA Host → Model access), looked up on each use so a new or removed key counts at once.
+const translateKey = (() => {
+  let at = -1, key = '';
+  return () => {
+    if (CFG.TRANSLATE_KEY) return CFG.TRANSLATE_KEY;
+    let m = 0;
+    try { m = fs.statSync(LLM_FILE).mtimeMs; } catch { /* no llm.env */ }
+    if (m !== at) { at = m; key = m ? llm.get(LLM_FILE, 'ANTHROPIC_API_KEY') : ''; }
+    return key;
+  };
+})();
 const translator = createTranslator({
   provider: chat ? CFG.TRANSLATE : 'off', model: CFG.TRANSLATE_MODEL, url: CFG.TRANSLATE_URL, dir: CFG.CHAT_DIR, log,
-  apiKey: CFG.TRANSLATE_KEY, secret: CFG.IDENTITY_SECRET,
+  apiKey: translateKey,
 });
 if (chat) {
   const prune = () => { try { chat.prune(); } catch (e) { log('chat.prune_failed', { error: String(e.message) }); } };
@@ -1669,7 +1681,7 @@ async function chatApi(req, res, url) {
     if (recent.length >= 60) throw new HttpError(429, 'slow_down');
     recent.push(now); trRate.set(who, recent);
     try { return send(res, 200, { id: msg.id, to, ...(await translator.translate(msg.id, msg.text, to)) }); }
-    catch (e) { throw new HttpError(e.code === 'translate_off' ? 404 : 502, e.code || 'translate_failed'); }
+    catch (e) { throw new HttpError(e.code === 'translate_off' ? 404 : 502, e.code === 'translate_key' ? 'translate_key' : 'translate_failed'); }
   }
   if (m[2] === '/delete') {
     await chatThread(login, id, false);

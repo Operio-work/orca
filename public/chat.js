@@ -274,7 +274,7 @@
     const row = el('div', 'msg-tr');
     const btn = (label, fn) => { const b = el('button', 'linkish', label); b.type = 'button'; b.addEventListener('click', fn); return b; };
     if (!tr || tr.state === 'failed') {
-      if (tr?.state === 'failed') row.append(el('span', 'err', t('chatTrFailed')));
+      if (tr?.state === 'failed') row.append(el('span', 'err', t(tr.key ? 'chatTrKey' : 'chatTrFailed')));
       row.append(btn(t('chatTranslate'), () => translateMsg(m, true)));
     } else if (tr.state === 'busy') row.append(el('span', 'busy', t('chatTranslating')));
     else {
@@ -293,9 +293,9 @@
       const r = await post(`/api/chat/${enc(id)}/translate`, { id: m.id, to: lang });
       if (thread?.id !== id) return;
       trans.set(m.id, { state: 'done', text: r.text, show: true });
-    } catch {
+    } catch (e) {
       if (thread?.id !== id) return;
-      trans.set(m.id, { state: 'failed' });
+      trans.set(m.id, { state: 'failed', key: e.message === 'translate_key' });
     }
     render();
   }
