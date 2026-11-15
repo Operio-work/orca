@@ -27,6 +27,7 @@ const { createJournal, redact } = require('./lib/journal');
 const { createChat, findMentions, buildPrompt, cutReply } = require('./lib/chat');
 const { createTranslator, detectLang } = require('./lib/translate');
 const llm = require('./lib/llm');
+const identity = require('./lib/identity');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = require('./lib/config').load();
@@ -111,10 +112,38 @@ function send(res, status, body, type = 'application/json') {
   res.end(data);
 }
 
-// ─── People: single user ──────────────────────────────────────────────────────
+// ─── People ───────────────────────────────────────────────────────────────────
 // ORCA has no login system. Everyone who reaches the page is "you"; the shared
 // "Team" claim is kept so an agent can be marked as company-wide work.
-const loginOf = () => 'local';
+// A hosted panel (ORCA Host) is the exception: ORCA Host signs who each request is from
+// (lib/identity.js) with a secret only it and this panel hold, and the panel trusts that
+// person: "h:<id>", with a name and a role. Nothing else can make the panel trust a person.
+const ID_SECRET = CFG.HOSTED ? CFG.IDENTITY_SECRET : '';
+// Secrets stay in this process: never passed on to herdr, the CLI or the agents it starts.
+delete process.env.OPERIO_ORCA_IDENTITY_SECRET;
+delete process.env.OPERIO_ORCA_TRANSLATE_KEY;
+function loginOf(req) {
+  if (!ID_SECRET || !req?.headers) return 'local';
+  const p = identity.verify(ID_SECRET, req.headers[identity.HEADER]);
+  if (!p) return 'local';
+  const login = 'h:' + p.id;
+  rememberPerson(login, p);
+  return login;
+}
+// People seen through ORCA Host, kept so names survive a restart: login -> { name, role, operio, chat, at }.
+function rememberPerson(login, p) {
+  state.people = state.people || {};
+  const cur = state.people[login];
+  const now = Date.now();
+  if (cur && cur.name === p.name && cur.role === p.role && cur.chat === p.chat && now - cur.at < 3600e3) return;
+  state.people[login] = { name: p.name, role: p.role, operio: p.operio, chat: p.chat, at: now };
+  saveState();
+}
+const hostPerson = login => (login.startsWith('h:') ? state.people?.[login] || null : null);
+// Viewers (client_viewer) read and comment; everyone else can act on agents.
+const canAct = login => hostPerson(login)?.role !== 'client_viewer';
+// Operio staff read a client's team chat only when the client lets them (ORCA Host sends it).
+const chatAllowed = login => { const p = hostPerson(login); return !p || !p.operio || !!p.chat; };
 const TEAM = 'team:all';
 const TEAM_NAME = process.env.OPERIO_ORCA_TEAM || 'Team';
 const YOU_NAME = process.env.OPERIO_ORCA_NAME || 'You';
@@ -122,6 +151,11 @@ const YOU_NAME = process.env.OPERIO_ORCA_NAME || 'You';
 const others = new Map(); // login -> name
 function person(login) {
   if (login === TEAM) return { id: 'team', name: TEAM_NAME, initial: TEAM_NAME[0].toUpperCase(), slot: 0, team: true };
+  const hp = hostPerson(login);
+  if (hp) {
+    const name = hp.operio ? `Operio — ${hp.name}` : hp.name;
+    return { id: login.replace(/[^a-z0-9]+/gi, '-'), name, initial: hp.name[0].toUpperCase(), slot: Object.keys(state.people).indexOf(login) + 1, viewer: hp.role === 'client_viewer' };
+  }
   const name = others.get(login);
   if (name) return { id: login.replace(/[^a-z0-9]+/gi, '-'), name, initial: name[0].toUpperCase(), slot: [...others.keys()].indexOf(login) + 1 };
   return { id: 'local', name: YOU_NAME, initial: YOU_NAME[0].toUpperCase(), slot: 0 };
@@ -141,6 +175,7 @@ let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: C
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
 const translator = createTranslator({
   provider: chat ? CFG.TRANSLATE : 'off', model: CFG.TRANSLATE_MODEL, url: CFG.TRANSLATE_URL, dir: CFG.CHAT_DIR, log,
+  apiKey: CFG.TRANSLATE_KEY, secret: CFG.IDENTITY_SECRET,
 });
 if (chat) {
   const prune = () => { try { chat.prune(); } catch (e) { log('chat.prune_failed', { error: String(e.message) }); } };
@@ -153,9 +188,9 @@ function jAgent(x) {
   const born = a.terminal && state.born?.[a.terminal];
   return { name: a.name || null, pane: a.pane || null, terminal: a.terminal || null, kind: born?.kind || a.kind || a.agent || null, cwd: a.cwd || null };
 }
-// who: a request (always "you" here) or null for ORCA itself.
+// who: a request or a login, or null for ORCA itself.
 function jr(who, event, agent, detail = {}) {
-  return journal.write(event, { who: who ? 'local' : null, agent: agent ? jAgent(agent) : undefined, ...detail });
+  return journal.write(event, { who: who ? (typeof who === 'string' ? who : loginOf(who)) : null, agent: agent ? jAgent(agent) : undefined, ...detail });
 }
 // Errors are grouped: one entry per code+route per 10 minutes, with how many it stands for.
 const errAgg = new Map(); // key -> { n, at }
@@ -355,7 +390,9 @@ function claimOf(terminal) {
   return { id: p.id, name: p.name, initial: p.initial, slot: p.slot, team: !!p.team, at: c.at, by: by ? { id: by.id, name: by.name } : null };
 }
 // Everyone who can be assigned: the allowlist, plus named people.
-const PEOPLE_LOGINS = () => ['local', ...others.keys(), TEAM];
+// On a hosted panel: the people seen in the last 90 days (not "you", which is the box itself).
+const hostLogins = () => Object.entries(state.people || {}).filter(([, p]) => Date.now() - p.at < 90 * 864e5).map(([l]) => l);
+const PEOPLE_LOGINS = () => [...(ID_SECRET ? [] : ['local']), ...others.keys(), ...hostLogins(), TEAM];
 // Whose devices get its alerts: the holder's; everyone's when unclaimed or the team's.
 const holderLogin = terminal => { const l = state.claims[terminal]?.login; return l && l !== TEAM ? l : null; };
 // Messaging or answering an agent nobody holds claims it for you (never steals one).
@@ -1237,8 +1274,8 @@ const shellAccess = () => ({ confirmed: shellUnlockedFor(), unlockedUntil: shell
 function requireShell() { if (!shellUnlockedFor()) throw new HttpError(423, 'shell_locked'); }
 
 // What the page may show (single user: everything).
-function accessView() {
-  return { admin: true, folders: null, shell: shellAccess() };
+function accessView(login = 'local') {
+  return { admin: canAct(login), folders: null, shell: shellAccess() };
 }
 // ─── Terminal: mirror a pane into xterm.js in the browser ─────────────────────
 // herdr can't attach a browser PTY to a plain shell, so ORCA sends the screen as ANSI and
@@ -1354,7 +1391,7 @@ async function journalApi(req, res, url) {
       day, days: journal.days(), today, total, limit,
       entries: list,
       people: [...people.values()], agents: [...agentsSeen.values()].sort((a, b) => a.name.localeCompare(b.name)),
-      admin: true, me: brief('local'), keepDays: CFG.JOURNAL_DAYS,
+      admin: true, me: brief(loginOf(req)), keepDays: CFG.JOURNAL_DAYS,
     });
   }
 
@@ -1390,7 +1427,7 @@ async function journalApi(req, res, url) {
     if (!journal.DAY_RE.test(day)) throw new HttpError(400, 'bad_request');
     if (day >= today) throw new HttpError(409, 'not_final');
     if (!journal.readDigest(day)) journal.saveDigest(journal.buildDigest(day, nameOfWho));
-    const d = journal.review(day, body.undo ? null : person('local').name, String(body.note || '').slice(0, 500));
+    const d = journal.review(day, body.undo ? null : person(loginOf(req)).name, String(body.note || '').slice(0, 500));
     if (!d) throw new HttpError(404, 'gone');
     jr(req, body.undo ? 'journal.unreview' : 'journal.review', null, { day });
     countToReview();
@@ -1420,11 +1457,11 @@ setInterval(journalTick, 5 * 60e3).unref();
 // thread is open to them; threads of agents that ended stay readable until the 90-day prune.
 // The access seams below (canSeeAgent, requireActOn, isAdmin) are where roles plug in.
 const chatWho = login => login || 'local';
-const isAdmin = () => true;
+const isAdmin = login => canAct(login);
 const canSeeAgent = () => true;
-async function requireActOn() { /* single user: you can act on every agent */ }
+async function requireActOn(login) { if (!canAct(login)) throw new HttpError(403, 'read_only'); }
 function chatView(login, agents) {
-  if (!chat) return null;
+  if (!chat || !chatAllowed(login)) return null;
   const seen = agents.filter(a => a.terminal && canSeeAgent(login, a));
   const s = chat.summary(chatWho(login), ['room', ...seen.map(a => 't-' + a.terminal)]);
   const byPane = {};
@@ -1435,7 +1472,8 @@ async function chatThread(login, id, write) {
   if (!chat.valid(id)) throw new HttpError(400, 'bad_request');
   if (id === 'room') return { id, kind: 'room', live: true };
   const a = (await listAgents()).find(x => x.terminal === id.slice(2));
-  if (a) { await requireActOn(login, a.pane); return { id, kind: 'agent', live: true, pane: a.pane, name: a.name, agent: a.agent }; }
+  // Seeing an agent is enough to read and comment on its thread; sending it work is checked per @agent.
+  if (a) { if (!canSeeAgent(login, a)) throw new HttpError(404, 'gone'); return { id, kind: 'agent', live: true, pane: a.pane, name: a.name, agent: a.agent }; }
   if (!isAdmin(login)) throw new HttpError(404, 'gone');
   if (write) throw new HttpError(409, 'ended');
   return { id, kind: 'agent', live: false, pane: null, name: null };
@@ -1460,7 +1498,7 @@ function chatHolder(thread) {
 }
 function notifyChat(thread, msg) {
   const holder = chatHolder(thread);
-  const to = chat.recipients(thread.id, msg, { holder }).filter(r => !isViewing(r.login, thread.id));
+  const to = chat.recipients(thread.id, msg, { holder }).filter(r => !isViewing(r.login, thread.id) && chatAllowed(r.login));
   const text = msg.text.replace(/\s+/g, ' ').slice(0, 140);
   for (const r of to) {
     pushAll({ kind: r.kind, name: person(msg.by).name, where: thread.name || 'agent', room: thread.id === 'room', text,
@@ -1594,7 +1632,7 @@ function shapeAsks(id, who) {
 }
 
 async function chatApi(req, res, url) {
-  if (!chat) return send(res, 404, { error: 'not found' }); // the free panel has no chat
+  if (!chat || !chatAllowed(loginOf(req))) return send(res, 404, { error: 'not found' }); // the free panel has no chat
   const m = url.pathname.match(/^\/api\/chat\/([^/]+)(\/read|\/delete|\/follow|\/translate)?$/);
   if (!m) return send(res, 404, { error: 'not found' });
   const login = loginOf(req);
@@ -1644,7 +1682,7 @@ async function chatApi(req, res, url) {
   const recent = (chatRate.get(who) || []).filter(t => now - t < 60e3);
   if (recent.length >= 20) throw new HttpError(429, 'slow_down');
   recent.push(now); chatRate.set(who, recent);
-  const people = PEOPLE_LOGINS().filter(l => l !== TEAM).map(l => ({ login: l, name: person(l).name }));
+  const people = PEOPLE_LOGINS().filter(l => l !== TEAM && chatAllowed(l)).map(l => ({ login: l, name: person(l).name }));
   let msg;
   try { msg = chat.post(id, who, body.text, findMentions(body.text, people).filter(l => l !== who)); }
   catch (e) { throw new HttpError(400, e.code || 'bad_request'); }
@@ -1711,7 +1749,7 @@ async function api(req, res, url) {
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(), journal: { toReview }, now: Date.now() });
+    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -1753,7 +1791,7 @@ async function api(req, res, url) {
     const [tabsOut, wsOut] = await Promise.all([herdrJson(['tab', 'list']), herdrJson(['workspace', 'list'])]);
     const tabs = (tabsOut.result?.tabs || []).map(t => ({ id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null }));
     const workspaces = (wsOut.result?.workspaces || []).map(shapeWorkspace);
-    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, access: accessView() });
+    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, access: accessView(loginOf(req)) });
   }
 
   // ── LLM keys: names and last 4 characters only; the values stay in llm.env (0600).
@@ -2495,6 +2533,11 @@ const server = http.createServer(async (req, res) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && !sameOrigin(req)) {
     log('write.denied', { path: url.pathname });
     return send(res, 403, { error: 'cross-origin' });
+  }
+  // A viewer on a hosted panel writes in the team chat and turns alerts on; nothing else.
+  if (req.method !== 'GET' && req.method !== 'HEAD' && !canAct(loginOf(req)) && !/^\/api\/(chat\/|push\/(un)?subscribe$)/.test(url.pathname)) {
+    log('write.denied', { path: url.pathname, why: 'viewer' });
+    return send(res, 403, { error: 'read_only' });
   }
   if (url.pathname === '/healthz') return send(res, 200, { ok: true });
   if (url.pathname.startsWith('/api/')) {

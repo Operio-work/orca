@@ -15,6 +15,13 @@ The installer pins one panel release and one herdr release together; `operio-orc
   `OPERIO_ORCA_TRANSLATE_URL`, `OPERIO_ORCA_CHAT_ASKS_PERSON`, `OPERIO_ORCA_CHAT_ASKS_AGENT`,
   `OPERIO_ORCA_CHAT_QUEUE`. The demo seeds a chat for both businesses when run that way.
   `chat.prompt` entries in the Journal. Adds the `@anthropic-ai/sdk` dependency.
+- **People on a hosted panel:** ORCA Host signs who each request is from (`X-Orca-User`, HMAC with
+  `OPERIO_ORCA_IDENTITY_SECRET`, lib/identity.js); the panel trusts nothing else. Names show in the
+  chat, claims and Journal. Viewers comment in the chat and turn alerts on, nothing more; Operio
+  staff read a client's chat only when the client allows it. Translation can go through ORCA Host
+  (`OPERIO_ORCA_TRANSLATE=relay`, signed requests to `OPERIO_ORCA_TRANSLATE_URL`), so no model key
+  sits on the client's machine; `OPERIO_ORCA_TRANSLATE_KEY` for a direct key. Both secrets are
+  removed from the environment the agents inherit. Alerts open the right page under a proxy prefix.
 - `/api/meta` reports the panel `version`.
 - **Map:** every card keeps room for its name and status (a busy map scrolls instead of
   clipping); a hover card on desktop shows the task, last reply, agent and model, folder, jobs
