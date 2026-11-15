@@ -25,6 +25,20 @@ const T = {
     endHolder: '{0} is on it — they get an alert.', endMem: 'Frees about {0} of memory.', endRan: 'Running for {0}.', endNothing: 'Nothing else is lost.',
     endedClean: '{0} ended', endedForced: '{0} ended — it did not quit by itself, its pane was closed', e_end_failed: 'It could not be ended. Check the desktop.', e_not_final: 'Today is not over yet — review it tomorrow.',
     histTitle: 'History', histEmpty: 'Nothing recorded for this agent yet.', histOpen: 'Open in the Journal', histN: '{0} in 7 days',
+    chatTeam: 'Team chat', chatAgent: 'Chat about this agent', chatTeamTitle: 'Team', chatRoomSub: 'Everyone on this ORCA',
+    chatAgentSub: 'Comments on {0}', chatOpenAgent: 'Open agent', chatPlaceholder: 'Write — @ a person or an agent',
+    chatEmptyRoom: 'No messages yet. Say hi to the team.', chatEmptyAgent: 'No comments on this agent yet.',
+    chatEnded: 'This agent has ended. Its thread is read-only.', chatDelete: 'Delete', chatDeleted: 'message deleted',
+    chatYou: 'you', chatYesterday: 'yesterday', chatShort: '{0} chat', tChat: '{0} unread comments', chatMentioned: '{0} mentioned you',
+    chatFollowOn: 'Alerts on — tap to mute this thread', chatFollowOff: 'Alerts off — tap to get alerts for this thread', chatRoomOn: 'Alerts on for every team message — tap to turn off', chatRoomOff: 'Room alerts off (mentions still alert you) — tap to turn on', chatNowOn: 'You’ll get alerts for this thread', chatNowOff: 'Alerts off for this thread — mentions still reach you', chatNeedBell: 'Turn on alerts first: the bell at the top.',
+    chatPickAgent: 'agent — gets your message as work',
+    chatAskQueued: 'Waiting — {0} is busy', chatAskQueuedN: 'Waiting — {0} is busy ({1} ahead)', chatAskSent: 'Sent to {0} — working…', chatAskDone: '{0} answered',
+    chatAsk_gone: '{0} ended before answering', chatAsk_expired: 'Not sent — {0} stayed busy for 2 hours', chatAsk_no_answer: '{0} gave no text answer — see its output', chatAsk_send_failed: 'Could not send to {0}',
+    chatAskNo_no_access: 'You can’t send work to {0}.', chatAskNo_limit_person: 'Not sent to {0}: 5 agent requests an hour each.', chatAskNo_limit_agent: 'Not sent: {0} already got 5 requests this hour.', chatAskNo_queue_full: 'Not sent: {0} already has 5 waiting.',
+    chatTranslate: 'Translate', chatTranslating: 'Translating…', chatTranslated: 'Translated from {0}', chatShowOriginal: 'Show original', chatShowTranslation: 'Show translation', chatTrFailed: 'Translation failed — try again',
+    chatAutoTr: 'Auto-translate', chatAutoTrOn: 'Messages in other languages are translated into English', chatAutoTrOff: 'Translate messages in other languages automatically', langName_en: 'English', langName_es: 'Spanish',
+    chatAnswerTook: 'answered in {0}', chatSeeOutput: 'See full output', chatNoText: 'Finished without a text reply.', chatAgentTag: 'agent',
+    e_slow_down: 'Too many messages — wait a moment.', e_too_long: 'Too long — 2,000 characters at most.', e_too_late: 'Messages can be deleted only in the first 5 minutes.', e_ended: 'This agent has ended.',
     byOperio: 'by Operio', new: 'New', save: 'Save', close: 'Close', send: 'Send', focus: 'Show on desktop', clear: 'Clear name',
     needsYou: 'Needs you — answer with a key',
     placeholder: 'name this agent', unnamed: 'unnamed', shell: 'shell',
@@ -115,6 +129,20 @@ const T = {
     endHolder: '{0} lo tiene — recibirá una alerta.', endMem: 'Libera cerca de {0} de memoria.', endRan: 'Lleva {0} corriendo.', endNothing: 'No se pierde nada más.',
     endedClean: '{0} terminado', endedForced: '{0} terminado — no salió solo, se cerró su panel', e_end_failed: 'No se pudo terminar. Revisa el escritorio.', e_not_final: 'El día aún no termina — revísalo mañana.',
     histTitle: 'Historial', histEmpty: 'Aún no hay nada registrado de este agente.', histOpen: 'Abrir en la Bitácora', histN: '{0} en 7 días',
+    chatTeam: 'Chat del equipo', chatAgent: 'Chat sobre este agente', chatTeamTitle: 'Equipo', chatRoomSub: 'Todos en este ORCA',
+    chatAgentSub: 'Comentarios sobre {0}', chatOpenAgent: 'Abrir agente', chatPlaceholder: 'Escribe — @ persona o agente',
+    chatEmptyRoom: 'Aún no hay mensajes. Saluda al equipo.', chatEmptyAgent: 'Aún no hay comentarios sobre este agente.',
+    chatEnded: 'Este agente terminó. Su conversación es solo de lectura.', chatDelete: 'Borrar', chatDeleted: 'mensaje borrado',
+    chatYou: 'tú', chatYesterday: 'ayer', chatShort: '{0} chat', tChat: '{0} comentarios sin leer', chatMentioned: '{0} te mencionó',
+    chatFollowOn: 'Alertas activas — toca para silenciar esta conversación', chatFollowOff: 'Alertas apagadas — toca para recibir alertas de esta conversación', chatRoomOn: 'Alertas de cada mensaje del equipo — toca para apagarlas', chatRoomOff: 'Alertas del equipo apagadas (las menciones sí te avisan) — toca para activarlas', chatNowOn: 'Recibirás alertas de esta conversación', chatNowOff: 'Alertas apagadas en esta conversación — las menciones sí te llegan', chatNeedBell: 'Primero activa las alertas: la campana de arriba.',
+    chatPickAgent: 'agente — recibe tu mensaje como trabajo',
+    chatAskQueued: 'En espera — {0} está ocupado', chatAskQueuedN: 'En espera — {0} está ocupado ({1} antes)', chatAskSent: 'Enviado a {0} — trabajando…', chatAskDone: '{0} respondió',
+    chatAsk_gone: '{0} terminó antes de responder', chatAsk_expired: 'No enviado — {0} estuvo ocupado 2 horas', chatAsk_no_answer: '{0} no dejó respuesta en texto — mira su salida', chatAsk_send_failed: 'No se pudo enviar a {0}',
+    chatAskNo_no_access: 'No puedes enviar trabajo a {0}.', chatAskNo_limit_person: 'No enviado a {0}: máximo 5 pedidos a agentes por hora.', chatAskNo_limit_agent: 'No enviado: {0} ya recibió 5 pedidos esta hora.', chatAskNo_queue_full: 'No enviado: {0} ya tiene 5 en espera.',
+    chatTranslate: 'Traducir', chatTranslating: 'Traduciendo…', chatTranslated: 'Traducido del {0}', chatShowOriginal: 'Ver original', chatShowTranslation: 'Ver traducción', chatTrFailed: 'No se pudo traducir — inténtalo de nuevo',
+    chatAutoTr: 'Traducir todo', chatAutoTrOn: 'Los mensajes en otros idiomas se traducen al español', chatAutoTrOff: 'Traducir automáticamente los mensajes en otros idiomas', langName_en: 'inglés', langName_es: 'español',
+    chatAnswerTook: 'respondió en {0}', chatSeeOutput: 'Ver salida completa', chatNoText: 'Terminó sin respuesta en texto.', chatAgentTag: 'agente',
+    e_slow_down: 'Demasiados mensajes — espera un momento.', e_too_long: 'Demasiado largo — máximo 2.000 caracteres.', e_too_late: 'Solo puedes borrar un mensaje en los primeros 5 minutos.', e_ended: 'Este agente terminó.',
     byOperio: 'por Operio', new: 'Nuevo', save: 'Guardar', close: 'Cerrar', send: 'Enviar', focus: 'Mostrar en el escritorio', clear: 'Quitar nombre',
     needsYou: 'Te necesita — responde con una tecla',
     placeholder: 'nombra este agente', unnamed: 'sin nombre', shell: 'terminal',
@@ -228,6 +256,7 @@ let tagSlots = {};
 let tagLib = [];              // every saved tag: { tag, n (agents using it), last }
 let access = { admin: true, folders: null, shell: { confirmed: false, unlockedUntil: 0, unlockMs: 900000 } };
 let mapOrder = [], orderPending = false; // the order of the tab boxes on the map (tab ids)
+let chatCounts = { room: null, byPane: {} }; // team chat unread counts (chat.js)
 let links = [], handoffs = [], msgCounts = {}; // agent links (by pane), open hand-offs, message counts
 let clockSkew = 0;          // server now - client now
 let selected = null;        // pane id shown in the sheet
@@ -2035,6 +2064,7 @@ async function refresh() {
     tagLib = r.tagLib || [];
     if (r.access) { access = r.access; syncShellLock(); }
     renderJournalBadge(r.journal);
+    chatCounts = r.chat || { room: null, byPane: {} };
     if (!orderPending) mapOrder = r.mapOrder || [];
     links = r.links || []; handoffs = r.handoffs || []; msgCounts = r.msgs || {};
     if (r.now) clockSkew = r.now - Date.now();
@@ -2042,6 +2072,7 @@ async function refresh() {
     for (const [pane, since] of dismissed) if (byPane.get(pane)?.since !== since) dismissed.delete(pane);
     render();
     attend();
+    window.OrcaChat?.update();
     if (selected) loadOutput();
     if ($('#toast').textContent === t('offline')) $('#toast').hidden = true;
   } catch {
@@ -2054,10 +2085,11 @@ async function refresh() {
 
 window.addEventListener('hashchange', () => {
   const p = decodeURIComponent(location.hash.slice(1));
+  if (p.startsWith('chat-')) return; // chat.js opens those
   if (p && p !== selected) { pendingPane = p; attend(); }
 });
 navigator.serviceWorker?.addEventListener('message', e => {
-  if (e.data?.type === 'open') { pendingPane = e.data.pane; attend(); }
+  if (e.data?.type === 'open' && !String(e.data.pane || '').startsWith('chat-')) { pendingPane = e.data.pane; attend(); }
 });
 
 // ─── Links: who depends on whom, who talks to whom, and the hand-offs you approve ──
@@ -2077,6 +2109,8 @@ function tileLinkBadge(a) {
   if (hand) { parts.push('↪'); aria += ' — ' + t('handBadge'); }
   else if (ups.length) { parts.push('⧗ ' + label(ups[0])); aria += ' — ' + t('tWaits', label(ups[0])); }
   if (n) { parts.push('✉' + n); aria += ' — ' + t('tMsgs', n); }
+  const c = chatCounts.byPane?.[a.pane]?.unread || 0;
+  if (c) { parts.push(t('chatShort', c)); aria += ' — ' + t('tChat', c); }
   return { text: parts.length ? ' · ' + parts.join(' ') : '', hand, aria };
 }
 

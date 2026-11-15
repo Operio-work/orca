@@ -244,6 +244,12 @@ ORCA is the free, do-it-yourself version. If you'd rather have Operio run it for
 **ORCA Managed by Operio** runs your AI operations team (WhatsApp, Google Business Profile, bilingual routines, approvals and
 monitoring), see [make.operio.work](https://make.operio.work).
 
+Managed ORCA also comes with a **team chat**: comments on each agent, one room for the whole
+team, alerts when someone mentions you, and agents brought into the conversation (write
+`@reviews shorten the intro` and the answer comes back in the thread). Messages can be
+translated between English and Spanish. To see it in the demo:
+`OPERIO_ORCA_HOSTED=1 operio-orca demo --reset`.
+
 ## License
 
 MIT, Copyright (c) 2026 Operio. herdr and the other components keep their own licenses; see

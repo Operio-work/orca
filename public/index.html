@@ -21,6 +21,7 @@
   <script src="/jtext.js" defer></script>
   <script src="/reader.js" defer></script>
   <script src="/app.js" defer></script>
+  <script src="/chat.js" defer></script>
   <script src="/cron.js" defer></script>
   <script src="/routines.js" defer></script>
   <script src="/demo.js" defer></script>
@@ -52,6 +53,7 @@
     <symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></symbol>
     <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3z"/></symbol>
     <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 20.5l1.6-5.2A8.4 8.4 0 1 1 21 11.5Z"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
     <symbol id="i-journal" viewBox="0 0 24 24"><path d="M5 4a2 2 0 0 1 2-2h12v18H7a2 2 0 0 0-2 2z"/><path d="M5 20V4M9 7h6M9 11h6"/></symbol>
@@ -71,6 +73,7 @@
         <button id="new" class="chip primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="new">New</span></button>
         <button id="routines-btn" class="chip" type="button"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-i18n="routines">Routines</span></button>
         <a id="journal-btn" class="chip icon jbtn" href="/journal.html" data-i18n-title="journal"><svg class="ic" aria-hidden="true"><use href="#i-journal"/></svg><span id="journal-badge" class="jbadge" hidden></span></a>
+        <button id="chat-btn" class="chip icon jbtn" type="button" hidden data-i18n-title="chatTeam"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span id="chat-badge" class="jbadge" hidden></span></button>
         <div class="viewpick">
           <button id="view-btn" class="chip view-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="views" data-i18n-title="views"><svg class="ic cur" aria-hidden="true"><use href="#i-map"/></svg><span id="view-cur" class="view-cur">Map</span><svg class="ic caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button>
           <div id="views" class="view-menu" role="group" hidden>
@@ -162,6 +165,7 @@
             <svg class="ic mon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><rect class="scr" x="7.5" y="7.5" width="9" height="9" rx="1.5"/><path class="ok" d="m9.5 12 2 2 3.5-4"/></svg>
             <span class="bl" data-i18n="zoom" aria-live="polite">Zoom</span>
           </button>
+          <button id="sheet-chat" class="icon-btn jbtn" type="button" hidden data-i18n-title="chatAgent"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span id="sheet-chat-badge" class="jbadge" hidden></span></button>
           <button id="sheet-more" class="icon-btn" type="button" aria-expanded="false" aria-controls="sheet-extra" data-i18n-title="more"><svg class="ic" aria-hidden="true"><use href="#i-more"/></svg></button>
         </header>
         <div id="crew" class="crew" hidden>
@@ -380,6 +384,26 @@
     <div id="term-host" class="term-host"></div>
     <p class="term-foot" data-i18n="termFoot">Mirrors the pane — keys you type go straight to the shell.</p>
   </div>
+
+  <!-- Team chat: one thread per agent + the team room (chat.js) -->
+  <aside id="chat" class="chat" role="dialog" aria-modal="true" aria-labelledby="chat-title" tabindex="-1" hidden>
+    <header class="chat-head">
+      <button id="chat-close" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic back" aria-hidden="true"><use href="#i-back"/></svg><svg class="ic x" aria-hidden="true"><use href="#i-x"/></svg></button>
+      <span id="chat-mark" class="chat-mark" aria-hidden="true"><svg class="ic"><use href="#i-chat"/></svg></span>
+      <div class="chat-who"><h2 id="chat-title" class="chat-title"></h2><p id="chat-sub" class="chat-sub"></p></div>
+      <button id="chat-agent" class="chip small" type="button" hidden data-i18n="chatOpenAgent">Open agent</button>
+      <button id="chat-tr" class="chip small chat-tr" type="button" aria-pressed="false" hidden><span aria-hidden="true">A⇄文</span> <span id="chat-tr-label" class="chat-tr-label"></span></button>
+      <button id="chat-follow" class="icon-btn chat-follow" type="button" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg></button>
+    </header>
+    <ol id="chat-list" class="chat-list"></ol>
+    <p id="chat-empty" class="chat-empty" hidden></p>
+    <p id="chat-ended" class="chat-ended" hidden data-i18n="chatEnded">This agent has ended. Its thread is read-only.</p>
+    <form id="chat-form" class="chat-form" autocomplete="off">
+      <div id="chat-pick" class="chat-pick" role="listbox" hidden></div>
+      <textarea id="chat-text" rows="1" maxlength="2000" data-i18n-placeholder="chatPlaceholder" enterkeyhint="send" aria-label="Message"></textarea>
+      <button id="chat-send" class="chat-send" type="submit" data-i18n-title="send"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button>
+    </form>
+  </aside>
 
   <!-- Confirmation before any shell -->
   <dialog id="shell-dialog" class="shell-dialog" aria-labelledby="shell-title">

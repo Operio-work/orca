@@ -642,6 +642,7 @@ cmd_demo() {
     OPERIO_ORCA_HERDR_BIN="$APP_DIR/demo/demo-herdr" OPERIO_ORCA_HOST=127.0.0.1 OPERIO_ORCA_PORT="$DEMO_PORT" \
     OPERIO_ORCA_AGENT_SOCK="${TMPDIR:-/tmp}/operio-orca-demo-$(id -u)/agents.sock" \
     OPERIO_ORCA_POLL_MS=1500 OPERIO_ORCA_MIN_WORK_SEC=5 OPERIO_ORCA_FOLDERS="~" \
+    ${OPERIO_ORCA_HOSTED:+OPERIO_ORCA_HOSTED="$OPERIO_ORCA_HOSTED"} \
     nohup "$NODE_BIN" "$APP_DIR/server.js" >>"$DEMO_ROOT/server.log" 2>&1 &
   echo $! > "$DEMO_PID"
   for _ in 1 2 3 4 5 6 7 8 9 10 11 12; do demo_healthy && break; sleep 0.5; done

@@ -22,6 +22,7 @@ const crypto = require('crypto');
 const tl = require('./timeline');
 const cron = require('../lib/cron');
 const { CLIENTS, ROUTINE_CHOICES, HISTORY, LANGS, forLang } = require('./clients');
+const { seedChat } = require('./chat');
 
 const APP = path.join(__dirname, '..');
 const MARK = '.operio-orca-demo';
@@ -110,6 +111,11 @@ function seedClient(L, c, now, lang) {
   log.sort((x, y) => x.ts.localeCompare(y.ts));
   fs.writeFileSync(path.join(base, 'logs', 'routines.jsonl'), log.map(l => JSON.stringify(l)).join('\n') + '\n', { mode: 0o600 });
   fs.mkdirSync(path.join(L.home, c.folder), { recursive: true });
+  // Team chat (shown only when the demo runs as ORCA Host): agent threads by the demo's terminal ids.
+  const local = forLang(lang).CLIENTS.find(x => x.id === c.id) || c;
+  const names = Object.fromEntries(local.agents.map((a, i) => [`${c.ws}-term${i + 1}`, a.name]));
+  fs.rmSync(path.join(base, 'chat'), { recursive: true, force: true });
+  seedChat(path.join(base, 'chat'), c.id, lang, names, now);
 }
 
 function seed(L, { speed = 1, lang = 'en' } = {}) {

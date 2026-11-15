@@ -23,7 +23,9 @@ const guard = require('./lib/guard');
 const routinesLib = require('./lib/routines');
 const { Scheduler } = require('./lib/scheduler');
 const cronLib = require('./lib/cron');
-const { createJournal } = require('./lib/journal');
+const { createJournal, redact } = require('./lib/journal');
+const { createChat, findMentions, buildPrompt, cutReply } = require('./lib/chat');
+const { createTranslator, detectLang } = require('./lib/translate');
 const llm = require('./lib/llm');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -116,8 +118,12 @@ const loginOf = () => 'local';
 const TEAM = 'team:all';
 const TEAM_NAME = process.env.OPERIO_ORCA_TEAM || 'Team';
 const YOU_NAME = process.env.OPERIO_ORCA_NAME || 'You';
+// Other people by login, for the team chat: the demo's fictional teammates (ORCA Host only).
+const others = new Map(); // login -> name
 function person(login) {
   if (login === TEAM) return { id: 'team', name: TEAM_NAME, initial: TEAM_NAME[0].toUpperCase(), slot: 0, team: true };
+  const name = others.get(login);
+  if (name) return { id: login.replace(/[^a-z0-9]+/gi, '-'), name, initial: name[0].toUpperCase(), slot: [...others.keys()].indexOf(login) + 1 };
   return { id: 'local', name: YOU_NAME, initial: YOU_NAME[0].toUpperCase(), slot: 0 };
 }
 
@@ -128,6 +134,19 @@ const sameOrigin = req => guard.sameOrigin(req, ALLOWED_HOSTS);
 // Append-only daily files under <config>/journal, owner-only, with secrets redacted before
 // they are written (lib/journal.js). Nothing leaves this computer.
 const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL_DAYS });
+
+// ─── Team chat (ORCA Host only): one thread per agent (by terminal) + one team room ─────
+// lib/chat.js. Off (null) unless OPERIO_ORCA_HOSTED=1: the free panel has no chat UI or API.
+let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
+// Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
+const translator = createTranslator({
+  provider: chat ? CFG.TRANSLATE : 'off', model: CFG.TRANSLATE_MODEL, url: CFG.TRANSLATE_URL, dir: CFG.CHAT_DIR, log,
+});
+if (chat) {
+  const prune = () => { try { chat.prune(); } catch (e) { log('chat.prune_failed', { error: String(e.message) }); } };
+  prune();
+  setInterval(prune, 6 * 3600e3).unref();
+}
 const agentCache = new Map(); // pane -> last shaped agent (refreshed by every listAgents)
 function jAgent(x) {
   const a = typeof x === 'string' ? agentCache.get(x) || { pane: x } : x || {};
@@ -220,21 +239,24 @@ webpush.setVapidDetails(CFG.VAPID_SUBJECT, vapid.publicKey, vapid.privateKey);
 
 // Alert copy per subscriber language (EN/ES), no emoji.
 const PUSH = {
-  en: { blocked: n => `${n} needs you`, done: n => `${n} finished`, taken: n => `${n} was taken over`, assigned: n => `${n} is yours now`, handoff: n => `${n} finished — hand off?`, chatty: n => `${n}: link paused`, test: () => 'ORCA alerts are on', testBody: 'You’ll hear when an agent finishes or needs you.' },
-  es: { blocked: n => `${n} te necesita`, done: n => `${n} terminó`, taken: n => `${n} fue tomado`, assigned: n => `${n} ahora es tuyo`, handoff: n => `${n} terminó — ¿pasar el relevo?`, chatty: n => `${n}: enlace en pausa`, test: () => 'Alertas de ORCA activas', testBody: 'Te avisaremos cuando un agente termine o te necesite.' },
+  en: { blocked: n => `${n} needs you`, done: n => `${n} finished`, taken: n => `${n} was taken over`, assigned: n => `${n} is yours now`, handoff: n => `${n} finished — hand off?`, chatty: n => `${n}: link paused`, mention: n => `${n} mentioned you`, reply: n => `${n} wrote`, agentReply: n => `${n} answered you`, room: 'Team', test: () => 'ORCA alerts are on', testBody: 'You’ll hear when an agent finishes or needs you.' },
+  es: { blocked: n => `${n} te necesita`, done: n => `${n} terminó`, taken: n => `${n} fue tomado`, assigned: n => `${n} ahora es tuyo`, handoff: n => `${n} terminó — ¿pasar el relevo?`, chatty: n => `${n}: enlace en pausa`, mention: n => `${n} te mencionó`, reply: n => `${n} escribió`, agentReply: n => `${n} te respondió`, room: 'Equipo', test: () => 'Alertas de ORCA activas', testBody: 'Te avisaremos cuando un agente termine o te necesite.' },
 };
 function pushPayload(p, lang) {
   const L = PUSH[lang] || PUSH.en;
-  return JSON.stringify({ ...p, title: L[p.kind](p.name), body: p.kind === 'test' ? L.testBody : p.body });
+  const isChat = p.kind === 'mention' || p.kind === 'reply' || p.kind === 'agentReply';
+  return JSON.stringify({ ...p, title: L[p.kind](p.name), body: p.kind === 'test' ? L.testBody : isChat ? `${p.room ? L.room : p.where}: ${p.text}` : p.body });
 }
 
 // only: a login — alerts for a claimed agent go to its holder's devices (and to devices
 // subscribed before logins were recorded, which re-register with theirs on next open).
-async function pushAll(payload, only = null) {
+// strict: only that login's devices (chat: never someone else's phone). Devices without a login
+// were subscribed on a single-user panel: they are "you".
+async function pushAll(payload, only = null, strict = false) {
   if (!state.subs.length) return 0;
   const dead = [];
   let sent = 0;
-  const subs = only ? state.subs.filter(x => !x.login || x.login === only) : state.subs;
+  const subs = only ? state.subs.filter(x => (strict ? (x.login || 'local') === only : !x.login || x.login === only)) : state.subs;
   await Promise.all(subs.map(s => webpush.sendNotification({ endpoint: s.endpoint, keys: s.keys }, pushPayload(payload, s.lang), { TTL: 600, urgency: 'high' })
     .then(() => { sent++; })
     .catch(e => {
@@ -333,7 +355,7 @@ function claimOf(terminal) {
   return { id: p.id, name: p.name, initial: p.initial, slot: p.slot, team: !!p.team, at: c.at, by: by ? { id: by.id, name: by.name } : null };
 }
 // Everyone who can be assigned: the allowlist, plus named people.
-const PEOPLE_LOGINS = () => ['local', TEAM];
+const PEOPLE_LOGINS = () => ['local', ...others.keys(), TEAM];
 // Whose devices get its alerts: the holder's; everyone's when unclaimed or the team's.
 const holderLogin = terminal => { const l = state.claims[terminal]?.login; return l && l !== TEAM ? l : null; };
 // Messaging or answering an agent nobody holds claims it for you (never steals one).
@@ -375,9 +397,8 @@ function summarizeTurn(text) {
 }
 
 async function recordJob(a, from, end) {
-  let sum = { ask: '', said: '' }, out = null;
+  let sum = { ask: '', said: '' }, out = null, text = '';
   try {
-    let text;
     try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '300', '--format', 'text']); }
     catch { text = await herdr(['agent', 'read', a.pane, '--source', 'visible', '--format', 'text']); }
     sum = summarizeTurn(text);
@@ -394,6 +415,7 @@ async function recordJob(a, from, end) {
   const secs = from ? Math.round((end - from) / 1000) : null;
   log('agent.job', { pane: a.pane, secs });
   jr(null, 'agent.job', a, { ask: job.ask, said: job.said, title: job.title, secs, out });
+  answerAsk(a, text, { from, end, out });
   offerHandoffs(a, job);
 }
 
@@ -402,7 +424,7 @@ async function recordJob(a, from, end) {
 // pending AskUserQuestion (exact options) and the latest reply chips. Without it
 // (Codex, a permission prompt, an older session) the numbered menu on screen is read.
 const ORCA_DIR = path.join(HOME, '.claude', 'orca');
-const { chipsFor, lastReply } = require('./chips');
+const { chipsFor, lastReply, replyAfter, turnReply } = require('./chips');
 const screenChips = new Map(); // pane -> { key, chips }: worked out once per agent state
 // Named by the Claude session id (survives the pane moving); older mods used the pane id.
 function readHandoff(name) {
@@ -467,7 +489,7 @@ async function poll() {
     else if ((a.status === 'idle' || a.status === 'done') && work.has(a.pane)) {
       const { from } = work.get(a.pane);
       work.delete(a.pane);
-      if (!from || now - from >= 5000) recordJob(a, from, now).catch(() => {});
+      if (!from || now - from >= 5000 || askInFlight(a.terminal)) recordJob(a, from, now).catch(() => {});
     }
     if (!p || p.status === a.status) continue;
     const label = a.name || a.pane;
@@ -504,7 +526,8 @@ async function poll() {
   for (const t of live) if (state.born[t]) state.born[t].seen = now;
   if (bornChanged) saveState();
   polledOnce = true;
-  deliverQueued(agents).catch(e => log('msg.deliver_error', { detail: e.detail || e.message }));
+  deliverQueued(agents).catch(e => log('msg.deliver_error', { detail: e.detail || e.message }))
+    .then(() => deliverAsks(agents)).catch(e => log('chat.deliver_error', { detail: e.detail || e.message }));
 }
 // Always track state (so the first alert after subscribing is correct); push only when subscribed.
 setInterval(poll, POLL_MS);
@@ -1241,7 +1264,7 @@ async function termScreen(pane) {
 // ─── Journal API: timeline, saved output, export, daily review ────────────────
 const GROUPS = {
   lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'agent.model', 'shell.new'],
-  work: ['agent.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
+  work: ['agent.prompt', 'chat.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
   coordination: ['link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
   security: ['shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
   errors: ['error'],
@@ -1270,6 +1293,8 @@ function describe(e) {
     case 'agent.tags': return `${who} tagged ${ag}: ${(e.tags || []).join(', ') || '(none)'}`;
     case 'agent.model': return `${who} switched ${ag} to ${e.model}`;
     case 'agent.prompt': return `${who} → ${ag}: ${e.text}`;
+    case 'chat.prompt': return `${who} → ${ag} (team chat): ${e.text}`;
+    case 'chat.prompt': return `${who} → ${ag} (team chat): ${e.text}`;
     case 'agent.answer': return `${who} answered ${ag}${e.question ? ` “${e.question}”` : ''}: ${(e.picked || []).join(' / ')}`;
     case 'agent.keys': return `${who} pressed ${e.key} on ${ag}`;
     case 'agent.job': return `${ag} finished a job${e.secs != null ? ` (${Math.max(1, Math.round(e.secs / 60))} min)` : ''}${e.ask ? ` — asked: ${e.ask}` : ''}${e.said ? ` — reply: ${e.said}` : ''}`;
@@ -1389,9 +1414,251 @@ function journalTick() {
 setTimeout(journalTick, 3000).unref();
 setInterval(journalTick, 5 * 60e3).unref();
 
+// ─── Team chat API (ORCA Host only) ─────────────────────────────────────────────
+// Who wrote it = the panel's person (one "you" on a single-user panel; ORCA Host passes each
+// signed-in person). Everyone who reaches the panel can act on every agent, so every agent's
+// thread is open to them; threads of agents that ended stay readable until the 90-day prune.
+// The access seams below (canSeeAgent, requireActOn, isAdmin) are where roles plug in.
+const chatWho = login => login || 'local';
+const isAdmin = () => true;
+const canSeeAgent = () => true;
+async function requireActOn() { /* single user: you can act on every agent */ }
+function chatView(login, agents) {
+  if (!chat) return null;
+  const seen = agents.filter(a => a.terminal && canSeeAgent(login, a));
+  const s = chat.summary(chatWho(login), ['room', ...seen.map(a => 't-' + a.terminal)]);
+  const byPane = {};
+  for (const a of seen) { const x = s['t-' + a.terminal]; if (x?.n) byPane[a.pane] = x; }
+  return { room: s.room, byPane, translate: translator.enabled };
+}
+async function chatThread(login, id, write) {
+  if (!chat.valid(id)) throw new HttpError(400, 'bad_request');
+  if (id === 'room') return { id, kind: 'room', live: true };
+  const a = (await listAgents()).find(x => x.terminal === id.slice(2));
+  if (a) { await requireActOn(login, a.pane); return { id, kind: 'agent', live: true, pane: a.pane, name: a.name, agent: a.agent }; }
+  if (!isAdmin(login)) throw new HttpError(404, 'gone');
+  if (write) throw new HttpError(409, 'ended');
+  return { id, kind: 'agent', live: false, pane: null, name: null };
+}
+function shapeChat(m, who) {
+  const agent = isAgentBy(m.by);
+  const x = m.x || {};
+  return {
+    id: m.id, at: m.at, who: agent ? { id: m.by, name: x.name || 'agent', agent: true } : brief(m.by), mine: m.by === who,
+    text: m.deleted || x.empty ? '' : m.text, deleted: !!m.deleted, lang: m.deleted || x.empty ? null : detectLang(m.text),
+    mentionsMe: m.mentions.includes(who), canDelete: !m.deleted && m.by === who && Date.now() - m.at < chat.DELETE_WINDOW,
+    ...(agent ? { answer: { to: x.ask || null, took: x.took ?? null, out: x.out || null, empty: !!x.empty } } : {}),
+  };
+}
+const chatRate = new Map(); // login -> recent post times (max 20 a minute)
+const trRate = new Map();   // login -> recent translation requests (max 60 a minute)
+const chatViewing = new Map(); // login -> { id, at }: the thread open on a visible page (polled every 2 s)
+const isViewing = (login, id) => { const v = chatViewing.get(login); return !!v && v.id === id && Date.now() - v.at < 7000; };
+function chatHolder(thread) {
+  if (thread.kind !== 'agent') return null;
+  return holderLogin(thread.id.slice(2));
+}
+function notifyChat(thread, msg) {
+  const holder = chatHolder(thread);
+  const to = chat.recipients(thread.id, msg, { holder }).filter(r => !isViewing(r.login, thread.id));
+  const text = msg.text.replace(/\s+/g, ' ').slice(0, 140);
+  for (const r of to) {
+    pushAll({ kind: r.kind, name: person(msg.by).name, where: thread.name || 'agent', room: thread.id === 'room', text,
+      tag: 'chat-' + thread.id, url: '/#chat-' + encodeURIComponent(thread.id), thread: thread.id }, r.login, true).catch(() => {});
+  }
+  if (to.length) log('chat.notify', { thread: thread.id, to: to.length });
+}
+// ── @agent: a chat message sent to an agent as a prompt, its answer posted back.
+// Limits per person/agent per hour and a queue per agent.
+const ASK = {
+  perPerson: CFG.CHAT_ASKS_PERSON,
+  perAgent: CFG.CHAT_ASKS_AGENT,
+  queueMax: CFG.CHAT_QUEUE,
+  queueTtl: 2 * 3600e3,   // queued this long without the agent going idle → expired
+  peek: 8e3,              // sent, agent idle, no turn seen (shorter than a poll) → read the screen
+  noAnswer: 90e3,         // … and give up after this long
+  replyMax: 2000,
+};
+const ASK_HEAD = '[ORCA team chat';
+const CHIP_ROW = /^\s*(\[ [^\]]+ \]\s*)+$/;
+const isAgentBy = by => typeof by === 'string' && by.startsWith('agent:');
+const chatName = (by, m) => (isAgentBy(by) ? m?.x?.name || 'agent' : person(by).name);
+const askInFlight = terminal => !!chat && chat.asksWhere(k => k.terminal === terminal && k.state === 'sent').length > 0;
+// Named live agents this person can see, as mention targets (a person's name wins a clash).
+function agentTargets(login, agents) {
+  const names = new Set(PEOPLE_LOGINS().map(l => person(l).name.toLowerCase()));
+  return agents.filter(a => a.name && a.terminal && !names.has(a.name.toLowerCase()) && canSeeAgent(login, a))
+    .map(a => ({ login: a.terminal, name: a.name, a }));
+}
+async function queueAsks(login, who, thread, msg, text) {
+  const agents = await listAgents();
+  const targets = agentTargets(login, agents);
+  const hit = findMentions(text, targets);
+  const out = [];
+  for (const terminal of hit.slice(0, 3)) {
+    const { a } = targets.find(x => x.login === terminal);
+    try { await requireActOn(login, a.pane); } catch { out.push({ name: a.name, state: 'refused', reason: 'no_access' }); continue; }
+    const reason = chat.askAllowed(who, terminal, ASK);
+    if (reason) { out.push({ name: a.name, state: 'refused', reason }); continue; }
+    const own = thread.id === 't-' + terminal;
+    const where = own ? null : thread.id === 'room' ? 'the team room' : `the thread of agent "${thread.name || 'another agent'}"`;
+    const prompt = buildPrompt({
+      from: person(who).name, agentName: a.name, where, text: msg.text, replyMax: ASK.replyMax,
+      context: chat.contextFor(thread.id, msg.id, { max: 6, chars: 1500, nameOf: chatName }),
+    });
+    const k = chat.addAsk({ thread: thread.id, msgId: msg.id, by: who, terminal, name: a.name, prompt });
+    log('chat.ask', { thread: thread.id, to: a.pane });
+    out.push({ name: a.name, state: 'queued', id: k.id });
+  }
+  if (out.some(x => x.state === 'queued')) deliverAsks(agents).catch(e => log('chat.deliver_error', { detail: e.detail || e.message }));
+  return out;
+}
+let askDelivering = false;
+async function deliverAsks(agents) {
+  if (!chat || askDelivering || delivering) return; // link messages go first; the next poll retries
+  askDelivering = true;
+  try { await deliverAsksNow(agents); } finally { askDelivering = false; }
+}
+async function deliverAsksNow(agents) {
+  const now = Date.now();
+  const byTerminal = new Map(agents.map(a => [a.terminal, a]));
+  const gone = t => !byTerminal.has(t) && !lastLive.has(t);
+  // In flight: the agent ended, or finished without a turn we saw.
+  for (const k of chat.asksWhere(x => x.state === 'sent')) {
+    const a = byTerminal.get(k.terminal);
+    if (gone(k.terminal)) { failAsk(k, 'gone'); continue; }
+    if (!a || work.has(a.pane) || (a.status !== 'idle' && a.status !== 'done') || now - k.sentAt < ASK.peek) continue;
+    let text = '';
+    try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '300', '--format', 'text']); } catch { /* full-screen agent */ }
+    if (k.state !== 'sent') continue; // the job log answered it meanwhile
+    if (!answerAsk(a, text, { from: k.sentAt, end: now, out: null }) && now - k.sentAt > ASK.noAnswer) failAsk(k, 'no_answer');
+  }
+  for (const k of chat.nextAsks()) {
+    const a = byTerminal.get(k.terminal);
+    if (gone(k.terminal)) { failAsk(k, 'gone'); continue; }
+    if (!a || a.status !== 'idle' && a.status !== 'done' || work.has(a.pane)) {
+      if (now - k.at > ASK.queueTtl) failAsk(k, 'expired');
+      continue;
+    }
+    if ((sentAsk.get(a.terminal)?.at || 0) > now - 15e3) continue; // someone just sent it work
+    try {
+      await herdr(['agent', 'prompt', a.pane, k.prompt], 10000);
+    } catch (e) {
+      if (!['blocked', 'stalled', 'timeout'].includes(e.code)) failAsk(k, 'send_failed');
+      log('chat.ask_failed', { pane: a.pane, code: e.code });
+      continue;
+    }
+    const at = Date.now();
+    const msg = chat.list(k.thread).find(m => m.id === k.msgId);
+    chat.updateAsk(k.id, { state: 'sent', sentAt: at });
+    sentAsk.set(a.terminal, { text: `${person(k.by).name} (chat): ${(msg?.text || '').replace(/\s+/g, ' ')}`, at });
+    autoClaim(a.terminal, k.by);
+    log('chat.ask_sent', { pane: a.pane, waited: Math.round((at - k.at) / 1000) });
+    jr(k.by, 'chat.prompt', a, { text: msg?.text || '', thread: k.thread === 'room' ? 'room' : k.thread === 't-' + a.terminal ? 'own' : 'other' });
+  }
+}
+function failAsk(k, reason) {
+  chat.updateAsk(k.id, { state: 'failed', reason, endAt: Date.now() });
+  log('chat.ask_' + reason, { thread: k.thread });
+}
+// A turn ended on an agent with a chat ask in flight: post its reply (the prose after our prompt).
+// Returns true when an answer was posted.
+function answerAsk(a, text, { from, end, out }) {
+  if (!chat) return false;
+  const k = chat.asksWhere(x => x.terminal === a.terminal && x.state === 'sent')[0];
+  if (!k || k.sentAt > end) return false; // that turn ended before the ask went out
+  // The reply after our prompt; a long turn may have scrolled the prompt off: then the turn's
+  // last reply (only when it is a recorded turn, which started after the ask was sent).
+  const raw = String(text || '').includes(ASK_HEAD) ? replyAfter(text, ASK_HEAD) : out ? turnReply(text) : '';
+  // Drop the reply-chips row the ORCA mod prints under a reply ("[ Explain 1 · … ] [ Wrap up ]").
+  const reply = cutReply(raw.split('\n').filter(l => !CHIP_ROW.test(l)).join('\n').trim(), ASK.replyMax);
+  if (!reply) return false; // not readable yet (a busy screen, a partial read): the 8 s peek retries until 90 s
+  let msg;
+  try {
+    msg = chat.post(k.thread, 'agent:' + a.terminal, reply, [], { name: a.name || k.name, ask: k.msgId, out: out || null, took: end - k.sentAt });
+  } catch (e) { log('chat.answer_failed', { code: e.code }); return false; }
+  chat.updateAsk(k.id, { state: 'done', endAt: Date.now(), answer: msg.id });
+  log('chat.answer', { thread: k.thread, chars: reply.length });
+  if (!isViewing(k.by, k.thread)) {
+    pushAll({ kind: 'agentReply', name: a.name || k.name || 'agent', where: a.name || 'agent', room: k.thread === 'room',
+      text: reply.replace(/\s+/g, ' ').slice(0, 140), tag: 'chat-' + k.thread, url: '/#chat-' + encodeURIComponent(k.thread), thread: k.thread }, k.by, true).catch(() => {});
+  }
+  return true;
+}
+function shapeAsks(id, who) {
+  const day = Date.now() - 864e5;
+  return chat.asksWhere(k => k.thread === id && k.at >= day).map(k => ({
+    msg: k.msgId, name: k.name, state: k.state, reason: k.reason || null, mine: k.by === who,
+    pos: k.state === 'queued' ? chat.queuePos(k) : null, answer: k.answer || null,
+  }));
+}
+
+async function chatApi(req, res, url) {
+  if (!chat) return send(res, 404, { error: 'not found' }); // the free panel has no chat
+  const m = url.pathname.match(/^\/api\/chat\/([^/]+)(\/read|\/delete|\/follow|\/translate)?$/);
+  if (!m) return send(res, 404, { error: 'not found' });
+  const login = loginOf(req);
+  const who = chatWho(login);
+  const id = decodeURIComponent(m[1]);
+  if (req.method === 'GET' && !m[2]) {
+    const thread = await chatThread(login, id, false);
+    thread.following = chat.following(who, id, chatHolder(thread));
+    if (url.searchParams.get('open') === '1') chatViewing.set(who, { id, at: Date.now() });
+    const after = Math.max(0, Number(url.searchParams.get('after')) || 0);
+    return send(res, 200, { thread, messages: chat.list(id, { after }).map(x => shapeChat(x, who)), asks: shapeAsks(id, who), now: Date.now() });
+  }
+  if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
+  if (!sameOrigin(req)) { log('write.denied', { path: url.pathname }); return send(res, 403, { error: 'cross-origin' }); }
+  const body = await readBody(req);
+  if (m[2] === '/read') {
+    await chatThread(login, id, false);
+    chat.markRead(who, id, Math.min(Number(body.at) || Date.now(), Date.now()));
+    return send(res, 200, { ok: true });
+  }
+  if (m[2] === '/follow') {
+    await chatThread(login, id, false);
+    chat.setFollow(who, id, !!body.on);
+    return send(res, 200, { ok: true, following: !!body.on });
+  }
+  if (m[2] === '/translate') {
+    await chatThread(login, id, false);
+    if (!translator.enabled) throw new HttpError(404, 'translate_off');
+    const msg = chat.get(id, String(body.id || ''));
+    if (!msg || msg.deleted || msg.x?.empty) throw new HttpError(404, 'not_found');
+    const to = body.to === 'es' ? 'es' : 'en';
+    const now = Date.now();
+    const recent = (trRate.get(who) || []).filter(t => now - t < 60e3);
+    if (recent.length >= 60) throw new HttpError(429, 'slow_down');
+    recent.push(now); trRate.set(who, recent);
+    try { return send(res, 200, { id: msg.id, to, ...(await translator.translate(msg.id, msg.text, to)) }); }
+    catch (e) { throw new HttpError(e.code === 'translate_off' ? 404 : 502, e.code || 'translate_failed'); }
+  }
+  if (m[2] === '/delete') {
+    await chatThread(login, id, false);
+    try { chat.remove(id, String(body.id || ''), who, false); }
+    catch (e) { throw new HttpError(e.code === 'not_found' ? 404 : 403, e.code || 'bad_request'); }
+    return send(res, 200, { ok: true });
+  }
+  const thread = await chatThread(login, id, true);
+  const now = Date.now();
+  const recent = (chatRate.get(who) || []).filter(t => now - t < 60e3);
+  if (recent.length >= 20) throw new HttpError(429, 'slow_down');
+  recent.push(now); chatRate.set(who, recent);
+  const people = PEOPLE_LOGINS().filter(l => l !== TEAM).map(l => ({ login: l, name: person(l).name }));
+  let msg;
+  try { msg = chat.post(id, who, body.text, findMentions(body.text, people).filter(l => l !== who)); }
+  catch (e) { throw new HttpError(400, e.code || 'bad_request'); }
+  notifyChat(thread, msg);
+  let asks = [];
+  try { asks = await queueAsks(login, who, thread, msg, body.text); }
+  catch (e) { log('chat.ask_error', { detail: e.detail || e.message }); }
+  return send(res, 200, { ok: true, thread, message: shapeChat(msg, who), asks, askState: shapeAsks(id, who) });
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function api(req, res, url) {
   const { pathname } = url;
+  if (pathname.startsWith('/api/chat/')) return chatApi(req, res, url);
 
   // ── Terminal (shells): screen out, keys in. Needs a fresh shell confirmation.
   {
@@ -1444,7 +1711,7 @@ async function api(req, res, url) {
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), access: accessView(), journal: { toReview }, now: Date.now() });
+    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(), journal: { toReview }, now: Date.now() });
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -1591,7 +1858,7 @@ async function api(req, res, url) {
     const sub = body.subscription;
     if (!sub?.endpoint || !/^https:\/\//.test(sub.endpoint) || !sub.keys?.p256dh || !sub.keys?.auth) throw new HttpError(400, 'bad_request');
     const lang = body.lang === 'es' ? 'es' : 'en';
-    state.subs = state.subs.filter(s => s.endpoint !== sub.endpoint).concat([{ endpoint: sub.endpoint, keys: sub.keys, lang }]);
+    state.subs = state.subs.filter(s => s.endpoint !== sub.endpoint).concat([{ endpoint: sub.endpoint, keys: sub.keys, lang, login: loginOf(req) }]);
     saveState();
     log('push.subscribe', { devices: state.subs.length });
     return send(res, 200, { ok: true, devices: state.subs.length });
@@ -2050,6 +2317,11 @@ function useDemoClient(id) {
   RDIRS.drafts = CFG.DRAFTS_DIR; RDIRS.reports = CFG.REPORTS_DIR;
   rstate = routinesLib.readState(CFG.ROUTINES_STATE);
   layoutCache.at = 0;
+  if (CFG.HOSTED) { // each business has its own team chat and fictional teammates
+    chat = createChat({ dir: path.join(base, 'chat'), redact, log, keepDays: CFG.JOURNAL_DAYS });
+    others.clear();
+    for (const [login, name] of Object.entries(require('./demo/chat').PEOPLE[id] || {})) others.set(login, name);
+  }
 }
 if (DEMO) useDemoClient(demoTl.loadState(process.env.OPERIO_ORCA_DEMO_DIR).client);
 

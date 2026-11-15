@@ -75,4 +75,25 @@ function lastReply(text) {
   return out.join('\n').trim();
 }
 
-module.exports = { chipsFor, lastReply, stepsOf };
+// The reply to one prompt: from the last line that starts with `head` up to the next prompt line
+// (the next message, or the input box — which can hold a suggested prompt in grey, so it must
+// never count as "a newer prompt with no reply"). '' when the head isn't there.
+function replyAfter(text, head) {
+  const lines = String(text || '').split('\n');
+  let i = -1;
+  for (let j = lines.length - 1; j >= 0; j--) if (/^[❯›]\s+/.test(lines[j]) && lines[j].replace(/^[❯›]\s+/, '').startsWith(head)) { i = j; break; }
+  if (i < 0) return '';
+  let end = lines.length;
+  for (let j = i + 1; j < lines.length; j++) if (/^[❯›](\s|$)/.test(lines[j])) { end = j; break; }
+  return lastReply(lines.slice(i, end).join('\n'));
+}
+
+// The last reply of a finished turn, ignoring the input box below it (it may hold a suggestion).
+function turnReply(text) {
+  const lines = String(text || '').split('\n');
+  let p = -1, s = -1;
+  lines.forEach((l, i) => { if (/^[❯›](\s|$)/.test(l)) p = i; if (/^[●•]\s+\S/.test(l)) s = i; });
+  return lastReply((p > s ? lines.slice(0, p) : lines).join('\n'));
+}
+
+module.exports = { chipsFor, lastReply, replyAfter, turnReply, stepsOf };

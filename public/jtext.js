@@ -16,6 +16,7 @@
       'agent.tags': (w, a, e) => `${w} tagged ${a}: ${(e.tags || []).map(x => '#' + x).join(' ') || '(none)'}`,
       'agent.model': (w, a, e) => `${w} switched ${a} to ${e.model}`,
       'agent.prompt': (w, a) => `${w} → ${a}`,
+      'chat.prompt': (w, a, e) => `${w} → ${a} (team chat${e.thread === 'room' ? ', room' : ''})`,
       'agent.answer': (w, a, e) => `${w} answered ${a}: ${(e.picked || []).join(' / ')}`,
       'agent.keys': (w, a, e) => `${w} pressed ${e.key} on ${a}`,
       'agent.job': (w, a, e) => `${a} finished a job${e.secs != null ? ` (${mins(e.secs * 1000, 'en')})` : ''}`,
@@ -48,6 +49,7 @@
       'agent.tags': (w, a, e) => `${w} etiquetó ${a}: ${(e.tags || []).map(x => '#' + x).join(' ') || '(ninguna)'}`,
       'agent.model': (w, a, e) => `${w} cambió ${a} a ${e.model}`,
       'agent.prompt': (w, a) => `${w} → ${a}`,
+      'chat.prompt': (w, a, e) => `${w} → ${a} (chat del equipo${e.thread === 'room' ? ', sala' : ''})`,
       'agent.answer': (w, a, e) => `${w} respondió a ${a}: ${(e.picked || []).join(' / ')}`,
       'agent.keys': (w, a, e) => `${w} pulsó ${e.key} en ${a}`,
       'agent.job': (w, a, e) => `${a} terminó un trabajo${e.secs != null ? ` (${mins(e.secs * 1000, 'es')})` : ''}`,
@@ -83,7 +85,7 @@
 
   // The quote or reply that goes under the line (shown smaller), if any.
   function detail(e) {
-    if (e.event === 'agent.prompt') return e.text || '';
+    if (e.event === 'agent.prompt' || e.event === 'chat.prompt') return e.text || '';
     if (e.event === 'agent.job') return [e.ask ? '“' + e.ask + '”' : '', e.said || e.title || ''].filter(Boolean).join(' → ');
     if (e.event === 'agent.end') return e.said || '';
     if (e.event === 'agent.answer') return e.question || '';

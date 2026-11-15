@@ -275,3 +275,11 @@ test('a new agent can start on a model; a model its kind does not take is refuse
   const other = await post('/api/agents/new', { name: 'm-other', kind: 'codex', folder: '~', tab: 'new', model: 'opus' });
   assert.equal(other.status, 400);
 });
+
+test('the free panel has no team chat: no API, nothing in the agents list', async () => {
+  assert.equal((await req('GET', '/api/chat/room')).status, 404);
+  assert.equal((await post('/api/chat/room', { text: 'hi' })).status, 404);
+  const r = await req('GET', '/api/agents');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.chat, null);
+});

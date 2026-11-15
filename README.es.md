@@ -207,6 +207,12 @@ ORCA es la versión gratuita para hacerlo tú mismo. Si prefieres que Operio lo 
 **ORCA Gestionado por Operio** opera tu equipo de operaciones con IA (WhatsApp, Perfil de Negocio de Google, rutinas bilingües, aprobaciones y
 monitoreo), visita [make.operio.work](https://make.operio.work).
 
+ORCA Gestionado también incluye un **chat del equipo**: comentarios en cada agente, una sala
+para todo el equipo, alertas cuando alguien te menciona y agentes dentro de la conversación
+(escribe `@opiniones acorta la introducción` y la respuesta vuelve al hilo). Los mensajes se
+pueden traducir entre español e inglés. Para verlo en la demo:
+`OPERIO_ORCA_HOSTED=1 operio-orca demo --reset --lang es`.
+
 ## Licencia
 
 MIT, Copyright (c) 2026 Operio. herdr y los demás componentes conservan sus propias licencias;

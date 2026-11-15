@@ -6,6 +6,15 @@ The installer pins one panel release and one herdr release together; `operio-orc
 ## [Unreleased]
 
 ### Panel
+- **Team chat (ORCA Host only, off in the free panel):** a thread on every agent and one team
+  room, unread badges, @mentions with alerts, and `@agent` to send a message to an agent as work
+  (with the thread's recent messages); the answer is posted back. Limits: 5 requests per person
+  and per agent an hour, 5 waiting per agent. EN ⇄ ES translation of messages with Claude Haiku
+  5.5 (`ANTHROPIC_API_KEY`) or a local Ollama model. On when `OPERIO_ORCA_HOSTED=1`; settings
+  `OPERIO_ORCA_TRANSLATE` (anthropic | ollama | off), `OPERIO_ORCA_TRANSLATE_MODEL`,
+  `OPERIO_ORCA_TRANSLATE_URL`, `OPERIO_ORCA_CHAT_ASKS_PERSON`, `OPERIO_ORCA_CHAT_ASKS_AGENT`,
+  `OPERIO_ORCA_CHAT_QUEUE`. The demo seeds a chat for both businesses when run that way.
+  `chat.prompt` entries in the Journal. Adds the `@anthropic-ai/sdk` dependency.
 - `/api/meta` reports the panel `version`.
 - **Map:** every card keeps room for its name and status (a busy map scrolls instead of
   clipping); a hover card on desktop shows the task, last reply, agent and model, folder, jobs

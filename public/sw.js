@@ -1,7 +1,7 @@
 // ORCA service worker: caches the app shell, shows phone alerts and
 // opens the right agent when one is tapped. /api/* is always live, never cached.
-const CACHE = 'operio-orca-shell-v6';
-const SHELL = ['/', '/index.html', '/tokens.css', '/style.css', '/theme-boot.js', '/sound.js', '/app.js', '/reader.js', '/jtext.js', '/journal.html', '/journal.css', '/journal.js', '/cron.js', '/routines.js', '/demo.js', '/manifest.webmanifest',
+const CACHE = 'operio-orca-shell-v7';
+const SHELL = ['/', '/index.html', '/tokens.css', '/style.css', '/theme-boot.js', '/sound.js', '/app.js', '/chat.js', '/reader.js', '/jtext.js', '/journal.html', '/journal.css', '/journal.js', '/cron.js', '/routines.js', '/demo.js', '/manifest.webmanifest',
   '/fonts/inter-latin-400-normal.woff2', '/fonts/inter-latin-600-normal.woff2',
   '/fonts/jetbrains-mono-latin-400-normal.woff2', '/fonts/jetbrains-mono-latin-600-normal.woff2',
   '/icons/icon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
@@ -55,7 +55,8 @@ self.addEventListener('notificationclick', e => {
     const win = wins.find(w => new URL(w.url).origin === self.location.origin);
     if (win) {
       await win.focus();
-      if (pane) win.postMessage({ type: 'open', pane });
+      if (pane.startsWith('chat-')) win.postMessage({ type: 'chat', thread: pane.slice(5) });
+      else if (pane) win.postMessage({ type: 'open', pane });
       return;
     }
     await self.clients.openWindow(url.href);
