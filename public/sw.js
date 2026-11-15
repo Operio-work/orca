@@ -1,6 +1,6 @@
 // ORCA service worker: caches the app shell, shows phone alerts and
 // opens the right agent when one is tapped. /api/* is always live, never cached.
-const CACHE = 'operio-orca-shell-v4';
+const CACHE = 'operio-orca-shell-v5';
 const SHELL = ['/', '/index.html', '/tokens.css', '/style.css', '/theme-boot.js', '/sound.js', '/app.js', '/reader.js', '/jtext.js', '/journal.html', '/journal.css', '/journal.js', '/cron.js', '/routines.js', '/demo.js', '/manifest.webmanifest',
   '/fonts/inter-latin-400-normal.woff2', '/fonts/inter-latin-600-normal.woff2',
   '/fonts/jetbrains-mono-latin-400-normal.woff2', '/fonts/jetbrains-mono-latin-600-normal.woff2',

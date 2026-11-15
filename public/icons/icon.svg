@@ -1,27 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- ORCA by Operio: an island block from a 90s sim map, an orca fin breaking the water,
-       framed by a strategy game's selection brackets and unit health bar. Operio v3 colours. -->
-  <rect width="512" height="512" rx="112" fill="#0A0A0A"/>
-  <path d="M0 128H512M0 256H512M0 384H512M128 0V512M256 0V512M384 0V512" stroke="#161616" stroke-width="2"/>
-  <!-- island block: water top, earth sides -->
-  <path d="M96 262 256 182 416 262 256 342Z" fill="#3B82F6"/>
-  <path d="M96 262 256 342V398L96 318Z" fill="#F5A623"/>
-  <path d="M416 262 256 342V398L416 318Z" fill="#C47D10"/>
-  <path d="M96 262 256 342 416 262" fill="none" stroke="#FFB84D" stroke-width="6" stroke-linejoin="round"/>
-  <!-- ripples -->
-  <ellipse cx="184" cy="272" rx="52" ry="20" fill="none" stroke="#00CFE8" stroke-width="8" opacity=".55"/>
-  <path d="M330 236h36M340 296h28" stroke="#00CFE8" stroke-width="8" stroke-linecap="round" opacity=".7"/>
-  <!-- orca leaping out of the island's water: black body, white eye patch and belly -->
-  <path d="M146 282C160 272 174 268 188 270M170 292C184 284 198 284 212 288" stroke="#00CFE8" stroke-width="7" stroke-linecap="round" fill="none"/>
-  <path d="M396 196C372 152 304 136 252 158C220 172 196 200 182 238L152 228L166 258L146 282L192 258C222 230 266 214 318 214C352 214 382 214 396 196Z" fill="#0A0A0A" stroke="#F0F0F0" stroke-width="7" stroke-linejoin="round"/>
-  <path d="M262 156L254 96L304 150Z" fill="#0A0A0A" stroke="#F0F0F0" stroke-width="7" stroke-linejoin="round"/>
-  <path d="M232 214C262 222 312 226 352 218C330 236 270 236 232 214Z" fill="#F0F0F0"/>
-  <ellipse cx="344" cy="172" rx="17" ry="7" transform="rotate(14 344 172)" fill="#F0F0F0"/>
-  <path d="M316 214L300 244L292 216Z" fill="#0A0A0A" stroke="#F0F0F0" stroke-width="5" stroke-linejoin="round"/>
-  <!-- unit health bar -->
-  <rect x="196" y="54" width="128" height="20" rx="4" fill="#0A0A0A" stroke="#F0F0F0" stroke-width="4"/>
-  <path d="M204 64h24M236 64h24M268 64h24" stroke="#22C55E" stroke-width="10"/>
-  <path d="M300 64h16" stroke="#3a3a3a" stroke-width="10"/>
-  <!-- selection brackets -->
-  <path d="M70 156V112h44M398 112h44v44M442 360v44h-44M114 404H70v-44" fill="none" stroke="#F5A623" stroke-width="16" stroke-linecap="square"/>
+  <!-- ORCA by Operio, "Node Fin": the three Operio nodes form an orca fin above the waterline.
+       The white tip node is the agent waiting for approval; the half ring echoes the Operio circle. -->
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#181B20"/><stop offset="1" stop-color="#08090B"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <g id="art">
+    <path d="M106 300A150 150 0 0 0 406 300" fill="none" stroke="#F5A623" stroke-opacity=".28" stroke-width="22" stroke-linecap="round"/>
+    <path d="M170 300Q262 236 312 96L350 300Z" fill="#F5A623" fill-opacity=".16"/>
+    <path d="M170 300Q262 236 312 96L350 300Z" fill="none" stroke="#F5A623" stroke-width="22" stroke-linejoin="round"/>
+    <path d="M84 300H428" stroke="#F0F0F0" stroke-width="16" stroke-linecap="round"/>
+    <circle cx="170" cy="300" r="32" fill="#F5A623"/><circle cx="350" cy="300" r="32" fill="#F5A623"/><circle cx="312" cy="96" r="34" fill="#F0F0F0"/>
+  </g>
 </svg>
