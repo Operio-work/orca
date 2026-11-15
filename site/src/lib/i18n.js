@@ -263,7 +263,7 @@ const en = {
       },
       {
         q: 'What do I need?',
-        a: 'A computer with Linux, macOS or Windows (WSL2), Node.js 20 or newer, and at least one AI agent installed and signed in. For routines, the computer has to be on when they are scheduled.'
+        a: 'A computer with Linux, macOS or Windows (WSL2), Node.js 20 or newer, and at least one AI agent installed and signed in. For routines, the computer has to be on when they are scheduled. So far we have tested it on Linux; macOS and WSL2 are not tested yet.'
       },
       {
         q: 'Can I use it from my phone?',
@@ -349,6 +349,7 @@ const en = {
     reqTitle: 'What you need',
     req: [
       'Linux (x86_64 or arm64), macOS (Apple silicon or Intel), or Windows through WSL2.',
+      'Tested by us on Linux so far. macOS and WSL2 follow the same steps but are not tested yet; tell us on GitHub if something fails.',
       'Node.js 20 or newer.',
       'An AI assistant installed and signed in: Claude Code, Codex or opencode.',
       'A computer that is on when your routines are scheduled.'
@@ -812,7 +813,7 @@ vsTitle: 'Cómo se compara ORCA',
       },
       {
         q: '¿Qué necesito?',
-        a: 'Una computadora con Linux, macOS o Windows (WSL2), Node.js 20 o más reciente y al menos un agente de IA instalado y con sesión iniciada. Para las rutinas, la computadora tiene que estar prendida a la hora programada.'
+        a: 'Una computadora con Linux, macOS o Windows (WSL2), Node.js 20 o más reciente y al menos un agente de IA instalado y con sesión iniciada. Para las rutinas, la computadora tiene que estar prendida a la hora programada. Hasta ahora lo hemos probado en Linux; macOS y WSL2 aún no.'
       },
       {
         q: '¿Lo puedo usar desde mi celular?',
@@ -898,6 +899,7 @@ vsTitle: 'Cómo se compara ORCA',
     reqTitle: 'Qué necesitas',
     req: [
       'Linux (x86_64 o arm64), macOS (Apple silicon o Intel), o Windows con WSL2.',
+      'Hasta ahora lo probamos en Linux. macOS y WSL2 siguen los mismos pasos, pero aún no los hemos probado; cuéntanos en GitHub si algo falla.',
       'Node.js 20 o más reciente.',
       'Un asistente de IA instalado y con sesión iniciada: Claude Code, Codex u opencode.',
       'Una computadora que esté prendida a la hora de tus rutinas.'
