@@ -592,6 +592,31 @@ async function newAgent({ name, kind, folder, tab, model }, { prepare } = {}) {
 //   { mode: 'workspace', label? }   as a new workspace
 // Works for agents and plain shells alike (drag and drop on the map moves both).
 // herdr only swaps inside one tab and ignores a move within the same tab, hence the split.
+// herdr refuses to move or swap panes while the source or destination tab is zoomed: it answers
+// changed:false and leaves everything where it was. Unzoom those tabs first; afterwards re-zoom the
+// source tab on the same pane (unless that pane is the one that left). The destination stays unzoomed
+// so the moved agent is visible.
+async function unzoomTabs(paneIds) {
+  const restore = [];
+  const seen = new Set();
+  for (const id of paneIds) {
+    if (!id) continue;
+    const l = (await herdrJson(['pane', 'layout', '--pane', id]).catch(() => null))?.result?.layout;
+    if (!l || seen.has(l.tab_id)) continue;
+    seen.add(l.tab_id);
+    if (!l.zoomed) continue;
+    await herdr(['pane', 'zoom', id, '--off']);
+    restore.push({ tab: l.tab_id, pane: l.focused_pane_id });
+  }
+  return restore;
+}
+async function rezoom(restore, sourceTab, movedFrom) {
+  for (const z of restore) {
+    if (z.tab !== sourceTab || !z.pane || z.pane === movedFrom) continue;
+    await herdr(['pane', 'zoom', z.pane, '--on']).catch(e => log('agent.move.rezoom_failed', { pane: z.pane, detail: e.detail }));
+  }
+}
+
 async function moveAgent(pane, body) {
   const agents = await listAgents();
   const a = agents.find(x => x.pane === pane);
@@ -605,7 +630,9 @@ async function moveAgent(pane, body) {
     if (!target) throw new HttpError(404, 'tab_gone');
     if (target.pane_id === pane) throw new HttpError(400, 'same_place');
     if (target.tab_id !== me.tab_id) throw new HttpError(400, 'bad_request');
+    const zoomed = await unzoomTabs([pane]);
     const r = (await herdrJson(['pane', 'swap', '--source-pane', pane, '--target-pane', target.pane_id], 10000)).result?.swap || {};
+    await rezoom(zoomed, me.tab_id, null);
     if (!r.changed) throw new HttpError(502, 'move_failed', 'swap did not change the layout');
     layoutCache.at = 0;
     log('agent.move', { from: pane, mode, with: target.pane_id, tab: me.tab_id });
@@ -636,9 +663,18 @@ async function moveAgent(pane, body) {
   } else throw new HttpError(400, 'bad_request');
   args.push('--no-focus');
 
-  const r = (await herdrJson(args, 10000)).result?.move_result || {};
+  const destPane = mode === 'beside' ? String(body.target) : mode === 'split' ? args[args.indexOf('--target-pane') + 1] : null;
+  const zoomed = await unzoomTabs([pane, destPane]);
+  let r;
+  try { r = (await herdrJson(args, 10000)).result?.move_result || {}; }
+  catch (e) { await rezoom(zoomed, me.tab_id, null); throw e; }
   const moved = r.pane?.pane_id;
-  if (!moved) throw new HttpError(502, 'move_failed', JSON.stringify(r).slice(0, 300));
+  // changed:false = herdr left the pane where it was; never report that as a move.
+  if (!moved || r.changed === false || r.pane.tab_id === me.tab_id) {
+    await rezoom(zoomed, me.tab_id, null);
+    throw new HttpError(502, 'move_failed', JSON.stringify({ changed: r.changed, tab: r.pane?.tab_id }).slice(0, 300));
+  }
+  await rezoom(zoomed, me.tab_id, pane);
   // Keep the name and the status clock with the agent, not with the old pane id.
   if (a?.name) await herdr(['agent', 'rename', moved, a.name]).catch(e => log('agent.move.rename_failed', { pane: moved, detail: e.detail }));
   const p = prev.get(pane);
