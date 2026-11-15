@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.2.0] - 2026-11-15
 
 ### Panel
 - **Team chat (ORCA Host only, off in the free panel):** a thread on every agent and one team
@@ -53,6 +53,13 @@ The installer pins one panel release and one herdr release together; `operio-orc
   (same-origin, localhost). Values never come back and never reach the log; the Journal
   redacts key values by name (`*_API_KEY`, `*_TOKEN`, `*_SECRET`) and by shape (`sk-…`,
   `AIza…`, `gsk_…`).
+- **New icon and header:** the Node Fin mark (Operio's nodes form the fin) as the app icon and
+  favicon; the header reads ORCA · by Operio (EN/ES).
+- Phone header: the buttons sit on their own row so the name is never covered; Routines is
+  icon-only below 600 px, New below 380 px.
+- Fixed: moving an agent while a tab was zoomed did nothing but reported success. The tabs
+  involved are unzoomed first, the source tab re-zoomed afterwards, and `move_failed` is returned
+  when herdr leaves the pane in place.
 
 ### Install
 - Both service files load the agents' API keys from `~/.config/operio-orca/llm.env`: the systemd

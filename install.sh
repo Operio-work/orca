@@ -18,7 +18,7 @@
 set -euo pipefail
 
 # ─── Pinned versions (ORCA moves herdr and the panel together) ───────────
-PANEL_VERSION="0.1.0"
+PANEL_VERSION="0.2.0"
 HERDR_VERSION="0.9.5"
 HERDR_BASE_URL="https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}"
 # sha256 of each release asset, from the GitHub release v0.9.5 (published 2026-10-14).
