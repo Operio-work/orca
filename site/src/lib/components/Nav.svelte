@@ -32,7 +32,18 @@
     document.documentElement.dataset.theme = next;
     try { localStorage.setItem('operio-orca-theme', next); } catch { /* private mode */ }
   }
+
+  /** Phone menu (the links row does not fit beside the tools below 720px). */
+  let menuOpen = $state(false);
+  // Close it when the page changes (client-side navigation keeps this component alive).
+  $effect(() => { void here; menuOpen = false; });
+  /** @param {KeyboardEvent} e */
+  function onKey(e) { if (e.key === 'Escape' && menuOpen) { menuOpen = false; menuBtn?.focus(); } }
+  /** @type {HTMLButtonElement | undefined} */
+  let menuBtn = $state();
 </script>
+
+<svelte:window onkeydown={onKey} />
 
 <a class="skip" href="#main">{t.skip}</a>
 <header class="nav" class:scrolled>
@@ -59,9 +70,34 @@
         <span class="moon"><Icon name="moon" size={17} /></span>
       </button>
       <a class="icon-btn gh" href={GITHUB_URL} aria-label={t.nav.github}><Icon name="github" size={17} /></a>
+      <button
+        type="button"
+        class="icon-btn menu-btn"
+        bind:this={menuBtn}
+        aria-expanded={menuOpen}
+        aria-controls="phone-menu"
+        aria-label={menuOpen ? t.nav.closeMenu : t.nav.menu}
+        onclick={() => (menuOpen = !menuOpen)}
+      >
+        <Icon name={menuOpen ? 'x' : 'menu'} size={18} />
+      </button>
     </div>
   </nav>
+  <!-- Phone menu: every page link plus GitHub, under the bar. Hidden until the button opens it. -->
+  <div id="phone-menu" class="menu" hidden={!menuOpen}>
+    <ul>
+      <li><a href={href(lang, '/catalog')} aria-current={section === 'catalog' ? 'page' : undefined}>{t.nav.catalog}</a></li>
+      <li><a href={href(lang, '/install')} aria-current={section === 'install' ? 'page' : undefined}>{t.nav.install}</a></li>
+      <li><a href={href(lang, '/compare')} aria-current={section === 'compare' ? 'page' : undefined}>{t.nav.compare}</a></li>
+      <li><a href={href(lang, '/managed')} aria-current={section === 'managed' ? 'page' : undefined}>{t.nav.managed}</a></li>
+      <li><a class="menu-gh" href={GITHUB_URL}><Icon name="github" size={17} /><span>{t.nav.github}</span></a></li>
+    </ul>
+  </div>
 </header>
+{#if menuOpen}
+  <!-- Tapping outside the menu closes it; the X button and Escape are the accessible paths. -->
+  <div class="scrim" onclick={() => (menuOpen = false)} aria-hidden="true"></div>
+{/if}
 
 <style>
   .skip {
@@ -138,23 +174,38 @@
   }
   :global(html:not(.js)) .theme { display: none; }
 
+  /* Phone menu: off on desktop, and off without JS (the links row stays then). */
+  .menu-btn, .menu, .scrim { display: none; }
+  :global(html:not(.js)) .menu-btn { display: none !important; }
+
   @media (max-width: 720px) {
     .inner { gap: 4px; }
     .by { display: none; }
     .gh { display: none; }
-    .tools { gap: 4px; }
-    .links { gap: 0; justify-content: flex-end; }
-    /* "Catálogo / Instalar / Comparar" plus two 40px tools must fit 390px with the 16px gutters. */
-    .links a { padding: 0 6px; font-size: 0.86rem; }
-  }
-  @media (max-width: 520px) {
-    /* "Gestionado" does not fit beside the other three on a phone; the home page (twice) and the
-       footer still link to /managed there. */
-    .nav-managed { display: none; }
-  }
-  @media (max-width: 440px) {
-    /* Three links need the room: the logo alone carries the brand on phones. */
-    .wordmark { display: none; }
-    .links a { padding: 0 5px; font-size: 0.84rem; }
+    .tools { gap: 4px; margin-left: auto; }
+    .links { display: none; }
+    .menu-btn { display: inline-grid; }
+    .menu[hidden] { display: none; }
+    .menu {
+      display: block;
+      position: absolute; left: 0; right: 0; top: var(--nav-h);
+      padding: 8px 16px 14px;
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: 0 16px 32px -16px rgba(0, 0, 0, 0.5);
+    }
+    .menu ul { list-style: none; display: grid; }
+    .menu a {
+      display: flex; align-items: center; gap: 10px;
+      min-height: 48px; padding: 0 12px; border-radius: var(--radius);
+      color: var(--text-secondary); text-decoration: none; font-size: 1rem; font-weight: 500;
+    }
+    .menu a:active { background: var(--nav-hover-bg); }
+    .menu a[aria-current='page'] { color: var(--text-primary); font-weight: 600; box-shadow: inset 3px 0 0 var(--color-orange); }
+    .menu-gh { border-top: 1px solid var(--color-border); margin-top: 6px; padding-top: 6px; border-radius: 0; }
+    .scrim { display: block; position: fixed; inset: var(--nav-h) 0 0 0; z-index: 99; background: rgba(0, 0, 0, 0.35); }
+    /* Without JS the row of links comes back, wrapping under the brand. */
+    :global(html:not(.js)) .links { display: flex; flex-wrap: wrap; gap: 0; }
+    :global(html:not(.js)) .links a { padding: 0 6px; font-size: 0.86rem; }
   }
 </style>
