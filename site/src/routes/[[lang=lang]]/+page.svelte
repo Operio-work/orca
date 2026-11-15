@@ -17,9 +17,9 @@
   // Pixel sizes of the demo crops in static/pains (phone crops are 2x captures).
   /** @type {Record<string, [number, number]>} */
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050] };
-  // Pixel sizes of the 0.2.0 captures in static/shots (map, office, keys).
+  // Pixel sizes of the 0.2.0 captures in static/shots (map, office, keys, move, rename).
   /** @type {Record<string, [number, number]>} */
-  const SHOT2 = { map: [910, 560], office: [910, 560], keys: [910, 560] };
+  const SHOT2 = { map: [910, 560], office: [910, 560], keys: [910, 560], move: [910, 560], rename: [910, 560] };
 </script>
 
 <Seo title={h.title} description={h.description} {lang} ogLocale={t.ogLocale} />
@@ -230,6 +230,7 @@
           </tfoot>
         </table>
       </div>
+      <p class="compare-more"><a class="link" href={href(lang, '/managed')}>{h.seeDifferences} <span class="arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></a></p>
       <p class="partner">{h.partnerBody} <a class="link" href={partnersUrl(lang)}>{h.partnerCta}</a></p>
     </div>
   </div>
@@ -242,6 +243,7 @@
       <h2 id="team">{h.team.title}</h2>
       <p>{h.team.lead}</p>
       <a class="btn btn-primary" href={TALK_URL}>{h.secondary} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
+      <a class="link team-more" href={href(lang, '/managed')}>{h.seeDifferences} <span class="arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></a>
     </div>
     <ul class="team-list">
       {#each h.team.items as item}
@@ -469,8 +471,10 @@
   .how h3 { font-size: var(--text-xl); margin-bottom: 10px; }
   .how p { color: var(--text-secondary); max-width: 32ch; }
 
-  /* ── What's new in 0.2.0: three framed captures, then a two-column list ── */
-  .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 40px; }
+  /* ── What's new in 0.2.0: five framed captures in two rows (3 + 2), then a two-column list ── */
+  .shots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin-bottom: 40px; }
+  .shots figure { grid-column: span 2; min-width: 0; }
+  .shots figure:nth-child(n + 4) { grid-column: span 3; }
   .shots img {
     width: 100%;
     border: 1px solid var(--color-border);
@@ -505,6 +509,10 @@
   .team-intro h2 { margin-top: 4px; }
   .team-intro p { color: var(--text-secondary); font-size: var(--text-lg); line-height: 1.55; }
   .team-intro .btn { margin-top: 8px; }
+  .team-more .arrow, .compare-more .arrow { display: inline-block; vertical-align: -3px; margin-left: 4px; transition: transform var(--dur) var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .team-more:hover .arrow, .compare-more:hover .arrow { transform: translateX(3px); }
+  }
   .team-list { list-style: none; border-top: 1px solid var(--color-border); }
   .team-list li {
     display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px;
@@ -557,7 +565,8 @@
   .managed h3 { font-size: var(--text-xl); }
   .managed-head p { margin-top: 8px; color: var(--text-secondary); }
   .managed-head .link { white-space: nowrap; }
-  .partner { margin-top: 16px; font-size: 0.92rem; color: var(--text-secondary); }
+  .compare-more { margin-top: 16px; }
+  .partner { margin-top: 12px; font-size: 0.92rem; color: var(--text-secondary); }
   .partner .link { margin-left: 4px; white-space: nowrap; }
 
   /* ── Compare (inside the business section) ── */
@@ -668,8 +677,14 @@
     .how-n { grid-row: span 2; margin-bottom: 0; }
     .how h3 { font-size: var(--text-lg); margin: 8px 0 4px; }
 
-    /* What's new: the three captures stack, the list is one column. */
-    .shots { grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+    /* What's new: the five captures become one swipeable row (the page does not grow with
+       each capture); the list is one column. */
+    .shots {
+      display: flex; gap: 12px; margin: 0 calc(-1 * var(--gutter)) 24px; padding: 0 var(--gutter) 6px;
+      overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter);
+      -webkit-overflow-scrolling: touch;
+    }
+    .shots figure { flex: 0 0 84%; scroll-snap-align: start; }
     .shots figcaption { margin-top: 8px; }
     .new-list { grid-template-columns: 1fr; }
     .new-list li { padding: 14px 0; }

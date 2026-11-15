@@ -25,6 +25,7 @@
         <a href={href(lang, '/catalog')}>{t.nav.catalog}</a>
         <a href={href(lang, '/install')}>{t.nav.install}</a>
         <a href={href(lang, '/compare')}>{t.nav.compare}</a>
+        <a href={href(lang, '/managed')}>{t.nav.managed}</a>
         <a href={GITHUB_URL}>{t.footer.github}</a>
       </div>
       <div class="col">

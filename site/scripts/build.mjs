@@ -23,7 +23,7 @@ const log = await new Promise((resolve, reject) => {
 const problems = [];
 if (/\[500\]|\b500 GET\b/.test(log)) problems.push('the build log reports a 500 during prerender');
 
-const pages = ['/', '/catalog', '/install', '/compare', ...catalog.entries.map((e) => `/catalog/${e.id}`)];
+const pages = ['/', '/catalog', '/install', '/compare', '/managed', ...catalog.entries.map((e) => `/catalog/${e.id}`)];
 const files = pages.flatMap((p) => [
   p === '/' ? 'index.html' : `${p.slice(1)}.html`,
   p === '/' ? 'es.html' : `es${p}.html`

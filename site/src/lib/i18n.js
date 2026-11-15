@@ -5,7 +5,7 @@ const en = {
   htmlLang: 'en',
   ogLocale: 'en_US',
   skip: 'Skip to content',
-  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', github: 'ORCA on GitHub', home: 'ORCA home' },
+  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', managed: 'Managed', github: 'ORCA on GitHub', home: 'ORCA home' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   by: 'by',
@@ -160,6 +160,16 @@ const en = {
           id: 'keys',
           caption: 'Keys',
           alt: 'The keys panel: the keys set for the agents, by name and last four characters, and the Apply button.'
+        },
+        {
+          id: 'move',
+          caption: 'Move',
+          alt: 'An agent card being dragged onto another tab’s box, with the drop targets lit.'
+        },
+        {
+          id: 'rename',
+          caption: 'Rename',
+          alt: 'The rename field open on a workspace box header.'
         }
       ]
     },
@@ -187,6 +197,7 @@ const en = {
       ['When something breaks', 'You check the log', 'Operio is watching and fixes it']
     ],
     compareFreeCta: 'Install free',
+    seeDifferences: 'See every difference',
 
     team: {
       title: 'Your own panel, run by Operio',
@@ -413,6 +424,115 @@ const en = {
     helpBody: 'Operio runs the routines for you, connected to your real tools and watched so they keep working.'
   },
 
+  managedPage: {
+    metaTitle: 'ORCA Managed by Operio: your own panel, your team, run by Operio',
+    description:
+      'The same ORCA on a server Operio runs for you: your own panel at orca.operio.work behind a login, your team with roles, a team chat with @agent and EN/ES translation, 23 routines, and updates, monitoring and backups handled by Operio.',
+    title: 'Your own panel, run by Operio',
+    lead:
+      'The same ORCA, on a server Operio runs for you. Your team signs in at orca.operio.work and talks to the agents in a team chat, and Operio keeps it updated, watched and backed up.',
+    installFree: 'Install the free version',
+
+    plusTitle: 'Everything in free ORCA, plus',
+    plus: [
+      {
+        title: 'Your team, with roles',
+        body: 'Admins run the agents. Viewers follow along and comment.'
+      },
+      {
+        title: 'Team chat',
+        body: 'A thread on every agent and one team room, with unread badges and @mentions that alert your phone.'
+      },
+      {
+        title: 'Ask an agent from the chat',
+        body: 'Write @agent and the message goes to it as work. Its answer is posted back in the thread.'
+      },
+      {
+        title: 'English and Spanish',
+        body: 'Any message translated with one tap, in either direction.'
+      },
+      {
+        title: 'Model access, set up by Operio',
+        body: 'With your own subscription or key. Nothing to configure on your side.'
+      },
+      {
+        title: 'Updates, monitoring and backups',
+        body: 'Handled by Operio. If something breaks, Operio sees it and fixes it.'
+      }
+    ],
+
+    chat: {
+      title: 'Team chat',
+      lead: 'Your team and your agents in the same place, from the desk and from the phone.',
+      desktopCaption: 'On the desk',
+      desktopAlt:
+        'The team chat on desktop: an agent’s thread with messages from two people, an @agent request and the agent’s answer posted back, with the team room in the sidebar.',
+      phoneCaption: 'In your pocket',
+      phoneAlt:
+        'The team chat on a phone: the team room with an unread badge, a mention, and a Translate link under a message.',
+      points: [
+        'A thread on every agent and one room for the whole team. Follow the threads you care about and mute the rest.',
+        '@mention someone and their phone gets an alert. Unread badges show what you have not read yet.',
+        'Write @agent and the message goes to that agent as work, with the recent thread for context. Its answer comes back in the thread.',
+        'Messages in English or Spanish, translated with one tap.',
+        'Viewers read and comment, they do not run agents. Operio staff can read your chat only when your admin allows it. You can delete your own message within five minutes.'
+      ]
+    },
+
+    diffTitle: 'Free or managed: every difference',
+    diffHead: { topic: 'What you get', free: 'ORCA', managed: 'ORCA Managed by Operio' },
+    diffRows: [
+      ['Where it runs', 'Your own computer', 'A server Operio runs for you'],
+      ['Who can use it', 'One person, on one computer', 'Your team, with roles: admins run the agents, viewers follow and comment'],
+      ['Sign-in', 'None. It listens on localhost only', 'Your own panel at orca.operio.work, behind a login'],
+      ['Team chat', 'No', 'A thread on every agent and a team room, with unread badges, @mentions and phone alerts'],
+      ['Ask an agent from the chat', 'No', 'Yes. @agent sends the message as work and the answer comes back in the thread'],
+      ['Translation EN/ES', 'No', 'Any message, with one tap'],
+      ['Model access', 'Your own key file, or sign in inside the agent', 'Set up by Operio, with your subscription or key'],
+      ['Routines', '5, free. They write reports or drafts', '23. The managed ones send'],
+      ['Sending to customers', 'Never. You copy, paste and send', 'Yes, behind the approvals you set'],
+      ['Updates', 'You run operio-orca update', 'Operio'],
+      ['Monitoring', 'You check the log', 'Operio is watching'],
+      ['Backups', 'One command, run by you', 'Operio'],
+      ['Support', 'The GitHub repo', 'The Operio team']
+    ],
+
+    howTitle: 'How it starts',
+    how: [
+      {
+        title: 'Talk to Operio',
+        body: 'Tell us what your agents do and who on your team needs to see them.'
+      },
+      {
+        title: 'Operio sets up your panel',
+        body: 'Your panel at orca.operio.work, your model access, and the routines you pick.'
+      },
+      {
+        title: 'Your team signs in',
+        body: 'Admins run the agents, viewers follow along, and the team chat is ready.'
+      }
+    ],
+
+    faqTitle: 'Questions',
+    faq: [
+      {
+        q: 'Can Operio read our chat?',
+        a: 'Only when your admin turns it on. Until then, Operio staff cannot see your team chat.'
+      },
+      {
+        q: 'Whose model account is used?',
+        a: 'Yours: your subscription or your API key, set up by Operio. If you do not have one, Operio arranges one with you.'
+      },
+      {
+        q: 'Can we go back to the free version?',
+        a: 'Yes. It is the same ORCA, so your routines and your journal can come with you to your own computer.'
+      }
+    ],
+
+    finalTitle: 'Your panel, your team, run by Operio',
+    finalBody: 'Tell us about your agents and your team. Operio sets up the rest.'
+  },
+
   footer: {
     tagline: 'One board for all your AI agents, on your own computer. Free and open source.',
     madeBy: 'ORCA is made by Operio',
@@ -434,7 +554,7 @@ const es = {
   htmlLang: 'es-MX',
   ogLocale: 'es_MX',
   skip: 'Ir al contenido',
-  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
+  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', managed: 'Gestionado', github: 'ORCA en GitHub', home: 'Inicio de ORCA' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
   by: 'por',
@@ -589,6 +709,16 @@ vsTitle: 'Cómo se compara ORCA',
           id: 'keys',
           caption: 'Claves',
           alt: 'El panel de claves: las claves guardadas para los agentes, por nombre y últimos cuatro caracteres, y el botón Aplicar.'
+        },
+        {
+          id: 'move',
+          caption: 'Mover',
+          alt: 'Un recuadro de agente arrastrándose al cuadro de otra pestaña, con los destinos iluminados.'
+        },
+        {
+          id: 'rename',
+          caption: 'Renombrar',
+          alt: 'El campo para renombrar abierto en la cabecera del cuadro de un espacio de trabajo.'
         }
       ]
     },
@@ -616,6 +746,7 @@ vsTitle: 'Cómo se compara ORCA',
       ['Si algo falla', 'Revisas el registro', 'Operio lo vigila y lo arregla']
     ],
     compareFreeCta: 'Instalar gratis',
+    seeDifferences: 'Ver todas las diferencias',
 
     team: {
       title: 'Tu propio panel, operado por Operio',
@@ -840,6 +971,115 @@ vsTitle: 'Cómo se compara ORCA',
     uninstallBody: 'Quita el panel y su servicio. Agrega --purge para borrar también tu configuración, borradores y registros en ~/.config/operio-orca. Tus asistentes de IA y su trabajo no se tocan.',
     helpTitle: '¿Prefieres no correrlo tú?',
     helpBody: 'Operio opera las rutinas por ti, conectadas a tus herramientas reales y vigiladas para que sigan funcionando.'
+  },
+
+  managedPage: {
+    metaTitle: 'ORCA Gestionado por Operio: tu propio panel, tu equipo, operado por Operio',
+    description:
+      'El mismo ORCA en un servidor que Operio opera por ti: tu propio panel en orca.operio.work con inicio de sesión, tu equipo con roles, un chat de equipo con @agente y traducción EN/ES, 23 rutinas, y actualizaciones, monitoreo y respaldos a cargo de Operio.',
+    title: 'Tu propio panel, operado por Operio',
+    lead:
+      'El mismo ORCA, en un servidor que Operio opera por ti. Tu equipo entra en orca.operio.work y les habla a los agentes en un chat de equipo, y Operio lo mantiene actualizado, vigilado y respaldado.',
+    installFree: 'Instala la versión gratis',
+
+    plusTitle: 'Todo lo de ORCA gratis, más',
+    plus: [
+      {
+        title: 'Tu equipo, con roles',
+        body: 'Los administradores manejan los agentes. Los observadores siguen el trabajo y comentan.'
+      },
+      {
+        title: 'Chat de equipo',
+        body: 'Un hilo en cada agente y una sala para todo el equipo, con contadores de no leídos y @menciones que avisan al celular.'
+      },
+      {
+        title: 'Pídele algo a un agente desde el chat',
+        body: 'Escribe @agente y el mensaje le llega como trabajo. Su respuesta se publica en el hilo.'
+      },
+      {
+        title: 'En inglés y en español',
+        body: 'Cualquier mensaje traducido con un toque, en las dos direcciones.'
+      },
+      {
+        title: 'Acceso a los modelos, configurado por Operio',
+        body: 'Con tu propia suscripción o tu clave. Nada que configurar de tu lado.'
+      },
+      {
+        title: 'Actualizaciones, monitoreo y respaldos',
+        body: 'A cargo de Operio. Si algo falla, Operio lo ve y lo arregla.'
+      }
+    ],
+
+    chat: {
+      title: 'Chat de equipo',
+      lead: 'Tu equipo y tus agentes en el mismo lugar, desde el escritorio y desde el celular.',
+      desktopCaption: 'En el escritorio',
+      desktopAlt:
+        'El chat de equipo en escritorio: el hilo de un agente con mensajes de dos personas, una petición con @agente y la respuesta del agente publicada en el hilo, con la sala de equipo en la barra lateral.',
+      phoneCaption: 'En tu bolsillo',
+      phoneAlt:
+        'El chat de equipo en un celular: la sala de equipo con un contador de no leídos, una mención y un enlace Traducir debajo de un mensaje.',
+      points: [
+        'Un hilo en cada agente y una sala para todo el equipo. Sigue los hilos que te importan y silencia los demás.',
+        'Menciona a alguien con @ y le llega un aviso al celular. Los contadores de no leídos te muestran lo que te falta leer.',
+        'Escribe @agente y el mensaje le llega a ese agente como trabajo, con los mensajes recientes del hilo como contexto. Su respuesta vuelve al hilo.',
+        'Mensajes en inglés o en español, traducidos con un toque.',
+        'Los observadores leen y comentan, no manejan agentes. El personal de Operio solo puede leer tu chat cuando tu administrador lo permite. Puedes borrar tu propio mensaje durante cinco minutos.'
+      ]
+    },
+
+    diffTitle: 'Gratis o gestionado: todas las diferencias',
+    diffHead: { topic: 'Qué obtienes', free: 'ORCA', managed: 'ORCA Gestionado por Operio' },
+    diffRows: [
+      ['Dónde corre', 'En tu propia computadora', 'En un servidor que Operio opera por ti'],
+      ['Quién lo usa', 'Una persona, en una computadora', 'Tu equipo, con roles: los administradores manejan los agentes, los observadores siguen y comentan'],
+      ['Inicio de sesión', 'Ninguno. Escucha solo en localhost', 'Tu propio panel en orca.operio.work, con inicio de sesión'],
+      ['Chat de equipo', 'No', 'Un hilo en cada agente y una sala de equipo, con contadores de no leídos, @menciones y avisos al celular'],
+      ['Pedirle algo a un agente desde el chat', 'No', 'Sí. @agente le manda el mensaje como trabajo y la respuesta vuelve al hilo'],
+      ['Traducción EN/ES', 'No', 'Cualquier mensaje, con un toque'],
+      ['Acceso a los modelos', 'Tu propio archivo de claves, o inicias sesión dentro del agente', 'Lo configura Operio, con tu suscripción o tu clave'],
+      ['Rutinas', '5, gratis. Escriben reportes o borradores', '23. Las gestionadas envían'],
+      ['Envíos a clientes', 'Nunca. Tú copias, pegas y envías', 'Sí, con las aprobaciones que tú pones'],
+      ['Actualizaciones', 'Tú corres operio-orca update', 'Operio'],
+      ['Monitoreo', 'Revisas el registro', 'Operio lo vigila'],
+      ['Respaldos', 'Un comando, lo corres tú', 'Operio'],
+      ['Soporte', 'El repositorio en GitHub', 'El equipo de Operio']
+    ],
+
+    howTitle: 'Cómo empieza',
+    how: [
+      {
+        title: 'Habla con Operio',
+        body: 'Cuéntanos qué hacen tus agentes y quién de tu equipo necesita verlos.'
+      },
+      {
+        title: 'Operio configura tu panel',
+        body: 'Tu panel en orca.operio.work, tu acceso a los modelos y las rutinas que elijas.'
+      },
+      {
+        title: 'Tu equipo entra',
+        body: 'Los administradores manejan los agentes, los observadores siguen el trabajo, y el chat de equipo queda listo.'
+      }
+    ],
+
+    faqTitle: 'Preguntas',
+    faq: [
+      {
+        q: '¿Operio puede leer nuestro chat?',
+        a: 'Solo cuando tu administrador lo activa. Mientras no lo haga, el personal de Operio no ve tu chat de equipo.'
+      },
+      {
+        q: '¿Qué cuenta de modelo se usa?',
+        a: 'La tuya: tu suscripción o tu clave de API, configurada por Operio. Si no tienes una, Operio la consigue contigo.'
+      },
+      {
+        q: '¿Podemos regresar a la versión gratis?',
+        a: 'Sí. Es el mismo ORCA, así que tus rutinas y tu bitácora se van contigo a tu propia computadora.'
+      }
+    ],
+
+    finalTitle: 'Tu panel, tu equipo, operado por Operio',
+    finalBody: 'Cuéntanos de tus agentes y de tu equipo. Operio configura el resto.'
   },
 
   footer: {

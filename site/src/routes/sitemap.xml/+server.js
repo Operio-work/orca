@@ -3,7 +3,7 @@ import { SITE, href } from '#lib/site.js';
 
 export const prerender = true;
 
-const PAGES = ['/', '/catalog', '/install', '/compare', ...entries.map((e) => `/catalog/${e.id}`)];
+const PAGES = ['/', '/catalog', '/install', '/compare', '/managed', ...entries.map((e) => `/catalog/${e.id}`)];
 
 /** @param {string} lang @param {string} p */
 const abs = (lang, p) => SITE + href(lang, p);
