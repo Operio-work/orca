@@ -111,6 +111,59 @@ const en = {
       }
     ],
 
+    whatsNew: {
+      title: 'What’s new in 0.2.0',
+      items: [
+        {
+          title: 'A map you can rearrange',
+          body: 'Drag an agent next to another one, onto a tab, or to the bar at the bottom for a new tab or workspace. Drag a box header to reorder, and rename workspaces and tabs from the pencil.'
+        },
+        {
+          title: 'Office view is a tower',
+          body: 'One floor per workspace, a lift that carries agents between floors, a red room and a flag on the roof when an agent needs you, and a sky that follows your clock.'
+        },
+        {
+          title: 'A hover card on desktop',
+          body: 'The task, the last reply, agent and model, folder and jobs at a glance.'
+        },
+        {
+          title: 'Switch a Claude agent’s model from its card',
+          body: 'Fable, Opus, Sonnet or Haiku, while the agent is idle.'
+        },
+        {
+          title: 'API keys from the panel',
+          body: 'The key icon in the header adds or removes keys for your agents and applies them when no agent is working. Values are never shown back and never reach the log. Subscriptions keep signing in inside the agent, as before.'
+        },
+        {
+          title: 'New commands',
+          body: 'doctor (one line per check, with the fix), logs, open, backup and restore, and update --check.'
+        },
+        {
+          title: 'Windows (WSL2) without systemd',
+          body: 'The installer starts the panel by hand and prints the recipe that makes it start with Ubuntu.'
+        }
+      ],
+      note: 'Also new: the icon, and the header now reads “ORCA · by Operio”.',
+      changelog: 'Full changelog',
+      shots: [
+        {
+          id: 'map',
+          caption: 'Map',
+          alt: 'The map: agent cards grouped by tab and workspace, with one card being dragged to another tab.'
+        },
+        {
+          id: 'office',
+          caption: 'Office',
+          alt: 'The office view as a tower: one floor per workspace, a lift between floors, and a red room with a flag on the roof.'
+        },
+        {
+          id: 'keys',
+          caption: 'Keys',
+          alt: 'The keys panel: the keys set for the agents, by name and last four characters, and the Apply button.'
+        }
+      ]
+    },
+
     bizTitle: 'Run a business?',
     bizBody:
       'ORCA also runs office routines on a schedule: a morning brief, review replies, a weekly report. They read the files you give them and write a report or a draft. Nothing reaches your customers until you send it.',
@@ -127,11 +180,40 @@ const en = {
     compareHead: { topic: 'What you get', free: 'ORCA', managed: 'ORCA Managed by Operio' },
     compareRows: [
       ['Where it runs', 'Your own computer', 'Operio runs it for you'],
+      ['Who can use it', 'You, on your computer', 'Your team, with roles'],
+      ['Team chat', 'No', 'Threads per agent, a team room, EN/ES translation'],
       ['Sending to customers', 'Never. You copy, paste and send', 'Yes, behind the approvals you set'],
       ['Setup', 'You install it with one line', 'Operio sets it up with you'],
       ['When something breaks', 'You check the log', 'Operio is watching and fixes it']
     ],
     compareFreeCta: 'Install free',
+
+    team: {
+      title: 'Your own panel, run by Operio',
+      lead: 'The same ORCA, on a server Operio runs for you, with your team signed in.',
+      items: [
+        {
+          title: 'Your team, with roles',
+          body: 'Admins run the agents, viewers follow along and comment.'
+        },
+        {
+          title: 'Team chat',
+          body: 'A thread on every agent and one team room, with alerts when someone mentions you.'
+        },
+        {
+          title: 'Ask an agent from the chat',
+          body: 'Write @agent and the message goes to it as work; its answer comes back in the thread.'
+        },
+        {
+          title: 'English and Spanish',
+          body: 'Messages in both languages, translated with one tap.'
+        },
+        {
+          title: 'Operio keeps it running',
+          body: 'Model access, updates and monitoring handled by Operio.'
+        }
+      ]
+    },
 
     securityTitle: 'It stays on your computer',
     security: [
@@ -183,6 +265,10 @@ const en = {
       {
         q: 'How can I see it before I set anything up?',
         a: 'Run operio-orca demo. It opens a second panel with two fictional businesses whose agents work, ask you questions and finish, with no real data and no cost.'
+      },
+      {
+        q: 'Can my team use it?',
+        a: 'The free panel is for one person on one computer. ORCA Managed by Operio adds people with roles and a team chat, and Operio runs it for you.'
       }
     ],
 
@@ -454,6 +540,59 @@ vsTitle: 'Cómo se compara ORCA',
       }
     ],
 
+    whatsNew: {
+      title: 'Novedades de la 0.2.0',
+      items: [
+        {
+          title: 'Un mapa que puedes reacomodar',
+          body: 'Arrastra un agente junto a otro, a una pestaña o a la barra de abajo para crear una pestaña o un espacio de trabajo nuevos. Arrastra la cabecera de un recuadro para reordenar, y renombra espacios de trabajo y pestañas desde el lápiz.'
+        },
+        {
+          title: 'La vista de oficina es una torre',
+          body: 'Un piso por espacio de trabajo, un elevador que lleva a los agentes entre pisos, un cuarto en rojo y una bandera en el techo cuando un agente te necesita, y un cielo que sigue tu reloj.'
+        },
+        {
+          title: 'Una tarjeta al pasar el cursor, en escritorio',
+          body: 'La tarea, la última respuesta, agente y modelo, carpeta y trabajos de un vistazo.'
+        },
+        {
+          title: 'Cambia el modelo de un agente de Claude desde su recuadro',
+          body: 'Fable, Opus, Sonnet o Haiku, mientras el agente está inactivo.'
+        },
+        {
+          title: 'Claves de API desde el panel',
+          body: 'El ícono de llave en la cabecera agrega o quita claves para tus agentes y las aplica cuando ninguno está trabajando. Los valores nunca se muestran de vuelta ni llegan al registro. Las suscripciones siguen iniciando sesión dentro del agente, como antes.'
+        },
+        {
+          title: 'Comandos nuevos',
+          body: 'doctor (una línea por revisión, con el arreglo), logs, open, backup y restore, y update --check.'
+        },
+        {
+          title: 'Windows (WSL2) sin systemd',
+          body: 'El instalador arranca el panel a mano y muestra la receta para que arranque con Ubuntu.'
+        }
+      ],
+      note: 'También nuevos: el ícono, y la cabecera ahora dice “ORCA · por Operio”.',
+      changelog: 'Registro de cambios completo',
+      shots: [
+        {
+          id: 'map',
+          caption: 'Mapa',
+          alt: 'El mapa: recuadros de agentes agrupados por pestaña y espacio de trabajo, con uno arrastrándose a otra pestaña.'
+        },
+        {
+          id: 'office',
+          caption: 'Oficina',
+          alt: 'La vista de oficina como torre: un piso por espacio de trabajo, un elevador entre pisos y un cuarto en rojo con una bandera en el techo.'
+        },
+        {
+          id: 'keys',
+          caption: 'Claves',
+          alt: 'El panel de claves: las claves guardadas para los agentes, por nombre y últimos cuatro caracteres, y el botón Aplicar.'
+        }
+      ]
+    },
+
     bizTitle: '¿Tienes un negocio?',
     bizBody:
       'ORCA también corre rutinas de oficina a la hora que elijas: un resumen matutino, respuestas a reseñas, un reporte semanal. Leen los archivos que les das y escriben un reporte o un borrador. Nada les llega a tus clientes hasta que tú lo envías.',
@@ -470,11 +609,40 @@ vsTitle: 'Cómo se compara ORCA',
     compareHead: { topic: 'Qué obtienes', free: 'ORCA', managed: 'ORCA Gestionado por Operio' },
     compareRows: [
       ['Dónde corre', 'En tu propia computadora', 'Operio lo opera por ti'],
+      ['Quién lo usa', 'Tú, en tu computadora', 'Tu equipo, con roles'],
+      ['Chat de equipo', 'No', 'Hilos por agente, una sala de equipo, traducción EN/ES'],
       ['Envíos a clientes', 'Nunca. Tú copias, pegas y envías', 'Sí, con las aprobaciones que tú pones'],
       ['Instalación', 'La instalas tú con una línea', 'Operio la configura contigo'],
       ['Si algo falla', 'Revisas el registro', 'Operio lo vigila y lo arregla']
     ],
     compareFreeCta: 'Instalar gratis',
+
+    team: {
+      title: 'Tu propio panel, operado por Operio',
+      lead: 'El mismo ORCA, en un servidor que Operio opera por ti, con tu equipo conectado.',
+      items: [
+        {
+          title: 'Tu equipo, con roles',
+          body: 'Los administradores manejan los agentes; los observadores siguen el trabajo y comentan.'
+        },
+        {
+          title: 'Chat de equipo',
+          body: 'Un hilo en cada agente y una sala para todo el equipo, con avisos cuando alguien te menciona.'
+        },
+        {
+          title: 'Pídele algo a un agente desde el chat',
+          body: 'Escribe @agente y el mensaje le llega como trabajo; su respuesta vuelve al hilo.'
+        },
+        {
+          title: 'En inglés y en español',
+          body: 'Mensajes en los dos idiomas, traducidos con un toque.'
+        },
+        {
+          title: 'Operio lo mantiene funcionando',
+          body: 'Acceso a los modelos, actualizaciones y monitoreo a cargo de Operio.'
+        }
+      ]
+    },
 
     securityTitle: 'Se queda en tu computadora',
     security: [
@@ -526,6 +694,10 @@ vsTitle: 'Cómo se compara ORCA',
       {
         q: '¿Cómo lo veo antes de configurar algo?',
         a: 'Corre operio-orca demo. Abre un segundo panel con dos negocios ficticios cuyos agentes trabajan, te hacen preguntas y terminan, sin datos reales y sin costo.'
+      },
+      {
+        q: '¿Lo puede usar mi equipo?',
+        a: 'El panel gratis es para una persona en una computadora. ORCA Gestionado por Operio agrega personas con roles y un chat de equipo, y Operio lo opera por ti.'
       }
     ],
 

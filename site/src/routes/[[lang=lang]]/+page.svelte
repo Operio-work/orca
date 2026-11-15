@@ -5,7 +5,7 @@
   import Icon from '#lib/components/Icon.svelte';
   import OperioLogo from '#lib/components/OperioLogo.svelte';
   import { freeEntries, packOutput } from '#lib/catalog.js';
-  import { href, INSTALL_CMD, TALK_URL, partnersUrl } from '#lib/site.js';
+  import { href, GITHUB_URL, INSTALL_CMD, TALK_URL, partnersUrl } from '#lib/site.js';
 
   let { data } = $props();
   const lang = $derived(data.lang);
@@ -17,6 +17,9 @@
   // Pixel sizes of the demo crops in static/pains (phone crops are 2x captures).
   /** @type {Record<string, [number, number]>} */
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050] };
+  // Pixel sizes of the 0.2.0 captures in static/shots (map, office, keys).
+  /** @type {Record<string, [number, number]>} */
+  const SHOT2 = { map: [910, 560], office: [910, 560], keys: [910, 560] };
 </script>
 
 <Seo title={h.title} description={h.description} {lang} ogLocale={t.ogLocale} />
@@ -131,6 +134,39 @@
   </div>
 </section>
 
+<section class="section" aria-labelledby="whats-new">
+  <div class="container">
+    <div class="section-head"><h2 id="whats-new">{h.whatsNew.title}</h2></div>
+    <div class="shots">
+      {#each h.whatsNew.shots as s}
+        <figure>
+          <img
+            src="/shots/{s.id}-{lang}.webp"
+            width={SHOT2[s.id][0]}
+            height={SHOT2[s.id][1]}
+            alt={s.alt}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>{s.caption}</figcaption>
+        </figure>
+      {/each}
+    </div>
+    <ul class="new-list">
+      {#each h.whatsNew.items as item}
+        <li>
+          <span class="new-mark" aria-hidden="true"><Icon name="check" size={14} /></span>
+          <div>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </div>
+        </li>
+      {/each}
+    </ul>
+    <p class="new-note">{h.whatsNew.note} <a class="link" href="{GITHUB_URL}/blob/main/CHANGELOG.md">{h.whatsNew.changelog}</a></p>
+  </div>
+</section>
+
 <section class="section biz" aria-labelledby="biz">
   <div class="container">
     <div class="biz-grid">
@@ -196,6 +232,28 @@
       </div>
       <p class="partner">{h.partnerBody} <a class="link" href={partnersUrl(lang)}>{h.partnerCta}</a></p>
     </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="team">
+  <div class="container team-grid">
+    <div class="team-intro">
+      <span class="tier tier-managed">{t.tier.managedLong}</span>
+      <h2 id="team">{h.team.title}</h2>
+      <p>{h.team.lead}</p>
+      <a class="btn btn-primary" href={TALK_URL}>{h.secondary} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
+    </div>
+    <ul class="team-list">
+      {#each h.team.items as item}
+        <li>
+          <span class="team-mark" aria-hidden="true"><Icon name="check" size={16} /></span>
+          <div>
+            <h3>{item.title}</h3>
+            <p>{item.body}</p>
+          </div>
+        </li>
+      {/each}
+    </ul>
   </div>
 </section>
 
@@ -370,9 +428,10 @@
     mask-image: linear-gradient(90deg, #000 calc(100% - 140px), transparent calc(100% - 20px));
   }
   /* The captures are light; take the glare off them on a dark page. */
-  :global([data-theme='dark']) .stage img { filter: brightness(0.93); }
+  :global([data-theme='dark']) .stage img, :global([data-theme='dark']) .shots img { filter: brightness(0.93); }
   @media (prefers-color-scheme: dark) {
-    :global(:root:not([data-theme='light'])) .stage img { filter: brightness(0.93); }
+    :global(:root:not([data-theme='light'])) .stage img,
+    :global(:root:not([data-theme='light'])) .shots img { filter: brightness(0.93); }
   }
 
   /* ── How ORCA compares: three lines and a link, no table on the home page ── */
@@ -409,6 +468,56 @@
   }
   .how h3 { font-size: var(--text-xl); margin-bottom: 10px; }
   .how p { color: var(--text-secondary); max-width: 32ch; }
+
+  /* ── What's new in 0.2.0: three framed captures, then a two-column list ── */
+  .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-bottom: 40px; }
+  .shots img {
+    width: 100%;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-card);
+  }
+  .shots figcaption {
+    margin-top: 10px;
+    font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600;
+    letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-tertiary);
+  }
+  .new-list { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; border-top: 1px solid var(--color-border); }
+  .new-list li {
+    display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px;
+    padding: 18px 0; border-bottom: 1px solid var(--color-border);
+  }
+  .new-mark {
+    display: grid; place-items: center;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--tint-orange); color: var(--color-orange-ink);
+    transform: translateY(2px);
+  }
+  .new-list h3 { font-size: 1.05rem; font-weight: 650; }
+  .new-list p { margin-top: 4px; font-size: 0.95rem; color: var(--text-secondary); max-width: 52ch; }
+  .new-note { margin-top: 20px; font-size: 0.92rem; color: var(--text-secondary); }
+  .new-note .link { margin-left: 4px; white-space: nowrap; }
+
+  /* ── ORCA Managed by Operio: the panel with your team in it ── */
+  .team-grid { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: 56px; align-items: start; }
+  .team-intro { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .team-intro h2 { margin-top: 4px; }
+  .team-intro p { color: var(--text-secondary); font-size: var(--text-lg); line-height: 1.55; }
+  .team-intro .btn { margin-top: 8px; }
+  .team-list { list-style: none; border-top: 1px solid var(--color-border); }
+  .team-list li {
+    display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 14px;
+    padding: 20px 0; border-bottom: 1px solid var(--color-border);
+  }
+  .team-mark {
+    display: grid; place-items: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--tint-orange); color: var(--color-orange-ink);
+    border: 1px solid color-mix(in srgb, var(--color-orange) 45%, var(--color-border));
+  }
+  .team-list h3 { font-size: 1.05rem; font-weight: 650; }
+  .team-list p { margin-top: 4px; color: var(--text-secondary); max-width: 52ch; }
 
   /* ── Run a business? ── */
   .biz { background: var(--color-surface); }
@@ -504,7 +613,7 @@
   @media (max-width: 900px) {
     .vs-grid { grid-template-columns: 1fr; gap: 20px; }
     .pain { grid-template-columns: 1fr; gap: 24px; padding: 32px 0; }
-    .biz-grid, .faq-grid { grid-template-columns: 1fr; gap: 32px; }
+    .biz-grid, .faq-grid, .team-grid { grid-template-columns: 1fr; gap: 32px; }
     .faq-grid .section-head { margin-bottom: 0; }
   }
   @media (max-width: 768px) {
@@ -558,6 +667,22 @@
     .how li { display: grid; grid-template-columns: 40px 1fr; column-gap: 18px; }
     .how-n { grid-row: span 2; margin-bottom: 0; }
     .how h3 { font-size: var(--text-lg); margin: 8px 0 4px; }
+
+    /* What's new: the three captures stack, the list is one column. */
+    .shots { grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px; }
+    .shots figcaption { margin-top: 8px; }
+    .new-list { grid-template-columns: 1fr; }
+    .new-list li { padding: 14px 0; }
+    .new-list h3 { font-size: 1rem; }
+    .new-list p, .team-list p, .new-note { font-size: 0.92rem; line-height: 1.5; }
+
+    .team-grid { gap: 24px; }
+    .team-intro { gap: 12px; }
+    .team-intro p { font-size: 1rem; line-height: 1.5; }
+    .team-intro .btn { width: 100%; }
+    .team-list li { grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; padding: 14px 0; }
+    .team-mark { width: 24px; height: 24px; }
+    .team-list h3 { font-size: 1rem; }
 
     .biz-grid { gap: 24px; }
     .free-list a { grid-template-columns: minmax(0, 1fr) 20px; gap: 8px 16px; padding: 14px 0; margin: 0; }

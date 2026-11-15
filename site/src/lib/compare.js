@@ -249,7 +249,7 @@ export const copy = {
     },
     managed: {
       title: 'ORCA Managed by Operio',
-      body: 'Want it always on, without your computer? Operio runs it for you in the cloud, set up with you and watched so it keeps working.',
+      body: 'Want it always on, without your computer? Operio runs it for you in the cloud, set up with you and watched so it keeps working. Your team signs in with roles and talks to the agents in a team chat.',
       cta: 'Have Operio run it for you'
     }
   },
@@ -294,7 +294,7 @@ export const copy = {
     },
     managed: {
       title: 'ORCA Gestionado por Operio',
-      body: '¿Lo quieres siempre prendido, sin tu computadora? Operio lo opera por ti en la nube, configurado contigo y vigilado para que siga funcionando.',
+      body: '¿Lo quieres siempre prendido, sin tu computadora? Operio lo opera por ti en la nube, configurado contigo y vigilado para que siga funcionando. Tu equipo entra con roles y les habla a los agentes en un chat de equipo.',
       cta: 'Que Operio lo opere por ti'
     }
   }
