@@ -407,3 +407,70 @@ test('skills: install from stdin, list, catalog-set 0600, refuse bad input, remo
   assert.equal(run(['skills', 'remove', 'review-replies']).stdout, 'review-replies was not installed\n');
   assert.equal(run(['skills', 'list']).stdout, '');
 });
+
+// ─── kb: the business's documents, searched by agents (and by ORCA Host through the CLI) ──
+test('kb: add from stdin, list, status, search (argument or stdin, --json, -n, --collection), remove', () => {
+  let r = run(['kb', 'add', 'prices/menu.md'], {}, HOME, '# Menu\n\nTacos al pastor 25 MXN.\nQuesadillas 40 MXN.\n');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.stdout, 'added prices/menu.md (52 bytes, 1 chunks)\n');
+  r = run(['kb', 'add', 'hours.txt'], {}, HOME, 'Open Monday to Saturday, 9 to 21. Closed Sunday.\n');
+  assert.equal(r.code, 0, r.out);
+  assert.equal(mode(path.join(CONFIG, 'knowledge', 'prices', 'menu.md')), '600');
+  assert.ok(fs.lstatSync(path.join(HOME, '.claude', 'skills', 'business-knowledge')).isSymbolicLink(), 'the first document installs business-knowledge');
+  assert.match(run(['skills', 'list']).stdout, /^business-knowledge v1$/m);
+
+  assert.equal(run(['kb', 'list']).stdout, 'hours.txt  49  1  indexed\nprices/menu.md  52  1  indexed\n');
+  r = run(['kb', 'status']);
+  assert.match(r.stdout, /^files: 2 \(2 indexed, 0 skipped/m);
+  assert.match(r.stdout, /^chunks: 2$/m);
+  assert.match(r.stdout, /^collections: prices$/m);
+  assert.match(r.stdout, /^semantic: off \(keyword search on the free panel\)$/m);
+
+  r = run(['kb', 'search', 'price of tacos']);
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.stdout, /^1\. prices\/menu\.md:1-4\n {3}# Menu Tacos al pastor 25 MXN/);
+  assert.match(r.stdout, /Cite the source when you use it\.\n$/);
+  r = run(['kb', 'search', '-n', '1', '--json'], {}, HOME, 'are you closed on sunday\n'); // the question on stdin
+  const j = JSON.parse(r.stdout);
+  assert.equal(j.mode, 'keyword');
+  assert.deepEqual(j.results.map(x => [x.source, x.lines]), [['hours.txt', '1-1']]);
+  assert.deepEqual(Object.keys(j.results[0]).sort(), ['lines', 'score', 'snippet', 'source']);
+  assert.deepEqual(JSON.parse(run(['kb', 'search', 'closed', '--collection', 'prices', '--json']).stdout).results, []);
+  r = run(['kb', 'search', '-', '-n', '1', '--json'], {}, HOME, 'price of tacos\n'); // `-`: the question on stdin (ORCA Host's wrapper)
+  assert.equal(r.code, 0, r.out);
+  assert.equal(JSON.parse(r.stdout).results[0].source, 'prices/menu.md');
+  assert.match(run(['kb', 'search', 'helicopter']).stdout, /^Nothing found/);
+
+  // Hosted (learned from $CONFIG_DIR/env): meaning search turns on with a key in llm.env, says why not without.
+  const envFile = path.join(CONFIG, 'env'), llmFile = path.join(CONFIG, 'llm.env');
+  const envBefore = fs.readFileSync(envFile, 'utf8');
+  const llmBefore = fs.existsSync(llmFile) ? fs.readFileSync(llmFile, 'utf8') : null;
+  fs.writeFileSync(envFile, envBefore + 'OPERIO_ORCA_HOSTED=1\n');
+  try {
+    fs.writeFileSync(llmFile, '# test\n', { mode: 0o600 });
+    assert.match(run(['kb', 'status']).stdout, /^semantic: off \(no VOYAGE_API_KEY or OPENAI_API_KEY in llm\.env\)$/m);
+    fs.writeFileSync(llmFile, 'VOYAGE_API_KEY=pa-cli-test\n', { mode: 0o600 });
+    r = run(['kb', 'status']);
+    assert.match(r.stdout, /^semantic: on \(voyage voyage-4-lite\)$/m);
+    assert.ok(!r.out.includes('pa-cli-test'));
+  } finally {
+    fs.writeFileSync(envFile, envBefore);
+    if (llmBefore == null) fs.rmSync(llmFile); else fs.writeFileSync(llmFile, llmBefore, { mode: 0o600 });
+  }
+
+  r = run(['kb', 'add', '../escape.md'], {}, HOME, 'x');
+  assert.notEqual(r.code, 0);
+  assert.match(r.out, /bad_path/);
+  assert.match(run(['kb', 'add', 'x.sh'], {}, HOME, 'x').out, /bad_type/);
+  assert.notEqual(run(['kb', 'add'], {}, HOME, 'x').code, 0);
+  assert.notEqual(run(['kb', 'search', 'x', '-n', '99']).code, 0);
+  assert.notEqual(run(['kb', 'nope']).code, 0);
+  assert.match(run(['kb', 'reindex', '--full']).stdout, /^indexed 2 files \(2 chunks\), 0 skipped; 2 changed, 0 removed$/m);
+
+  assert.equal(run(['kb', 'remove', 'prices/menu.md']).stdout, 'removed prices/menu.md\n');
+  assert.equal(run(['kb', 'remove', 'prices/menu.md']).stdout, 'prices/menu.md was not there\n');
+  assert.ok(!fs.existsSync(path.join(CONFIG, 'knowledge', 'prices')));
+  assert.equal(run(['kb', 'remove', 'hours.txt']).code, 0);
+  assert.equal(run(['kb', 'list']).stdout, '');
+  assert.equal(run(['skills', 'remove', 'business-knowledge']).code, 0);
+});

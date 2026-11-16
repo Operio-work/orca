@@ -18,6 +18,9 @@
 #                         templates set (JSON on stdin) | show | clear
 #   operio-orca skills      skills your agents can use (~/.config/operio-orca/skills):
 #                         skills list | remove KEY | install, catalog-set (JSON on stdin)
+#   operio-orca kb          the business's documents for agents (~/.config/operio-orca/knowledge):
+#                         kb search "question" [-n 5] [--collection NAME] [--json] | add PATH (stdin)
+#                         | remove PATH | list | status | reindex [--full]
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -590,6 +593,31 @@ cmd_skills() {
   "$NODE_BIN" "$APP_DIR/lib/skills-cli.js" "$sub" "$CONFIG_DIR" "${2:-}"
 }
 
+cmd_kb() {
+  local sub="${1:-}"
+  case "$sub" in
+    search|add|remove|list|status|reindex) ;;
+    ''|help|-h|--help) printf '%s\n' \
+      'operio-orca kb search "question" [-n 5] [--collection NAME] [--json]' \
+      '                                   search the documents (question "-": read it from stdin)' \
+      'operio-orca kb add PATH            the file on stdin → knowledge/PATH (md txt csv json html pdf, 5 MB max)' \
+      'operio-orca kb remove PATH         remove a document' \
+      'operio-orca kb list                PATH  bytes  chunks  indexed|skipped:REASON' \
+      'operio-orca kb status              files, chunks, collections, semantic on/off, last indexed' \
+      'operio-orca kb reindex [--full]    index changed files now (--full: all of them)'; return 0 ;;
+    *) die "unknown kb command: $sub (search, add, remove, list, status, reindex)" ;;
+  esac
+  shift
+  [ -n "$NODE_BIN" ] || die "node not found"
+  # Hosted (meaning search on the client's key) comes from the environment, else from $CONFIG_DIR/env.
+  local hosted="${OPERIO_ORCA_HOSTED:-}" model="${OPERIO_ORCA_KB_MODEL:-}"
+  if [ -f "$ENV_FILE" ]; then
+    [ -n "$hosted" ] || hosted="$( (set -a; . "$ENV_FILE" >/dev/null 2>&1; printf '%s' "${OPERIO_ORCA_HOSTED:-}") )"
+    [ -n "$model" ] || model="$( (set -a; . "$ENV_FILE" >/dev/null 2>&1; printf '%s' "${OPERIO_ORCA_KB_MODEL:-}") )"
+  fi
+  OPERIO_ORCA_HOSTED="$hosted" OPERIO_ORCA_KB_MODEL="$model" "$NODE_BIN" "$APP_DIR/lib/kb-cli.js" "$sub" "$CONFIG_DIR" "$APP_DIR" "$@"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -701,10 +729,11 @@ case "${1:-help}" in
   llm) shift; cmd_llm "$@" ;;
   templates) shift; cmd_templates "$@" ;;
   skills) shift; cmd_skills "$@" ;;
+  kb) shift; cmd_kb "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,26p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,29p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac
