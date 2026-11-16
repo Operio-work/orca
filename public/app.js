@@ -50,7 +50,7 @@ const T = {
     linksTitle: 'Links', relWaitsOn: 'Depends on', relFeeds: 'Feeds', relTalk: 'Talks with', linkAdd: 'Link', linkRemove: 'Remove link with {0}', linkPick: 'Pick an agent', linkNone: 'No links yet', linkAdded: 'Linked with {0}', linkRemoved: 'Link removed', linksN: '{0} linked',
     linkHint: 'Linked agents can message each other (orca-send). When an agent it depends on finishes, you approve the hand-off — nothing is sent without you.',
     handTitle: '{0} finished', handTo: 'Hand its result to {0}?', handNote: 'Note for {0} (optional)', handSend: 'Send to {0}', handDismiss: 'Not now', handSent: 'Handed to {0}', handQueued: 'Queued for {0} — it gets it when idle', handBadge: 'Hand-off', tHand: 'hand off', tWaits: 'waits on {0}', tMsgs: '{0} messages in 24h',
-    msgsTitle: 'Messages', msgNone: 'No messages yet', msgIntro: 'ORCA note', msgHandoff: 'Hand-off', msgQueued: 'queued', msgFailed: 'not delivered',
+    msgsTitle: 'Messages', msgNone: 'No messages yet', msgIntro: 'ORCA note', msgHandoff: 'Hand-off', msgQueued: 'queued', msgFailed: 'not delivered', tTalk: '{0} ↔ {1} · {2} messages in 24h · last {3} ago', tTalkQueued: ' · {0} waiting', tTalkOpen: 'Open the messages',
     e_link_exists: 'Those two are already linked that way.', e_link_cycle: 'That would make them wait on each other.', e_link_self: 'Pick another agent.',
     memHint: 'RAM each agent uses, counting everything it started (tools, MCP servers, dev servers). Shared memory is split fairly, so the rows add up to the agents total. Updates every 15 s.',
     replyPlaceholder: 'Message this agent…', suggest: 'Name it “{0}”',
@@ -154,7 +154,7 @@ const T = {
     linksTitle: 'Enlaces', relWaitsOn: 'Depende de', relFeeds: 'Alimenta a', relTalk: 'Habla con', linkAdd: 'Enlazar', linkRemove: 'Quitar enlace con {0}', linkPick: 'Elige un agente', linkNone: 'Sin enlaces', linkAdded: 'Enlazado con {0}', linkRemoved: 'Enlace quitado', linksN: '{0} enlazados',
     linkHint: 'Los agentes enlazados pueden escribirse (orca-send). Cuando termina un agente del que depende, tú apruebas el relevo — nada se envía sin ti.',
     handTitle: '{0} terminó', handTo: '¿Pasar su resultado a {0}?', handNote: 'Nota para {0} (opcional)', handSend: 'Enviar a {0}', handDismiss: 'Ahora no', handSent: 'Pasado a {0}', handQueued: 'En cola para {0} — lo recibe al quedar libre', handBadge: 'Relevo', tHand: 'relevo', tWaits: 'espera a {0}', tMsgs: '{0} mensajes en 24 h',
-    msgsTitle: 'Mensajes', msgNone: 'Sin mensajes', msgIntro: 'Nota de ORCA', msgHandoff: 'Relevo', msgQueued: 'en cola', msgFailed: 'no entregado',
+    msgsTitle: 'Mensajes', msgNone: 'Sin mensajes', msgIntro: 'Nota de ORCA', msgHandoff: 'Relevo', msgQueued: 'en cola', msgFailed: 'no entregado', tTalk: '{0} ↔ {1} · {2} mensajes en 24 h · último hace {3}', tTalkQueued: ' · {0} en espera', tTalkOpen: 'Abrir los mensajes',
     e_link_exists: 'Esos dos ya están enlazados así.', e_link_cycle: 'Así se esperarían el uno al otro.', e_link_self: 'Elige otro agente.',
     memHint: 'RAM que usa cada agente, contando todo lo que inició (herramientas, servidores MCP, servidores de desarrollo). La memoria compartida se reparte, así que las filas suman el total de agentes. Se actualiza cada 15 s.',
     replyPlaceholder: 'Mensaje para este agente…', suggest: 'Nombrar “{0}”',
@@ -257,7 +257,7 @@ let tagLib = [];              // every saved tag: { tag, n (agents using it), la
 let access = { admin: true, folders: null, shell: { confirmed: false, unlockedUntil: 0, unlockMs: 900000 } };
 let mapOrder = [], orderPending = false; // the order of the tab boxes on the map (tab ids)
 let chatCounts = { room: null, byPane: {} }; // team chat unread counts (chat.js)
-let links = [], handoffs = [], msgCounts = {}; // agent links (by pane), open hand-offs, message counts
+let links = [], handoffs = [], msgCounts = {}, talk = []; // agent links (by pane), open hand-offs, message counts
 let clockSkew = 0;          // server now - client now
 let selected = null;        // pane id shown in the sheet
 const dismissed = new Map(); // pane -> since; a "needs you" the user closed stays closed until it changes
@@ -2066,7 +2066,7 @@ async function refresh() {
     renderJournalBadge(r.journal);
     chatCounts = r.chat || { room: null, byPane: {} };
     if (!orderPending) mapOrder = r.mapOrder || [];
-    links = r.links || []; handoffs = r.handoffs || []; msgCounts = r.msgs || {};
+    links = r.links || []; handoffs = r.handoffs || []; msgCounts = r.msgs || {}; talk = r.talk || [];
     if (r.now) clockSkew = r.now - Date.now();
     byPane = new Map(agents.map(a => [a.pane, a]));
     for (const [pane, since] of dismissed) if (byPane.get(pane)?.since !== since) dismissed.delete(pane);
@@ -2141,6 +2141,8 @@ function drawLinks() {
     return b.width ? { x: b.left - base.left, y: b.top - base.top, w: b.width, h: b.height } : null;
   };
   const paths = [];
+  const talkOf = talkByLink();
+  const now = Date.now() + clockSkew;
   for (const l of links) {
     const A = rectOf(l.from), B = rectOf(l.to);
     if (!A || !B) continue;
@@ -2167,9 +2169,88 @@ function drawLinks() {
     p.setAttribute('class', `lk ${l.kind}` + (hand ? ' hand' : '') + (hot ? ' hot' : '') + (selected && !hot ? ' faint' : ''));
     if (l.kind === 'depends') p.setAttribute('marker-end', hand ? 'url(#arrow-hand)' : 'url(#arrow)');
     paths.push(p);
+    const tk = talkOf.get(l.id);
+    if (tk) {
+      // Talking: the line flows from the last sender for a while, a count sits on the curve,
+      // and a dot travels the line when a new message passes (once per message).
+      const fwd = tk.lastFrom === l.from;
+      if (now - tk.lastAt < TALK_LIVE_MS) p.classList.add('live', fwd ? 'fwd' : 'rev');
+      const mx = 0.25 * x1 + 0.5 * cx + 0.25 * x2, my = 0.25 * y1 + 0.5 * cy + 0.25 * y2;
+      paths.push(talkBadge(tk, mx, my, hot, selected && !hot));
+      const key = tk.a + '|' + tk.b;
+      const seen = talkSeen.get(key);
+      if (seen !== undefined && tk.lastAt > seen && !reduceMotion.matches) talkDot(p.getAttribute('d'), fwd);
+      talkSeen.set(key, tk.lastAt);
+    }
   }
   linkSvg.setAttribute('width', base.width); linkSvg.setAttribute('height', base.height);
   g.replaceChildren(...paths);
+}
+
+// ─── Agents talking: live line, count badge, a dot per new message ─────────────
+const TALK_LIVE_MS = 90e3;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const talkSeen = new Map(); // pair -> lastAt already shown (first sight seeds it, no dot)
+const dotLayer = document.createElementNS(SVGNS, 'g');
+dotLayer.setAttribute('class', 'lk-dots');
+linkSvg.appendChild(dotLayer);
+// One line per pair carries the talk: the talk link if there is one, else the first.
+function talkByLink() {
+  const out = new Map();
+  if (!talk.length) return out;
+  const byPair = new Map(talk.map(x => [x.a + '|' + x.b, x]));
+  const taken = new Set();
+  for (const pass of ['talk', 'depends']) {
+    for (const l of links) {
+      if (l.kind !== pass) continue;
+      const key = [l.from, l.to].sort().join('|');
+      if (taken.has(key) || !byPair.has(key)) continue;
+      taken.add(key);
+      out.set(l.id, byPair.get(key));
+    }
+  }
+  return out;
+}
+function talkBadge(tk, x, y, hot, faint) {
+  const g = document.createElementNS(SVGNS, 'g');
+  g.setAttribute('class', 'lk-badge' + (tk.queued ? ' queued' : '') + (hot ? ' hot' : '') + (faint ? ' faint' : ''));
+  g.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
+  g.setAttribute('role', 'button');
+  g.setAttribute('tabindex', '0');
+  const tip = t('tTalk', label(byPane.get(tk.lastFrom)), label(byPane.get(tk.lastTo)), tk.n, ago(tk.lastAt)) + (tk.queued ? t('tTalkQueued', tk.queued) : '');
+  g.setAttribute('aria-label', tip + ' — ' + t('tTalkOpen'));
+  const title = document.createElementNS(SVGNS, 'title');
+  title.textContent = tip;
+  const txt = String(tk.n > 99 ? '99+' : tk.n);
+  const w = 14 + txt.length * 7;
+  const r = document.createElementNS(SVGNS, 'rect');
+  r.setAttribute('x', -w / 2); r.setAttribute('y', -10); r.setAttribute('width', w); r.setAttribute('height', 20); r.setAttribute('rx', 10);
+  const tx = document.createElementNS(SVGNS, 'text');
+  tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('dy', '0.35em');
+  tx.textContent = txt;
+  g.append(title, r, tx);
+  // Opens the receiver of the last message; its sheet lists the messages (when you may act on it).
+  const open = () => { location.hash = encodeURIComponent(tk.lastTo); };
+  g.addEventListener('click', open);
+  g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  return g;
+}
+function talkDot(d, fwd) {
+  const c = document.createElementNS(SVGNS, 'circle');
+  c.setAttribute('r', 4.5);
+  c.setAttribute('class', 'lk-dot');
+  const m = document.createElementNS(SVGNS, 'animateMotion');
+  m.setAttribute('path', d);
+  m.setAttribute('dur', '1.4s');
+  m.setAttribute('fill', 'freeze');
+  m.setAttribute('calcMode', 'linear');
+  m.setAttribute('keyPoints', fwd ? '0;1' : '1;0');
+  m.setAttribute('keyTimes', '0;1');
+  m.setAttribute('begin', 'indefinite');
+  c.appendChild(m);
+  dotLayer.appendChild(c);
+  try { m.beginElement(); } catch {}
+  setTimeout(() => c.remove(), 1600);
 }
 
 // Panel: hand-off cards, the agent's links, add a link, recent messages.

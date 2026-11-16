@@ -26,6 +26,7 @@ const cronLib = require('./lib/cron');
 const { createJournal, redact } = require('./lib/journal');
 const { createChat, findMentions, buildPrompt, cutReply } = require('./lib/chat');
 const { createTranslator, detectLang } = require('./lib/translate');
+const { talkView } = require('./lib/talk');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -1168,7 +1169,7 @@ function linksView(agents) {
       if (m.state === 'queued' && t === m.to) c.queued++;
     }
   }
-  return { links, handoffs, msgs };
+  return { links, handoffs, msgs, talk: talkView(state.msgs, byTerminal, day) };
 }
 
 // Drop links and offers whose agents are gone for good (terminal not seen for a day).

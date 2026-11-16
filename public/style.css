@@ -215,6 +215,18 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .link-lines .lk.faint { opacity: 0.22; }
 .link-lines #arrow path { fill: var(--color-info); }
 .link-lines #arrow-hand path { fill: var(--color-orange); }
+.link-lines .lk.live { opacity: 1; stroke-width: 2.5; stroke: var(--color-green); stroke-dasharray: 6 6; animation: lk-talk 0.9s linear infinite; }
+.link-lines .lk.live.rev { animation-direction: reverse; }
+@keyframes lk-talk { to { stroke-dashoffset: -12; } }
+.link-lines .lk-badge { pointer-events: auto; cursor: pointer; transition: opacity var(--dur-fast) var(--ease); }
+.link-lines .lk-badge rect { fill: var(--color-surface); stroke: var(--text-dim); stroke-width: 1.5; }
+.link-lines .lk-badge text { fill: var(--text-primary); font: 600 11px/1 var(--font-mono, monospace); }
+.link-lines .lk-badge.queued rect { stroke: var(--color-orange); }
+.link-lines .lk-badge.hot rect { stroke: var(--color-green); stroke-width: 2; }
+.link-lines .lk-badge.faint { opacity: 0.3; }
+.link-lines .lk-badge:focus-visible { outline: none; }
+.link-lines .lk-badge:focus-visible rect { stroke: var(--color-info); stroke-width: 2.5; }
+.link-lines .lk-dot { fill: var(--color-green); filter: drop-shadow(0 0 4px var(--color-green)); }
 @keyframes lk-flow { to { stroke-dashoffset: -26; } }
 .tlinks { margin-left: 4px; letter-spacing: 0; color: var(--color-info); }
 .tile.blocked .tlinks { color: inherit; }
@@ -274,7 +286,7 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .m-state { color: var(--color-yellow-ink); }
 .m-row.failed .m-state { color: var(--color-red-ink); }
 .m-text { font: 400 var(--text-sm)/1.4 var(--font-sans); color: var(--text-secondary); white-space: pre-wrap; }
-@media (prefers-reduced-motion: reduce) { .link-lines .lk.hand { animation: none; } .links > summary .chev { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .link-lines .lk.hand, .link-lines .lk.live { animation: none; } .links > summary .chev { transition: none; } }
 
 /* ── Memory (bottom of the page): agents total + machine; opens to a row per agent ── */
 .mem { margin: 0 0 var(--space-6); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
