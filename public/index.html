@@ -27,12 +27,14 @@
   <script src="/demo.js" defer></script>
   <script src="/templates.js" defer></script>
   <script src="/skills.js" defer></script>
+  <script src="/kb.js" defer></script>
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
     <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
     <symbol id="i-skill" viewBox="0 0 24 24"><path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></symbol>
     <symbol id="i-tpl" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
@@ -77,6 +79,7 @@
         <button id="new" class="chip primary" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="new">New</span></button>
         <button id="routines-btn" class="chip" type="button"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span data-i18n="routines">Routines</span></button>
         <button id="skills-btn" class="chip icon" type="button" aria-haspopup="dialog" data-i18n-title="skOpen"><svg class="ic" aria-hidden="true"><use href="#i-skill"/></svg></button>
+        <button id="kb-btn" class="chip icon" type="button" aria-haspopup="dialog" data-i18n-title="kbOpen"><svg class="ic" aria-hidden="true"><use href="#i-book"/></svg></button>
         <a id="journal-btn" class="chip icon jbtn" href="/journal.html" data-i18n-title="journal"><svg class="ic" aria-hidden="true"><use href="#i-journal"/></svg><span id="journal-badge" class="jbadge" hidden></span></a>
         <button id="chat-btn" class="chip icon jbtn" type="button" hidden data-i18n-title="chatTeam"><svg class="ic" aria-hidden="true"><use href="#i-chat"/></svg><span id="chat-badge" class="jbadge" hidden></span></button>
         <div class="viewpick">
@@ -397,6 +400,37 @@
       <p id="skl-intro" class="hint skl-intro"></p>
       <ul id="skl-list" class="tpl-list skl-list"></ul>
       <p id="skl-empty" class="hint tpl-empty" hidden></p>
+    </div>
+  </dialog>
+
+  <dialog id="kb-dialog" class="tpl-dialog kb-dialog" aria-labelledby="kb-title">
+    <div class="tpl-wrap kb-wrap">
+      <header class="tpl-head">
+        <h2 id="kb-title" data-i18n="kbTitle">Knowledge</h2>
+        <button id="kb-close" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </header>
+      <p id="kb-intro" class="hint"></p>
+      <p id="kb-status" class="kb-status" aria-live="polite"></p>
+      <form id="kb-try" class="kb-try" role="search">
+        <label class="kb-label" for="kb-q" data-i18n="kbTry">Try a question</label>
+        <div class="kb-tryrow">
+          <input id="kb-q" class="tpl-search" type="search" autocomplete="off" maxlength="500" data-i18n-placeholder="kbTryPh">
+          <button class="btn" type="submit" data-i18n="kbAsk">Search</button>
+        </div>
+        <ol id="kb-hits" class="kb-hits" aria-live="polite" hidden></ol>
+        <p id="kb-hitnote" class="hint" hidden></p>
+      </form>
+      <div id="kb-up" class="kb-up" hidden>
+        <label class="kb-drop" id="kb-drop">
+          <input id="kb-file" type="file" multiple accept=".md,.txt,.csv,.json,.html,.htm,.pdf,text/plain,text/markdown,text/csv,application/json,text/html,application/pdf">
+          <svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg>
+          <span><strong data-i18n="kbAdd">Add documents</strong><br><span data-i18n="kbDrop">Drop files here or tap to choose</span> · <span data-i18n="kbTypes">md, txt, csv, json, html, pdf · 5 MB each</span></span>
+        </label>
+        <label class="kb-folder"><span data-i18n="kbFolder">Folder (optional)</span><input id="kb-coll" list="kb-colls" maxlength="64" autocomplete="off" data-i18n-placeholder="kbFolderPh"></label>
+        <datalist id="kb-colls"></datalist>
+      </div>
+      <div id="kb-files" class="kb-files"></div>
+      <p id="kb-empty" class="hint tpl-empty" data-i18n="kbNone" hidden>No documents yet.</p>
     </div>
   </dialog>
 

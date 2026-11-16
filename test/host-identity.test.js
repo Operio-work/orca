@@ -175,3 +175,18 @@ test('hosted identity: client admins and Operio staff may ask for a skill; viewe
     assert.equal(r.json.canRequest, want);
   }
 });
+
+test('hosted identity: client admins and Operio staff change Knowledge; viewers only search', async () => {
+  for (const [user, want] of [[ADMIN(), true], [STAFF(), true], [VIEWER(), false]]) {
+    const r = await req('GET', '/api/kb', { user });
+    assert.equal(r.status, 200);
+    assert.deepEqual([r.json.mode, r.json.canWrite], ['hosted', want]);
+  }
+  assert.equal((await req('POST', '/api/kb/upload', { user: ADMIN(), body: { path: 'menu.md', text: 'Tacos 25 MXN' } })).status, 200);
+  assert.equal((await req('POST', '/api/kb/upload', { user: STAFF(), body: { path: 'hours.md', text: 'Open at 9' } })).status, 200);
+  assert.equal((await req('POST', '/api/kb/upload', { user: VIEWER(), body: { path: 'x.md', text: 'x' } })).status, 403);
+  assert.equal((await req('POST', '/api/kb/remove', { user: VIEWER(), body: { path: 'menu.md' } })).status, 403);
+  const r = await req('GET', '/api/kb/search?q=tacos', { user: VIEWER() });
+  assert.equal(r.json.results[0].source, 'menu.md');
+  assert.equal((await req('POST', '/api/kb/remove', { user: ADMIN(), body: { path: 'menu.md' } })).status, 200);
+});

@@ -29,6 +29,7 @@ const { createTranslator, detectLang } = require('./lib/translate');
 const { talkView } = require('./lib/talk');
 const { createTemplates, TemplateError } = require('./lib/templates');
 const { createSkills, SkillError } = require('./lib/skills');
+const { createKb, KbError, installKnowledgeSkill } = require('./lib/kb');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -187,6 +188,14 @@ const skillErr = e => { if (e instanceof SkillError) throw new HttpError(e.statu
 // Who may ask Operio for a skill on a hosted panel: the client's admins and Operio staff.
 // (ORCA Host checks again before it records the request.)
 const canRequestSkill = login => { const p = hostPerson(login); return !p || p.operio || p.role === 'client_admin'; };
+// Knowledge for agents (lib/kb.js): documents in <config>/knowledge, searched by
+// `operio-orca kb search`. Hosted panels with an embedding key (llm.env) also search by meaning.
+// The first document installs the business-knowledge skill, so agents know the search exists.
+// Who may add or remove documents: free = you; hosted = the client's admins and Operio staff.
+const kb = createKb({ configDir: CFG.CONFIG_DIR, hosted: CFG.HOSTED, llmFile: CFG.LLM_FILE, log, onIndexed: () => installKnowledgeSkill(skills, log) });
+const kbErr = e => { if (e instanceof KbError) throw new HttpError(e.status, e.code, e.detail); throw e; };
+const canWriteKb = canRequestSkill;
+const KB_UPLOAD_MAX = Math.ceil(5 * 1024 * 1024 * 4 / 3) + 4096; // a 5 MB file as base64, plus the JSON around it
 let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
 // The model runs on the client's own Anthropic key: the one their Claude agents use (llm.env,
@@ -1395,6 +1404,8 @@ function describe(e) {
     case 'template.delete': return `${who} deleted a ${e.scope} prompt template`;
     case 'skill.install': return `${who} installed the skill ${e.key} v${e.version}`;
     case 'skill.remove': return `${who} removed the skill ${e.key}`;
+    case 'kb.add': return `${who} ${e.replaced ? 'replaced' : 'added'} the document ${e.path} (${e.bytes} bytes) in Knowledge`;
+    case 'kb.remove': return `${who} removed the document ${e.path} from Knowledge`;
     case 'msg.rate_limited': return `Link ${ag} ↔ ${to} paused (over ${e.perHour} messages/hour)`;
     case 'shell.open': return `${who} opened the shell ${ag || e.agent?.pane || ''}`;
     case 'shell.close': return `${who} closed the shell ${ag || e.agent?.pane || ''}`;
@@ -1811,6 +1822,17 @@ async function api(req, res, url) {
     return send(res, 200, skills.view({ hosted: CFG.HOSTED, lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', canRequest: canRequestSkill(loginOf(req)) }));
   }
 
+  if (req.method === 'GET' && pathname === '/api/kb') {
+    let status;
+    try { status = await kb.status(); } catch (e) { kbErr(e); }
+    return send(res, 200, { mode: CFG.HOSTED ? 'hosted' : 'local', canWrite: canWriteKb(loginOf(req)), status, files: kb.list() });
+  }
+  if (req.method === 'GET' && pathname === '/api/kb/search') {
+    const q = url.searchParams;
+    try { return send(res, 200, await kb.search(q.get('q') || '', { n: Number(q.get('n')) || 5, collection: q.get('collection') || null })); }
+    catch (e) { kbErr(e); }
+  }
+
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
     return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
@@ -1941,7 +1963,29 @@ async function api(req, res, url) {
   // Asking Operio for a skill is answered by ORCA Host in its proxy, never by the panel.
   if (pathname === '/api/skills/request') return send(res, 404, { error: 'not found' });
   if (!sameOrigin(req)) { log('write.denied', { path: pathname }); return send(res, 403, { error: 'cross-origin' }); }
-  const body = await readBody(req);
+  const body = await readBody(req, pathname === '/api/kb/upload' ? KB_UPLOAD_MAX : undefined);
+
+  // ── Knowledge (documents for agents; content is never journaled, only path + bytes)
+  if (pathname === '/api/kb/upload' || pathname === '/api/kb/remove') {
+    if (!canWriteKb(loginOf(req))) throw new HttpError(403, 'admins_only');
+    const rel = String(body.path || '');
+    if (pathname === '/api/kb/upload') {
+      let data;
+      if (typeof body.base64 === 'string') data = Buffer.from(body.base64, 'base64');
+      else if (typeof body.text === 'string') data = Buffer.from(body.text, 'utf8');
+      else throw new HttpError(400, 'bad_request', 'text or base64');
+      let r;
+      try { r = await kb.add(rel, data); } catch (e) { kbErr(e); }
+      jr(req, 'kb.add', null, { path: r.path, bytes: r.bytes, replaced: r.replaced || undefined });
+      // Hosted with a key: prepare the meaning search now, so the first search is quick.
+      if (kb.semantic().on) kb.embedPending().catch(e => log('kb.embed_failed', { code: e.code || 'error' }));
+      return send(res, 200, { ok: true, ...r });
+    }
+    let r;
+    try { r = await kb.remove(rel); } catch (e) { kbErr(e); }
+    if (r.removed) jr(req, 'kb.remove', null, { path: r.path, bytes: r.bytes });
+    return send(res, 200, { ok: true, removed: r.removed });
+  }
 
   // ── Skills (free panel only: install / remove a bundled skill)
   if (pathname === '/api/skills/install' || pathname === '/api/skills/remove') {

@@ -310,3 +310,42 @@ test('skills (free panel): the bundled gallery, install and remove a skill, jour
   const events = fs.readFileSync(path.join(CFG, 'journal', day), 'utf8').trim().split('\n').map(l => JSON.parse(l).event);
   assert.ok(events.includes('skill.install') && events.includes('skill.remove'));
 });
+
+test('knowledge (free panel): upload text and base64, list, test search, remove; journal has path + bytes, never content', async () => {
+  let r = await req('GET', '/api/kb');
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.json.mode, r.json.canWrite, r.json.files, r.json.status.semantic], ['local', true, [], { on: false, why: 'free' }]);
+  assert.equal((await req('POST', '/api/kb/upload', { body: { path: 'a.md', text: 'x' } })).status, 403, 'writes need the Origin');
+  r = await post('/api/kb/upload', { path: 'prices/menu.md', text: '# Menu\n\nTacos al pastor 25 MXN — the secret salsa recipe.\n' });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual([r.json.ok, r.json.status, r.json.chunks, r.json.collection], [true, 'indexed', 1, 'prices']);
+  r = await post('/api/kb/upload', { path: 'hours.txt', base64: Buffer.from('Open 9 to 21, closed Sunday.\n').toString('base64') });
+  assert.equal(r.json.status, 'indexed');
+  // A big upload (over the usual 16 KB body limit) goes through.
+  r = await post('/api/kb/upload', { path: 'faq.md', text: 'Question about parking. '.repeat(3000) });
+  assert.equal(r.status, 200, r.text);
+  assert.equal((await post('/api/kb/upload', { path: '../x.md', text: 'x' })).json.error, 'bad_path');
+  assert.equal((await post('/api/kb/upload', { path: 'x.exe', text: 'x' })).json.error, 'bad_type');
+  assert.equal((await post('/api/kb/upload', { path: 'x.md' })).status, 400);
+
+  r = await req('GET', '/api/kb');
+  assert.deepEqual(r.json.files.map(f => f.path), ['faq.md', 'hours.txt', 'prices/menu.md']);
+  assert.deepEqual(r.json.status.collections, ['prices']);
+  r = await req('GET', '/api/kb/search?q=' + encodeURIComponent('price of tacos') + '&n=2');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.results[0].source, 'prices/menu.md');
+  assert.equal(r.json.results[0].lines, '1-3');
+  assert.equal((await req('GET', '/api/kb/search?q=')).json.error, 'empty_query');
+  assert.ok(fs.lstatSync(path.join(HOME, '.claude', 'skills', 'business-knowledge')).isSymbolicLink(), 'the first document installs business-knowledge');
+
+  r = await post('/api/kb/remove', { path: 'prices/menu.md' });
+  assert.deepEqual(r.json, { ok: true, removed: true });
+  assert.deepEqual((await post('/api/kb/remove', { path: 'prices/menu.md' })).json, { ok: true, removed: false });
+  const day = fs.readdirSync(path.join(CFG, 'journal')).filter(f => f.endsWith('.jsonl')).sort().pop();
+  const lines = fs.readFileSync(path.join(CFG, 'journal', day), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  const adds = lines.filter(e => e.event === 'kb.add');
+  assert.deepEqual(adds.map(e => [e.path, e.bytes]), [['prices/menu.md', 60], ['hours.txt', 29], ['faq.md', 72000]]);
+  assert.ok(lines.some(e => e.event === 'kb.remove' && e.path === 'prices/menu.md'));
+  assert.ok(!JSON.stringify(lines).includes('secret salsa'), 'document content never goes to the journal');
+  assert.ok(!serverLog.includes('secret salsa'), '… nor to the log');
+});

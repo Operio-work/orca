@@ -1,6 +1,13 @@
 {
   "skills": [
     {
+      "key": "business-knowledge",
+      "version": 1,
+      "en": { "name": "Business knowledge", "summary": "Your agents look up your own documents (prices, hours, policies, services) before they answer, and say where they read it. If your documents don't say, they tell you instead of guessing." },
+      "es": { "name": "Conocimiento del negocio", "summary": "Tus agentes consultan tus propios documentos (precios, horarios, políticas, servicios) antes de responder y dicen dónde lo leyeron. Si tus documentos no lo dicen, te lo dicen en vez de adivinar." },
+      "tags": ["knowledge", "answers"]
+    },
+    {
       "key": "review-reply-drafts",
       "version": 1,
       "en": { "name": "Review reply drafts", "summary": "Drafts warm, specific replies to Google and other customer reviews, in the reviewer's language. You read them and post them yourself." },
