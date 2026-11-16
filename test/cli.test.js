@@ -374,3 +374,36 @@ test('templates: set from stdin into a 0600 file, show, reject bad input, clear'
   assert.match(run(['templates', 'clear']).out, /removed/);
   assert.ok(!fs.existsSync(FILE));
 });
+
+// ─── skills: installed by ORCA Host through the CLI, JSON on stdin ────────────
+test('skills: install from stdin, list, catalog-set 0600, refuse bad input, remove', () => {
+  const md = '---\nname: Review replies\ndescription: Drafts review replies.\n---\nDraft only.\n';
+  let r = run(['skills', 'install'], {}, HOME, JSON.stringify({ key: 'review-replies', version: 2, files: { 'SKILL.md': md } }));
+  assert.equal(r.code, 0, r.out);
+  assert.equal(r.stdout, 'installed review-replies v2\n');
+  assert.ok(fs.lstatSync(path.join(HOME, '.claude', 'skills', 'review-replies')).isSymbolicLink());
+  assert.ok(fs.existsSync(path.join(CONFIG, 'skills', 'review-replies', '.operio-skill.json')));
+  assert.equal(run(['skills', 'list']).stdout, 'review-replies v2\n');
+
+  r = run(['skills', 'install'], {}, HOME, JSON.stringify({ key: 'evil', version: 1, files: { 'SKILL.md': md, '../x.md': 'x' } }));
+  assert.notEqual(r.code, 0);
+  assert.match(r.out, /bad_path/);
+  assert.notEqual(run(['skills', 'install'], {}, HOME, 'not json').code, 0);
+  assert.notEqual(run(['skills', 'install', 'extra']).code, 0);
+  assert.notEqual(run(['skills', 'remove']).code, 0);
+
+  const FILE = path.join(CONFIG, 'operio-skills.json');
+  const cat = { skills: [{ key: 'review-replies', version: 2, en: { name: 'Review replies', summary: 'Drafts replies.' }, es: { name: 'Respuestas', summary: 'Redacta respuestas.' }, tags: [], request: { status: 'pending', at: 1 } }] };
+  r = run(['skills', 'catalog-set'], {}, HOME, JSON.stringify(cat));
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.stdout, /^saved 1 skill in /);
+  assert.equal(mode(FILE), '600');
+  r = run(['skills', 'catalog-set'], {}, HOME, '{"skills":[{"key":"Bad Key"}]}');
+  assert.notEqual(r.code, 0);
+  assert.equal(JSON.parse(fs.readFileSync(FILE, 'utf8')).skills.length, 1, 'a bad catalogue never replaces the good one');
+
+  assert.equal(run(['skills', 'remove', 'review-replies']).stdout, 'removed review-replies\n');
+  assert.ok(!fs.existsSync(path.join(HOME, '.claude', 'skills', 'review-replies')));
+  assert.equal(run(['skills', 'remove', 'review-replies']).stdout, 'review-replies was not installed\n');
+  assert.equal(run(['skills', 'list']).stdout, '');
+});

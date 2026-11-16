@@ -16,6 +16,8 @@
 #                         llm set NAME | unset NAME | list | apply | test KIND
 #   operio-orca templates   Operio's prompt-template library (ORCA Host sends it):
 #                         templates set (JSON on stdin) | show | clear
+#   operio-orca skills      skills your agents can use (~/.config/operio-orca/skills):
+#                         skills list | remove KEY | install, catalog-set (JSON on stdin)
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -576,6 +578,18 @@ cmd_templates() {
   return "${PIPESTATUS[0]}"
 }
 
+cmd_skills() {
+  local sub="${1:-}"
+  case "$sub" in
+    install|list|catalog-set) [ $# -eq 1 ] || die "skills $sub takes no arguments (install and catalog-set read the JSON on stdin)" ;;
+    remove) [ $# -eq 2 ] || die "usage: operio-orca skills remove KEY" ;;
+    ''|help|-h|--help) printf '%s\n' 'operio-orca skills list          installed skills, one per line: KEY vVERSION' 'operio-orca skills remove KEY    remove a skill ORCA installed' 'operio-orca skills install       a skill as JSON on stdin {key, version, files} (from ORCA Host)' 'operio-orca skills catalog-set   Operio'"'"'s gallery for this panel as JSON on stdin (from ORCA Host)'; return 0 ;;
+    *) die "unknown skills command: $sub (install, remove, list, catalog-set)" ;;
+  esac
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" "$APP_DIR/lib/skills-cli.js" "$sub" "$CONFIG_DIR" "${2:-}"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -686,10 +700,11 @@ case "${1:-help}" in
   restore) shift; cmd_restore "$@" ;;
   llm) shift; cmd_llm "$@" ;;
   templates) shift; cmd_templates "$@" ;;
+  skills) shift; cmd_skills "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,24p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,26p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac
