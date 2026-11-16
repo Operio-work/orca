@@ -599,7 +599,8 @@ cmd_kb() {
     search|add|remove|list|status|reindex) ;;
     ''|help|-h|--help) printf '%s\n' \
       'operio-orca kb search "question" [-n 5] [--collection NAME] [--json]' \
-      '                                   search the documents (question "-": read it from stdin)' \
+      '                                   search the documents (question "-": read it from stdin);' \
+      '                                   inside an agent, only the folders it may use (ORCA → Knowledge)' \
       'operio-orca kb add PATH            the file on stdin → knowledge/PATH (md txt csv json html pdf, 5 MB max)' \
       'operio-orca kb remove PATH         remove a document' \
       'operio-orca kb list                PATH  bytes  chunks  indexed|skipped:REASON' \

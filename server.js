@@ -30,6 +30,7 @@ const { talkView } = require('./lib/talk');
 const { createTemplates, TemplateError } = require('./lib/templates');
 const { createSkills, SkillError } = require('./lib/skills');
 const { createKb, KbError, installKnowledgeSkill } = require('./lib/kb');
+const { createKbAccess, scopeOf: kbScopeOf } = require('./lib/kb-access');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -195,6 +196,11 @@ const canRequestSkill = login => { const p = hostPerson(login); return !p || p.o
 const kb = createKb({ configDir: CFG.CONFIG_DIR, hosted: CFG.HOSTED, llmFile: CFG.LLM_FILE, log, onIndexed: () => installKnowledgeSkill(skills, log) });
 const kbErr = e => { if (e instanceof KbError) throw new HttpError(e.status, e.code, e.detail); throw e; };
 const canWriteKb = canRequestSkill;
+// Per-agent access (lib/kb-access.js, <config>/kb-access.json): a collection is open to all
+// agents unless an admin names the agents or tags that may search it. Agents ask over the
+// agent socket (GET /kb-scope) when they run `kb search`. Scoping, not a security wall.
+const kbAccess = createKbAccess({ configDir: CFG.CONFIG_DIR, log });
+const kbScope = a => kbScopeOf(kbAccess.load(), { name: a.name, tags: state.tags[a.terminal] || [] }, kb.list().map(f => f.collection).filter(Boolean));
 const KB_UPLOAD_MAX = Math.ceil(5 * 1024 * 1024 * 4 / 3) + 4096; // a 5 MB file as base64, plus the JSON around it
 let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
@@ -1283,6 +1289,9 @@ const agentServer = http.createServer(async (req, res) => {
 
     if (req.method === 'GET' && url.pathname === '/links') return reply(200, { me: { name: nameOf(me), pane: me.pane }, links: linksOf(me, agents) });
 
+    // Which Knowledge collections this agent may search (`operio-orca kb search` asks first).
+    if (req.method === 'GET' && url.pathname === '/kb-scope') return reply(200, { me: { name: nameOf(me), pane: me.pane }, ...kbScope(me) });
+
     if (req.method === 'GET' && url.pathname === '/last') {
       const other = findAgent(agents, url.searchParams.get('of'));
       if (!other) throw new HttpError(404, 'no_such_agent');
@@ -1406,6 +1415,7 @@ function describe(e) {
     case 'skill.remove': return `${who} removed the skill ${e.key}`;
     case 'kb.add': return `${who} ${e.replaced ? 'replaced' : 'added'} the document ${e.path} (${e.bytes} bytes) in Knowledge`;
     case 'kb.remove': return `${who} removed the document ${e.path} from Knowledge`;
+    case 'kb.access': return e.agents || e.tags ? `${who} limited the Knowledge folder ${e.collection} to ${e.agents} agent name(s) and ${e.tags} tag(s)` : `${who} opened the Knowledge folder ${e.collection} to all agents`;
     case 'msg.rate_limited': return `Link ${ag} ↔ ${to} paused (over ${e.perHour} messages/hour)`;
     case 'shell.open': return `${who} opened the shell ${ag || e.agent?.pane || ''}`;
     case 'shell.close': return `${who} closed the shell ${ag || e.agent?.pane || ''}`;
@@ -1829,8 +1839,30 @@ async function api(req, res, url) {
   }
   if (req.method === 'GET' && pathname === '/api/kb/search') {
     const q = url.searchParams;
-    try { return send(res, 200, await kb.search(q.get('q') || '', { n: Number(q.get('n')) || 5, collection: q.get('collection') || null })); }
+    // &as=<pane or name>: what that agent would get (its access applied), for the test search.
+    let scope = null;
+    if (q.get('as')) {
+      const a = findAgent(await listAgents(), q.get('as'));
+      if (!a) throw new HttpError(404, 'no_such_agent');
+      const sc = kbScope(a);
+      scope = { agent: { name: nameOf(a), pane: a.pane }, collections: sc.scope, denied: sc.denied }; // as `kb search --json` says it
+      if (q.get('collection') && scope.denied.includes(q.get('collection'))) throw new HttpError(403, 'kb_denied', q.get('collection'));
+    }
+    let r;
+    try { r = await kb.search(q.get('q') || '', { n: Number(q.get('n')) || 5, collection: q.get('collection') || null, exclude: scope?.denied }); }
     catch (e) { kbErr(e); }
+    return send(res, 200, scope ? { ...r, scope } : r);
+  }
+  // Per-agent access: everyone sees it (and the agents and tags to pick from); admins change it.
+  if (req.method === 'GET' && pathname === '/api/kb/access') {
+    const agents = await listAgents();
+    return send(res, 200, {
+      canWrite: canWriteKb(loginOf(req)),
+      access: kbAccess.load(),
+      collections: [...new Set(kb.list().map(f => f.collection).filter(Boolean))].sort(),
+      agents: agents.map(a => ({ name: a.name, pane: a.pane, tags: state.tags[a.terminal] || [] })),
+      tags: Object.keys(state.tagColors).sort(),
+    });
   }
 
   if (req.method === 'GET' && pathname === '/api/agents') {
@@ -1985,6 +2017,16 @@ async function api(req, res, url) {
     try { r = await kb.remove(rel); } catch (e) { kbErr(e); }
     if (r.removed) jr(req, 'kb.remove', null, { path: r.path, bytes: r.bytes });
     return send(res, 200, { ok: true, removed: r.removed });
+  }
+
+  // ── Knowledge access: { collection, agents: [names], tags: [tags] } (both empty = all agents).
+  // Journal: the collection and how many names/tags, never the names themselves.
+  if (pathname === '/api/kb/access') {
+    if (!canWriteKb(loginOf(req))) throw new HttpError(403, 'admins_only');
+    let rule;
+    try { rule = kbAccess.set(String(body.collection ?? ''), { agents: body.agents, tags: body.tags }); } catch (e) { kbErr(e); }
+    jr(req, 'kb.access', null, { collection: String(body.collection), agents: rule?.agents.length || 0, tags: rule?.tags.length || 0 });
+    return send(res, 200, { ok: true, collection: body.collection, rule, access: kbAccess.load() });
   }
 
   // ── Skills (free panel only: install / remove a bundled skill)

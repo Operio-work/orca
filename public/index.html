@@ -417,6 +417,7 @@
           <input id="kb-q" class="tpl-search" type="search" autocomplete="off" maxlength="500" data-i18n-placeholder="kbTryPh">
           <button class="btn" type="submit" data-i18n="kbAsk">Search</button>
         </div>
+        <label class="kb-as" id="kb-asrow" hidden><span data-i18n="kbAs">Search as</span><select id="kb-as"></select></label>
         <ol id="kb-hits" class="kb-hits" aria-live="polite" hidden></ol>
         <p id="kb-hitnote" class="hint" hidden></p>
       </form>
@@ -429,6 +430,7 @@
         <label class="kb-folder"><span data-i18n="kbFolder">Folder (optional)</span><input id="kb-coll" list="kb-colls" maxlength="64" autocomplete="off" data-i18n-placeholder="kbFolderPh"></label>
         <datalist id="kb-colls"></datalist>
       </div>
+      <p id="kb-acchint" class="hint" data-i18n="kbAccHint" hidden></p>
       <div id="kb-files" class="kb-files"></div>
       <p id="kb-empty" class="hint tpl-empty" data-i18n="kbNone" hidden>No documents yet.</p>
     </div>

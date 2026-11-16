@@ -349,3 +349,68 @@ test('knowledge (free panel): upload text and base64, list, test search, remove;
   assert.ok(!JSON.stringify(lines).includes('secret salsa'), 'document content never goes to the journal');
   assert.ok(!serverLog.includes('secret salsa'), '… nor to the log');
 });
+
+test('knowledge access: admins limit a collection to tags or names; the test search previews an agent; kb search inside an agent is scoped', async () => {
+  const { spawnSync } = require('child_process');
+  assert.equal((await post('/api/kb/upload', { path: 'team/staff.md', text: '# Staff\n\nThe staff rota: Ana opens on Monday.\n' })).status, 200);
+  assert.equal((await post('/api/kb/upload', { path: 'prices/list.md', text: '# Prices\n\nStaff discount 10 percent on tacos.\n' })).status, 200);
+  // Two agents; sable's pane shell is this test process, so a command it runs is "inside sable".
+  const f = path.join(FAKE, 'state.json');
+  const st = JSON.parse(fs.readFileSync(f, 'utf8'));
+  st.agents.push({ pane_id: 'w1:p77', tab_id: 'w1:t77', terminal_id: 'term77', name: 'sable', agent: 'claude', agent_status: 'idle', cwd: HOME, shell_pid: process.pid });
+  st.agents.push({ pane_id: 'w1:p78', tab_id: 'w1:t78', terminal_id: 'term78', name: 'otto', agent: 'claude', agent_status: 'idle', cwd: HOME });
+  fs.writeFileSync(f, JSON.stringify(st));
+  await until(async () => (await req('GET', '/api/agents')).json?.agents?.some(a => a.pane === 'w1:p78'));
+  assert.equal((await post('/api/agents/w1%3Ap77/tags', { tags: ['front'] })).status, 200);
+
+  let r = await req('GET', '/api/kb/access');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.canWrite, true);
+  assert.deepEqual(r.json.access, { collections: {} });
+  assert.deepEqual(r.json.collections, ['prices', 'team']);
+  assert.deepEqual(r.json.agents.find(a => a.pane === 'w1:p77'), { name: 'sable', pane: 'w1:p77', tags: ['front'] });
+  assert.ok(r.json.tags.includes('front'));
+
+  assert.equal((await req('POST', '/api/kb/access', { body: { collection: 'team', tags: ['front'] } })).status, 403, 'writes need the Origin');
+  assert.equal((await post('/api/kb/access', { collection: '../x', tags: ['front'] })).json.error, 'bad_collection');
+  assert.equal((await post('/api/kb/access', { collection: 'team', tags: ['two words'] })).json.error, 'bad_access');
+  r = await post('/api/kb/access', { collection: 'team', tags: ['front'] });
+  assert.equal(r.status, 200, r.text);
+  assert.deepEqual(r.json.rule, { agents: [], tags: ['front'] });
+  assert.equal((fs.statSync(path.join(CFG, 'kb-access.json')).mode & 0o777).toString(8), '600');
+
+  const q = (as, extra = '') => req('GET', `/api/kb/search?n=5&q=staff${as ? '&as=' + encodeURIComponent(as) : ''}${extra}`);
+  r = await q('w1:p77');
+  assert.deepEqual(r.json.scope, { agent: { name: 'sable', pane: 'w1:p77' }, collections: 'all', denied: [] });
+  assert.ok(r.json.results.some(x => x.source === 'team/staff.md'));
+  r = await q('otto');
+  assert.deepEqual(r.json.scope.denied, ['team']);
+  assert.ok(r.json.results.length && r.json.results.every(x => !x.source.startsWith('team/')), r.text);
+  assert.ok((await q(null)).json.results.some(x => x.source === 'team/staff.md'), 'without as: everything');
+  assert.equal((await q('w1:p78', '&collection=team')).status, 403);
+  assert.equal((await q('nobody')).status, 404);
+
+  // `operio-orca kb search` run inside sable asks the agent socket (pid → pane) and is scoped.
+  const kbSearch = (...args) => spawnSync(process.execPath, [path.join(ROOT, 'lib', 'kb-cli.js'), 'search', CFG, ROOT, ...args], { env: { PATH: process.env.PATH, HOME }, encoding: 'utf8', timeout: 20000 });
+  let c = kbSearch('staff', '--json');
+  assert.equal(c.status, 0, c.stderr);
+  let j = JSON.parse(c.stdout);
+  assert.deepEqual(j.scope, { agent: { name: 'sable', pane: 'w1:p77' }, collections: 'all', denied: [], checked: true });
+  assert.ok(j.results.some(x => x.source === 'team/staff.md'));
+  await post('/api/kb/access', { collection: 'team', agents: ['otto'], tags: [] });
+  c = kbSearch('staff');
+  assert.equal(c.status, 0, c.stderr);
+  assert.ok(!c.stdout.includes('team/staff.md'), c.stdout);
+  assert.match(c.stdout, /searched only the folders this agent may use/);
+  c = kbSearch('staff', '--collection', 'team');
+  assert.notEqual(c.status, 0);
+  assert.match(c.stderr, /may not search the folder "team"/);
+
+  r = await post('/api/kb/access', { collection: 'team', agents: [], tags: [] });
+  assert.equal(r.json.rule, null);
+  assert.deepEqual(r.json.access, { collections: {} });
+  const day = fs.readdirSync(path.join(CFG, 'journal')).filter(x => x.endsWith('.jsonl')).sort().pop();
+  const acc = fs.readFileSync(path.join(CFG, 'journal', day), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.event === 'kb.access');
+  assert.deepEqual(acc.map(e => [e.collection, e.agents, e.tags]), [['team', 0, 1], ['team', 1, 0], ['team', 0, 0]]);
+  assert.ok(!JSON.stringify(acc).includes('otto'), 'counts only, not the names');
+});

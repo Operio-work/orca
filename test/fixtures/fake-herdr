@@ -36,6 +36,11 @@ else if (cmd === 'tab create' && st.noWorkspace) {
 } else if (cmd === 'pane get') {
   const ag = st.agents.find(x => x.pane_id === rest[0]);
   out({ result: { pane: ag ? { pane_id: ag.pane_id, terminal_id: ag.terminal_id } : null } });
+} else if (cmd === 'pane process-info') {
+  // A test can say which process is the pane's shell (shell_pid in state.json), so the agent
+  // socket can tell which agent a command runs in.
+  const ag = st.agents.find(x => x.pane_id === flag('--pane'));
+  out({ result: { process_info: { shell_pid: ag?.shell_pid || null } } });
 } else if (cmd === 'agent prompt') {
   fs.appendFileSync(path.join(dir, 'prompts.jsonl'), JSON.stringify({ pane: rest[0], text: rest[1] }) + '\n');
   // An agent told to /exit quits (its pane stays until closed; here it just leaves the list).

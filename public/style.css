@@ -1767,3 +1767,15 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
 .kb-fmeta { font: 400 var(--text-xs) var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
 .kb-fmeta.no { color: var(--color-red-ink); }
 .kb-file .btn { min-height: 36px; font-size: var(--text-sm); flex-shrink: 0; }
+/* Who searches a folder (per-agent access) and the test search "as" an agent */
+.kb-as[hidden] { display: none; }
+.kb-acc { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--space-2); margin: 0 0 6px; }
+.kb-accsum { flex: 1; min-width: 0; font: 400 var(--text-xs) var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.kb-accsum.on { color: var(--color-orange-ink); }
+.kb-acc > .btn { min-height: 36px; font-size: var(--text-sm); flex-shrink: 0; }
+.kb-accedit { flex-basis: 100%; display: grid; gap: 6px; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface-2); }
+.kb-accedit .hint { margin: 0; }
+.kb-picks { margin-top: 0; }
+.kb-picks .fchip { min-height: 36px; overflow-wrap: anywhere; }
+.kb-accacts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: var(--space-1); }
+.kb-accacts .btn { min-height: 40px; font-size: var(--text-sm); }
