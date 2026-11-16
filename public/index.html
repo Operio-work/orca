@@ -25,11 +25,13 @@
   <script src="/cron.js" defer></script>
   <script src="/routines.js" defer></script>
   <script src="/demo.js" defer></script>
+  <script src="/templates.js" defer></script>
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
     <symbol id="i-theme" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></symbol>
+    <symbol id="i-tpl" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
     <symbol id="i-focus" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
@@ -247,6 +249,7 @@
           <div id="sheet-keys" class="keys"></div>
           <div id="chips" class="chips" hidden></div>
           <form id="prompt-form" class="prompt-form">
+            <button id="tpl-btn" class="icon-btn tpl-btn" type="button" aria-haspopup="dialog" data-i18n-title="tplOpen"><svg class="ic" aria-hidden="true"><use href="#i-tpl"/></svg></button>
             <textarea id="prompt" name="text" rows="1" maxlength="4000" enterkeyhint="send"></textarea>
             <button class="btn primary send" type="submit" data-i18n-title="send"><svg class="ic" aria-hidden="true"><use href="#i-send"/></svg></button>
           </form>
@@ -356,6 +359,30 @@
         <button type="submit" class="btn primary" data-i18n="llmAdd">Add key</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="tpl-dialog" class="tpl-dialog" aria-labelledby="tpl-title">
+    <div class="tpl-wrap">
+      <header class="tpl-head">
+        <h2 id="tpl-title" data-i18n="tplTitle">Prompt templates</h2>
+        <button id="tpl-new" class="btn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n="tplNew">New</span></button>
+        <button id="tpl-close" class="icon-btn" type="button" data-i18n-title="close"><svg class="ic" aria-hidden="true"><use href="#i-x"/></svg></button>
+      </header>
+      <input id="tpl-search" class="tpl-search" type="search" autocomplete="off" spellcheck="false" data-i18n-placeholder="tplSearch">
+      <div id="tpl-tabs" class="tpl-tabs" role="tablist"></div>
+      <ul id="tpl-list" class="tpl-list"></ul>
+      <p id="tpl-empty" class="hint tpl-empty" hidden></p>
+      <form id="tpl-form" class="tpl-form" hidden>
+        <label><span data-i18n="tplName">Name</span><input name="title" maxlength="80" required autocomplete="off"></label>
+        <label><span data-i18n="tplText">Text</span><textarea name="body" rows="7" maxlength="4000" required></textarea></label>
+        <label id="tpl-scope-row"><span data-i18n="tplWho">Who can use it</span><select name="scope"></select></label>
+        <p class="hint" data-i18n="tplHint">Tip: write {client} or {date} — after you pick the template, the first {…} is selected so you can type over it.</p>
+        <div class="dialog-row">
+          <button type="button" class="btn" id="tpl-cancel" data-i18n="cancel">Cancel</button>
+          <button type="submit" class="btn primary" data-i18n="rnSave">Save</button>
+        </div>
+      </form>
+    </div>
   </dialog>
 
   <dialog id="end-dialog" aria-labelledby="end-title">

@@ -27,6 +27,7 @@ const { createJournal, redact } = require('./lib/journal');
 const { createChat, findMentions, buildPrompt, cutReply, a2aPosts } = require('./lib/chat');
 const { createTranslator, detectLang } = require('./lib/translate');
 const { talkView } = require('./lib/talk');
+const { createTemplates, TemplateError } = require('./lib/templates');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -172,6 +173,10 @@ const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL
 
 // ─── Team chat (ORCA Host only): one thread per agent (by terminal) + one team room ─────
 // lib/chat.js. Off (null) unless OPERIO_ORCA_HOSTED=1: the free panel has no chat UI or API.
+// Prompt templates. Free panel: your own only. ORCA Host: also Company (admins edit) and Operio's
+// library, which ORCA Host writes to operio-templates.json in the config folder (read-only here).
+const templates = createTemplates({ dir: CFG.CONFIG_DIR, operioFile: path.join(CFG.CONFIG_DIR, 'operio-templates.json'), company: CFG.HOSTED, operio: CFG.HOSTED, log });
+const tplErr = e => { if (e instanceof TemplateError) throw new HttpError(e.status, e.code); throw e; };
 let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
 // The model runs on the client's own Anthropic key: the one their Claude agents use (llm.env,
@@ -1376,6 +1381,8 @@ function describe(e) {
     case 'handoff.send': return `${who} handed ${ag}'s result to ${to}${e.note ? ` — note: ${e.note}` : ''}`;
     case 'handoff.dismiss': return `${who} dismissed the hand-off ${ag} → ${to}`;
     case 'msg.agent': return `${ag} messaged ${to}: ${e.text}`;
+    case 'template.save': return `${who} ${e.update ? 'edited' : 'added'} a ${e.scope} prompt template “${e.title}”`;
+    case 'template.delete': return `${who} deleted a ${e.scope} prompt template`;
     case 'msg.rate_limited': return `Link ${ag} ↔ ${to} paused (over ${e.perHour} messages/hour)`;
     case 'shell.open': return `${who} opened the shell ${ag || e.agent?.pane || ''}`;
     case 'shell.close': return `${who} closed the shell ${ag || e.agent?.pane || ''}`;
@@ -1783,6 +1790,11 @@ async function api(req, res, url) {
     return send(res, 200, { ok: true });
   }
 
+  if (req.method === 'GET' && pathname === '/api/templates') {
+    const login = loginOf(req);
+    return send(res, 200, templates.list(chatWho(login), { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', admin: isAdmin(login) }));
+  }
+
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
     return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
@@ -1912,6 +1924,23 @@ async function api(req, res, url) {
   if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
   if (!sameOrigin(req)) { log('write.denied', { path: pathname }); return send(res, 403, { error: 'cross-origin' }); }
   const body = await readBody(req);
+
+  // ── Prompt templates (fill the prompt box; never sent by themselves)
+  if (pathname === '/api/templates') {
+    const login = loginOf(req);
+    try {
+      const row = templates.put(chatWho(login), { id: body.id ? String(body.id) : null, scope: String(body.scope || ''), title: body.title, body: body.body }, { admin: isAdmin(login) });
+      jr(req, 'template.save', null, { scope: row.scope, title: row.title, update: !!body.id });
+      return send(res, 200, { ok: true, template: row });
+    } catch (e) { tplErr(e); }
+  }
+  if (pathname === '/api/templates/delete') {
+    const login = loginOf(req);
+    try { templates.remove(chatWho(login), { id: String(body.id || ''), scope: String(body.scope || '') }, { admin: isAdmin(login) }); }
+    catch (e) { tplErr(e); }
+    jr(req, 'template.delete', null, { scope: String(body.scope || '') });
+    return send(res, 200, { ok: true });
+  }
 
   // ── Crew: pin / unpin / hide a name
   if (pathname === '/api/names') {
