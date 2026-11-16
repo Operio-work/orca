@@ -14,6 +14,8 @@
 #   operio-orca restore     put a backup back (panel stopped; keeps a copy of what was there)
 #   operio-orca llm         API keys for your agents, kept in ~/.config/operio-orca/llm.env:
 #                         llm set NAME | unset NAME | list | apply | test KIND
+#   operio-orca templates   Operio's prompt-template library (ORCA Host sends it):
+#                         templates set (JSON on stdin) | show | clear
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -562,6 +564,18 @@ cmd_llm() {
   esac
 }
 
+cmd_templates() {
+  local sub="${1:-}"
+  case "$sub" in
+    set|show|clear) [ $# -eq 1 ] || die "templates $sub takes no arguments (set reads the JSON on stdin)" ;;
+    ''|help|-h|--help) printf '%s\n' 'operio-orca templates set     the library as JSON on stdin (from ORCA Host)' 'operio-orca templates show    how many, and when they were sent' 'operio-orca templates clear   remove them'; return 0 ;;
+    *) die "unknown templates command: $sub (set, show, clear)" ;;
+  esac
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" "$APP_DIR/lib/templates-cli.js" "$sub" "$CONFIG_DIR" | sed 's/^/operio-orca: /'
+  return "${PIPESTATUS[0]}"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -671,10 +685,11 @@ case "${1:-help}" in
   backup) shift; cmd_backup "$@" ;;
   restore) shift; cmd_restore "$@" ;;
   llm) shift; cmd_llm "$@" ;;
+  templates) shift; cmd_templates "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,22p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,24p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

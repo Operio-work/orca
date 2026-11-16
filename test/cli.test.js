@@ -355,3 +355,22 @@ test('start by hand records the herdr pid and loads llm.env into it; llm apply r
   assert.equal(r.code, 0, r.out);
   assert.match(r.out, /herdr is not running; the keys load when it starts: operio-orca start/);
 });
+
+// ─── templates: Operio's library, sent by ORCA Host on stdin ──────────────────
+test('templates: set from stdin into a 0600 file, show, reject bad input, clear', () => {
+  const FILE = path.join(CONFIG, 'operio-templates.json');
+  const lib = { templates: [{ id: 'review-reply', en: { title: 'Reply', body: 'Draft a reply to {customer}' }, es: { title: 'Responder', body: 'Redacta una respuesta' } }] };
+  let r = run(['templates', 'set'], {}, HOME, JSON.stringify(lib));
+  assert.equal(r.code, 0, r.out);
+  assert.match(r.out, /saved 1 Operio template /);
+  assert.equal(fs.statSync(FILE).mode & 0o777, 0o600);
+  assert.match(run(['templates', 'show']).out, /1 Operio template,/);
+  r = run(['templates', 'set'], {}, HOME, '{"templates":[{"id":"x y","en":{"title":"a","body":"b"}}]}');
+  assert.notEqual(r.code, 0);
+  assert.match(r.out, /bad id/);
+  assert.ok(fs.existsSync(FILE), 'a bad library never replaces the good one');
+  assert.notEqual(run(['templates', 'set'], {}, HOME, 'not json').code, 0);
+  assert.notEqual(run(['templates', 'set', 'extra']).code, 0);
+  assert.match(run(['templates', 'clear']).out, /removed/);
+  assert.ok(!fs.existsSync(FILE));
+});
