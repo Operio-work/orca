@@ -24,7 +24,7 @@ const routinesLib = require('./lib/routines');
 const { Scheduler } = require('./lib/scheduler');
 const cronLib = require('./lib/cron');
 const { createJournal, redact } = require('./lib/journal');
-const { createChat, findMentions, buildPrompt, cutReply } = require('./lib/chat');
+const { createChat, findMentions, buildPrompt, cutReply, a2aPosts } = require('./lib/chat');
 const { createTranslator, detectLang } = require('./lib/translate');
 const { talkView } = require('./lib/talk');
 const llm = require('./lib/llm');
@@ -1070,7 +1070,29 @@ function queueMsg({ from, to, text, via }, byTerminal) {
   state.msgs.push(m);
   saveState();
   log('msg.queued', { id: m.id, via, chars: text.length });
+  mirrorToChat(m, byTerminal);
   return m;
+}
+
+// Agent ↔ agent messages also show in both agents' chat threads (as the sending agent, never
+// parsed for mentions → they can't prompt anyone). Unread counts move; a push goes only to
+// people who turned that thread on themselves. Best effort: the message itself already queued.
+function mirrorToChat(m, byTerminal) {
+  if (!chat) return; // free panel: no chat, the message stays in the agent's Messages and the Journal
+  try {
+    const from = byTerminal?.get(m.from), to = byTerminal?.get(m.to);
+    for (const p of a2aPosts(m, { fromName: nameOf(from), toName: nameOf(to) })) {
+      let msg;
+      try { msg = chat.post(p.thread, p.by, p.text, [], p.x); } catch (e) { log('chat.a2a_failed', { code: e.code || 'error' }); continue; }
+      const preview = msg.text.replace(/\s+/g, ' ').slice(0, 140);
+      const where = p.x.a2a.dir === 'in' ? nameOf(to) : nameOf(from);
+      for (const login of chat.explicitFollowers(p.thread)) {
+        if (isViewing(login, p.thread)) continue;
+        pushAll({ kind: 'reply', name: `${p.x.a2a.from} → ${p.x.a2a.to}`, where, room: false, text: preview,
+          tag: 'chat-' + p.thread, url: '/#chat-' + encodeURIComponent(p.thread), thread: p.thread }, login, true).catch(() => {});
+      }
+    }
+  } catch (e) { log('chat.a2a_failed', { code: 'error', detail: String(e.message) }); }
 }
 
 function deliveryText(m, from, to) {
@@ -1498,7 +1520,8 @@ function shapeChat(m, who) {
     id: m.id, at: m.at, who: agent ? { id: m.by, name: x.name || 'agent', agent: true } : brief(m.by), mine: m.by === who,
     text: m.deleted || x.empty ? '' : m.text, deleted: !!m.deleted, lang: m.deleted || x.empty ? null : detectLang(m.text),
     mentionsMe: m.mentions.includes(who), canDelete: !m.deleted && m.by === who && Date.now() - m.at < chat.DELETE_WINDOW,
-    ...(agent ? { answer: { to: x.ask || null, took: x.took ?? null, out: x.out || null, empty: !!x.empty } } : {}),
+    ...(agent && !x.a2a ? { answer: { to: x.ask || null, took: x.took ?? null, out: x.out || null, empty: !!x.empty } } : {}),
+    ...(x.a2a ? { a2a: { from: x.a2a.from, to: x.a2a.to, dir: x.a2a.dir, via: x.a2a.via } } : {}),
   };
 }
 const chatRate = new Map(); // login -> recent post times (max 20 a minute)

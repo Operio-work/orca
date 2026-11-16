@@ -192,3 +192,32 @@ test('agent answer read off the screen: a suggested prompt in the input box is n
   const next = screen.replace("❯ let's do phase 2", "❯ let's do phase 2\n● Phase 2 started.");
   assert.match(replyAfter(next, '[ORCA team chat'), /^Line one/, 'stops at the next prompt');
 });
+
+test('a2aPosts: one post per agent thread, as the sender, no mentions', () => {
+  const { a2aPosts } = require('../lib/chat');
+  const out = a2aPosts({ id: 'm1', from: 'tA', to: 'tB', text: 'please check @sam', via: 'agent' }, { fromName: 'Writer', toName: 'Reviewer' });
+  assert.strictEqual(out.length, 2);
+  assert.deepStrictEqual(out.map(p => [p.thread, p.by, p.x.a2a.dir]), [['t-tB', 'agent:tA', 'in'], ['t-tA', 'agent:tA', 'out']]);
+  assert.strictEqual(out[0].x.a2a.to, 'Reviewer');
+  assert.strictEqual(out[0].x.name, 'Writer');
+});
+
+test('a2aPosts: skips intros, self, empty; cuts long text', () => {
+  const { a2aPosts } = require('../lib/chat');
+  assert.deepStrictEqual(a2aPosts({ from: 'a', to: 'b', text: 'x', via: 'intro' }), []);
+  assert.deepStrictEqual(a2aPosts({ from: 'a', to: 'a', text: 'x', via: 'agent' }), []);
+  assert.deepStrictEqual(a2aPosts({ from: 'a', to: 'b', text: '  ', via: 'agent' }), []);
+  const [p] = a2aPosts({ from: 'a', to: 'b', text: 'y'.repeat(5000), via: 'handoff' });
+  assert.ok(p.text.length <= 2000);
+  assert.strictEqual(p.x.a2a.via, 'handoff');
+});
+
+test('explicitFollowers: only people who turned the thread on', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const { createChat } = require('../lib/chat');
+  const c = createChat({ dir: fs.mkdtempSync(path.join(os.tmpdir(), 'a2a-')) });
+  c.post('t-x', 'bob', 'hello');           // bob wrote → implicit follower, not explicit
+  c.setFollow('ann', 't-x', true);
+  c.setFollow('cy', 't-x', false);
+  assert.deepStrictEqual(c.explicitFollowers('t-x'), ['ann']);
+});

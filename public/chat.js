@@ -214,7 +214,7 @@
     let prev = null;
     for (const m of all) {
       const li = el('li', 'msg' + (m.mine ? ' mine' : '') + (m.deleted ? ' gone' : '') + (m.mentionsMe ? ' ping' : '') + (m.who.agent ? ' agent' : ''));
-      const grouped = prev && prev.who.id === m.who.id && m.at - prev.at < 5 * 60e3 && !prev.deleted && !m.deleted;
+      const grouped = prev && prev.who.id === m.who.id && m.at - prev.at < 5 * 60e3 && !prev.deleted && !m.deleted && prev.a2a?.to === m.a2a?.to;
       if (grouped) li.classList.add('cont');
       else {
         const head = el('div', 'msg-head');
@@ -222,6 +222,8 @@
         if (!m.who.agent) { const [bg, fg] = whoColor(m.who); av.style.background = bg; av.style.color = fg; }
         head.append(av, el('span', 'nm', m.mine ? `${m.who.name} (${t('chatYou')})` : m.who.name));
         if (m.who.agent) head.append(el('span', 'tag-bot', t('chatAgentTag')));
+        // Agent ↔ agent (orca-send or a hand-off): who it went to. Shown in both agents' threads.
+        if (m.a2a) head.append(el('span', 'a2a', t(m.a2a.via === 'handoff' ? 'chatA2aHand' : 'chatA2aTo', m.a2a.to)));
         head.append(el('time', 'tm', when(m.at)));
         li.append(head);
       }
@@ -235,6 +237,7 @@
         else fillText(body, shown);
         if (shown !== m.text) body.classList.add('tr');
       }
+      if (m.a2a) li.classList.add('a2a');
       li.append(body);
       if (needsTr(m)) li.append(trLine(m));
       if (m.answer && !m.deleted) {
