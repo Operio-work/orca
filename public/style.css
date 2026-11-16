@@ -1707,3 +1707,26 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
   .tpl-row { flex-direction: column; }
   .tpl-acts { justify-content: flex-end; padding: 0 4px 4px; }
 }
+
+/* ── Skills gallery (skills.js): reuses the template dialog's frame; one card per skill ── */
+.skl-intro { margin: 0; }
+.skl-card { display: grid; gap: 6px; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface-2); }
+.skl-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.skl-status { font: 600 var(--text-xs) var(--font-mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.skl-status.on { color: var(--color-green-ink); }
+.skl-status.wait { color: var(--color-orange-ink); }
+.skl-status.no { color: var(--color-red-ink); }
+.skl-sum { margin: 0; font: 400 var(--text-sm)/1.45 var(--font-sans); color: var(--text-secondary); overflow-wrap: anywhere; }
+.skl-note { margin: 0; padding-left: var(--space-2); border-left: 2px solid var(--color-border); font: 400 var(--text-sm)/1.4 var(--font-sans); color: var(--text-secondary); overflow-wrap: anywhere; }
+.skl-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+.skl-tags { display: flex; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.skl-tag { font: 600 var(--text-xs) var(--font-mono); color: var(--text-muted); padding: 2px 8px; border: 1px solid var(--color-border); border-radius: 999px; }
+.skl-foot .btn { min-height: 36px; margin-left: auto; }
+/* Phones: the header row also holds Skills (and Team chat on ORCA Host) — slimmer icon buttons so it fits at 360 px. */
+@media (max-width: 479px) {
+  .actions { gap: 2px; }
+  .actions .chip.icon, .actions #new, .actions #routines-btn { width: 32px; min-width: 0; }
+}
+@media (max-width: 379px) {
+  .actions .chip.icon, .actions #new, .actions #routines-btn { width: 30px; }
+}

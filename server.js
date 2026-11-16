@@ -28,6 +28,7 @@ const { createChat, findMentions, buildPrompt, cutReply, a2aPosts } = require('.
 const { createTranslator, detectLang } = require('./lib/translate');
 const { talkView } = require('./lib/talk');
 const { createTemplates, TemplateError } = require('./lib/templates');
+const { createSkills, SkillError } = require('./lib/skills');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -177,6 +178,15 @@ const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL
 // library, which ORCA Host writes to operio-templates.json in the config folder (read-only here).
 const templates = createTemplates({ dir: CFG.CONFIG_DIR, operioFile: path.join(CFG.CONFIG_DIR, 'operio-templates.json'), company: CFG.HOSTED, operio: CFG.HOSTED, log });
 const tplErr = e => { if (e instanceof TemplateError) throw new HttpError(e.status, e.code); throw e; };
+// Skills (SKILL.md folders your agents read when a task matches; lib/skills.js). Free panel: the
+// bundled open skills in <app>/skills, installed and removed from the Skills dialog. ORCA Host:
+// Operio's gallery for this client (operio-skills.json); a client admin requests one and ORCA Host
+// installs it through `operio-orca skills install` — the hosted panel never installs by itself.
+const skills = createSkills({ home: CFG.HOME, configDir: CFG.CONFIG_DIR, bundledDir: path.join(__dirname, 'skills'), log });
+const skillErr = e => { if (e instanceof SkillError) throw new HttpError(e.status, e.code, e.detail); throw e; };
+// Who may ask Operio for a skill on a hosted panel: the client's admins and Operio staff.
+// (ORCA Host checks again before it records the request.)
+const canRequestSkill = login => { const p = hostPerson(login); return !p || p.operio || p.role === 'client_admin'; };
 let chat = CFG.HOSTED ? createChat({ dir: CFG.CHAT_DIR, redact, log, keepDays: CFG.JOURNAL_DAYS }) : null;
 // Chat translation EN ⇄ ES with a small model (lib/translate.js): anthropic | ollama | off.
 // The model runs on the client's own Anthropic key: the one their Claude agents use (llm.env,
@@ -1383,6 +1393,8 @@ function describe(e) {
     case 'msg.agent': return `${ag} messaged ${to}: ${e.text}`;
     case 'template.save': return `${who} ${e.update ? 'edited' : 'added'} a ${e.scope} prompt template “${e.title}”`;
     case 'template.delete': return `${who} deleted a ${e.scope} prompt template`;
+    case 'skill.install': return `${who} installed the skill ${e.key} v${e.version}`;
+    case 'skill.remove': return `${who} removed the skill ${e.key}`;
     case 'msg.rate_limited': return `Link ${ag} ↔ ${to} paused (over ${e.perHour} messages/hour)`;
     case 'shell.open': return `${who} opened the shell ${ag || e.agent?.pane || ''}`;
     case 'shell.close': return `${who} closed the shell ${ag || e.agent?.pane || ''}`;
@@ -1795,6 +1807,10 @@ async function api(req, res, url) {
     return send(res, 200, templates.list(chatWho(login), { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', admin: isAdmin(login) }));
   }
 
+  if (req.method === 'GET' && pathname === '/api/skills') {
+    return send(res, 200, skills.view({ hosted: CFG.HOSTED, lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', canRequest: canRequestSkill(loginOf(req)) }));
+  }
+
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
     return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
@@ -1922,8 +1938,26 @@ async function api(req, res, url) {
   }
 
   if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
+  // Asking Operio for a skill is answered by ORCA Host in its proxy, never by the panel.
+  if (pathname === '/api/skills/request') return send(res, 404, { error: 'not found' });
   if (!sameOrigin(req)) { log('write.denied', { path: pathname }); return send(res, 403, { error: 'cross-origin' }); }
   const body = await readBody(req);
+
+  // ── Skills (free panel only: install / remove a bundled skill)
+  if (pathname === '/api/skills/install' || pathname === '/api/skills/remove') {
+    if (CFG.HOSTED) return send(res, 404, { error: 'not found' });
+    const key = String(body.key || '');
+    if (pathname === '/api/skills/install') {
+      let r;
+      try { r = skills.installBundled(key); } catch (e) { skillErr(e); }
+      jr(req, 'skill.install', null, { key: r.key, version: r.version, files: r.files, bytes: r.bytes });
+      return send(res, 200, { ok: true, key: r.key, version: r.version });
+    }
+    let r;
+    try { r = skills.remove(key); } catch (e) { skillErr(e); }
+    if (r.removed) jr(req, 'skill.remove', null, { key: r.key });
+    return send(res, 200, { ok: true, removed: r.removed });
+  }
 
   // ── Prompt templates (fill the prompt box; never sent by themselves)
   if (pathname === '/api/templates') {

@@ -1,0 +1,25 @@
+{
+  "skills": [
+    {
+      "key": "review-reply-drafts",
+      "version": 1,
+      "en": { "name": "Review reply drafts", "summary": "Drafts warm, specific replies to Google and other customer reviews, in the reviewer's language. You read them and post them yourself." },
+      "es": { "name": "Borradores de respuesta a reseñas", "summary": "Redacta respuestas cálidas y concretas a reseñas de Google y otros sitios, en el idioma de quien escribió. Tú las revisas y las publicas." },
+      "tags": ["reviews", "customers"]
+    },
+    {
+      "key": "weekly-owner-summary",
+      "version": 1,
+      "en": { "name": "Weekly owner summary", "summary": "Turns the week's notes, sales figures and messages into a one-page summary for the owner: what happened, what needs a decision, what is next." },
+      "es": { "name": "Resumen semanal para el dueño", "summary": "Convierte las notas, ventas y mensajes de la semana en un resumen de una página: qué pasó, qué necesita una decisión y qué sigue." },
+      "tags": ["reports", "owner"]
+    },
+    {
+      "key": "bilingual-message-polish",
+      "version": 1,
+      "en": { "name": "Bilingual message polish", "summary": "Cleans up a customer message in English or Spanish and gives you both versions, same tone, ready to copy. Nothing is sent." },
+      "es": { "name": "Mensajes pulidos en dos idiomas", "summary": "Mejora un mensaje para clientes en español o inglés y te da las dos versiones con el mismo tono, listas para copiar. No se envía nada." },
+      "tags": ["messages", "bilingual"]
+    }
+  ]
+}

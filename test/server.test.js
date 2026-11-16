@@ -283,3 +283,30 @@ test('the free panel has no team chat: no API, nothing in the agents list', asyn
   assert.equal(r.status, 200);
   assert.equal(r.json.chat, null);
 });
+
+test('skills (free panel): the bundled gallery, install and remove a skill, journal entries', async () => {
+  let r = await req('GET', '/api/skills');
+  assert.equal(r.status, 200);
+  assert.equal(r.json.mode, 'local');
+  assert.equal(r.json.canRequest, false);
+  assert.ok(r.json.items.some(i => i.key === 'review-reply-drafts' && i.installed === null && i.source === 'bundled'));
+  assert.equal((await req('POST', '/api/skills/install', { body: { key: 'review-reply-drafts' } })).status, 403, 'writes need the Origin');
+  r = await post('/api/skills/install', { key: 'review-reply-drafts' });
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.version, 1);
+  const link = path.join(HOME, '.claude', 'skills', 'review-reply-drafts');
+  assert.equal(fs.readlinkSync(link), path.join(CFG, 'skills', 'review-reply-drafts'));
+  r = await req('GET', '/api/skills?lang=es');
+  const it = r.json.items.find(i => i.key === 'review-reply-drafts');
+  assert.deepEqual(it.installed, { version: 1 });
+  assert.match(it.name, /reseñas/);
+  assert.equal((await post('/api/skills/install', { key: 'nope' })).status, 404);
+  assert.equal((await post('/api/skills/install', { key: '../x' })).status, 404);
+  assert.equal((await post('/api/skills/request', { key: 'review-reply-drafts' })).status, 404, 'only ORCA Host answers requests');
+  r = await post('/api/skills/remove', { key: 'review-reply-drafts' });
+  assert.deepEqual(r.json, { ok: true, removed: true });
+  assert.ok(!fs.existsSync(link));
+  const day = fs.readdirSync(path.join(CFG, 'journal')).filter(f => f.endsWith('.jsonl')).sort().pop();
+  const events = fs.readFileSync(path.join(CFG, 'journal', day), 'utf8').trim().split('\n').map(l => JSON.parse(l).event);
+  assert.ok(events.includes('skill.install') && events.includes('skill.remove'));
+});

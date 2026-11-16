@@ -166,3 +166,12 @@ test('hosted identity: translation runs on the client\'s own key, read from llm.
   setKey('');
   assert.equal((await req('GET', '/api/agents', { user: VIEWER() })).json.chat.translate, false);
 });
+
+test('hosted identity: client admins and Operio staff may ask for a skill; viewers only look', async () => {
+  for (const [user, want] of [[ADMIN(), true], [STAFF(), true], [VIEWER(), false]]) {
+    const r = await req('GET', '/api/skills', { user });
+    assert.equal(r.status, 200);
+    assert.equal(r.json.mode, 'hosted');
+    assert.equal(r.json.canRequest, want);
+  }
+});

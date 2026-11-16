@@ -34,7 +34,7 @@ done
 INCLUDE=(
   LICENSE THIRD_PARTY_NOTICES.md README.md README.es.md CHANGELOG.md
   package.json package-lock.json server.js chips.js uninstall.sh
-  bin lib public routines demo catalog
+  bin lib public routines skills demo catalog
 )
 EXCLUDE=(demo/screenshots)
 

@@ -81,3 +81,19 @@ test('hosted: your own message can be deleted; translation is off without a key'
   assert.equal(m.deleted, true);
   assert.equal(m.text, '');
 });
+
+test('hosted: skills come from Operio\'s catalogue; the panel never installs, and /request is the Host\'s', async () => {
+  const CFG = path.join(HOME, '.config', 'operio-orca');
+  let r = await req('GET', '/api/skills');
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.json.mode, r.json.canRequest, r.json.items.length], ['hosted', true, 0], 'no bundled skills on a hosted panel');
+  fs.writeFileSync(path.join(CFG, 'operio-skills.json'), JSON.stringify({ version: 1, updatedAt: 1, skills: [
+    { key: 'review-reply-drafts', version: 2, en: { name: 'Review replies', summary: 'Drafts replies.' }, es: { name: 'Respuestas', summary: 'Redacta.' }, tags: ['reviews'], request: { status: 'pending', at: 1 } },
+  ] }), { mode: 0o600 });
+  r = await req('GET', '/api/skills?lang=es');
+  assert.deepEqual(r.json.items.map(i => [i.key, i.name, i.installed, i.request.status, i.source]), [['review-reply-drafts', 'Respuestas', null, 'pending', 'operio']]);
+  assert.equal((await post('/api/skills/install', { key: 'review-reply-drafts' })).status, 404);
+  assert.equal((await post('/api/skills/remove', { key: 'review-reply-drafts' })).status, 404);
+  assert.equal((await post('/api/skills/request', { key: 'review-reply-drafts' })).status, 404);
+  assert.ok(!fs.existsSync(path.join(CFG, 'skills')), 'nothing installed');
+});

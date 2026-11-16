@@ -149,6 +149,18 @@ say "removed $PREFIX"
 
 if [ "$PURGE" -eq 1 ]; then
   case "$CONFIG_DIR" in ""|"/"|"$HOME"|"$HOME/") say "refusing to delete CONFIG_DIR=$CONFIG_DIR"; exit 1 ;; esac
+  # Skills ORCA installed: our links in ~/.claude/skills and our block in AGENTS.md / GEMINI.md.
+  for link in "$HOME/.claude/skills"/*; do
+    [ -L "$link" ] || continue
+    case "$(readlink "$link")" in "$CONFIG_DIR/skills/"*) rm -f "$link" ;; esac
+  done
+  for f in "$HOME/.codex/AGENTS.md" "$HOME/.gemini/GEMINI.md"; do
+    { [ -f "$f" ] && grep -qF '<!-- operio-orca skills:start -->' "$f"; } || continue
+    tmp="$(mktemp)"
+    awk '/<!-- operio-orca skills:start -->/ {skip=1} !skip {print} /<!-- operio-orca skills:end -->/ {skip=0}' "$f" > "$tmp"
+    cat "$tmp" > "$f"
+    rm -f "$tmp"
+  done
   rm -rf "$CONFIG_DIR"
   say "deleted $CONFIG_DIR"
   # The demo folder holds only fictional data, and is marked as such.
