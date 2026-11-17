@@ -116,8 +116,13 @@ function scriptedView(a, st, now) {
 const ROUTINE_RE = /^\[ORCA routine: ([^\]]+)\]/;
 const OUT_RE = /write your result as Markdown to this file \(create the folder if needed\): (\S+\.md)/;
 
-function dynTurn(p, speed, U) {
+function dynTurn(p, speed, U, reply) {
   const ms = s => (s * 1000) / speed;
+  // A worker's task ("[ORCA] Your task: …") gets the demo's canned reply when the state sets one.
+  if (reply && /\[ORCA\] Your task:/.test(p.text)) {
+    const text = p.text.replace(/\s+/g, ' ').trim().slice(0, 200);
+    return { rows: [{ at: p.at, text: `❯ ${text}` }, { at: p.at + ms(2), text: `● ${reply}` }], doneAt: p.at + ms(2.6) };
+  }
   const r = p.text.match(ROUTINE_RE);
   if (r) {
     const out = (p.text.match(OUT_RE) || [])[1] || '';
@@ -155,7 +160,7 @@ function dynView(d, st, now) {
   if (!d.kind) return { status: 'unknown', lines: [], seq: 0 };
   if (d.kind === 'shell') return { status: 'unknown', lines: [{ at: now, text: '$ ' }], seq: 0 };
   if (!prompts.length) return { status: 'idle', lines: [{ at: now, text: `  ${d.name} · ${U.dynReady}` }], seq: 1 };
-  const turns = prompts.map(p => dynTurn(p, speed, U));
+  const turns = prompts.map(p => dynTurn(p, speed, U, st.reply));
   const last = turns[turns.length - 1];
   const lines = turns.flatMap(t => t.rows).filter(r => r.at <= now);
   const working = now < last.doneAt;

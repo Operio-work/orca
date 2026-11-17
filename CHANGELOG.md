@@ -3,6 +3,21 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.4.1] - 2026-11-17
+
+### Panel
+- **Calmer header:** Admin, API keys, phone alerts, light/dark and language move into a **⋯ More**
+  menu; the header keeps New, Routines, Saved agents, Journal, Chat and the view picker.
+- **Workers close quietly:** a finished worker no longer sends its lead an "Agent … was ended"
+  note. Its message starts with the result ("Worker … finished. Result: …") and keeps the worker's
+  name after it is gone (it showed "← ?").
+- **Journal:** plain EN/ES sentences for workers, worker requests, saved-agent setups, accounts,
+  tools and secrets (they showed raw event names).
+- Saved agents: a worker request names the setup, and its card no longer clips Approve / Decline.
+
+### Docs
+- README (EN/ES): saved agents, teams, workers, MCP tools, accounts and local models.
+
 ## [0.4.0] - 2026-11-17
 
 ### Panel
