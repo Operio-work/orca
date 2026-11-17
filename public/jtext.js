@@ -22,6 +22,20 @@
       'agent.job': (w, a, e) => `${a} finished a job${e.secs != null ? ` (${mins(e.secs * 1000, 'en')})` : ''}`,
       'agent.blocked': (w, a) => `${a} needed you`,
       'link.add': (w, a, e) => `${w} linked ${a} with ${nm(e.to)}`,
+      'worker.end': (w, a, e) => `Worker ${a} ${e.reason === 'timeout' ? 'ran out of time' : 'finished'}${e.to ? ` and reported to ${nm(e.to)}` : ''}`,
+      'spawn.request': (w, a, e) => `${a} asked for a ${e.profile} worker`,
+      'spawn.approve': (w, a, e) => `${w} approved ${a}'s request: worker ${e.worker} started`,
+      'spawn.deny': (w, a, e) => `${w} declined ${a}'s request for a ${e.profile} worker`,
+      'profile.save': (w, a, e) => `${w} saved the agent setup ${e.profile}`,
+      'profile.delete': (w, a, e) => `${w} deleted the agent setup ${e.profile}`,
+      'account.add': (w, a, e) => `${w} added the ${kind(e.kind)} account “${e.label}”`,
+      'account.key': (w, a, e) => `${w} set the API key of the account “${e.label}”`,
+      'account.rename': (w, a, e) => `${w} renamed a ${kind(e.kind)} account to “${e.label}”`,
+      'account.remove': (w, a, e) => `${w} removed the ${kind(e.kind)} account “${e.label}”`,
+      'tool.save': (w, a, e) => `${w} saved the tool ${e.tool}`,
+      'tool.remove': (w, a, e) => `${w} removed the tool ${e.tool}`,
+      'secret.set': (w, a, e) => `${w} ${e.cleared ? 'cleared' : 'set'} the secret ${e.name}`,
+      'access.change': (w, a, e) => `${w} changed People & access: ${e.people} people, list ${e.allowlist ? 'on' : 'off'}`,
       'link.delete': (w, a, e) => `${w} unlinked ${a} and ${nm(e.to)}`,
       'handoff.send': (w, a, e) => `${w} handed ${a}'s result to ${nm(e.to)}`,
       'handoff.dismiss': (w, a, e) => `${w} skipped the hand-off ${a} → ${nm(e.to)}`,
@@ -55,6 +69,20 @@
       'agent.job': (w, a, e) => `${a} terminó un trabajo${e.secs != null ? ` (${mins(e.secs * 1000, 'es')})` : ''}`,
       'agent.blocked': (w, a) => `${a} te necesitó`,
       'link.add': (w, a, e) => `${w} enlazó ${a} con ${nm(e.to)}`,
+      'worker.end': (w, a, e) => `El trabajador ${a} ${e.reason === 'timeout' ? 'se quedó sin tiempo' : 'terminó'}${e.to ? ` y le reportó a ${nm(e.to)}` : ''}`,
+      'spawn.request': (w, a, e) => `${a} pidió un trabajador ${e.profile}`,
+      'spawn.approve': (w, a, e) => `${w} aprobó la solicitud de ${a}: inició el trabajador ${e.worker}`,
+      'spawn.deny': (w, a, e) => `${w} rechazó la solicitud de ${a} de un trabajador ${e.profile}`,
+      'profile.save': (w, a, e) => `${w} guardó la configuración del agente ${e.profile}`,
+      'profile.delete': (w, a, e) => `${w} borró la configuración del agente ${e.profile}`,
+      'account.add': (w, a, e) => `${w} agregó la cuenta de ${kind(e.kind)} “${e.label}”`,
+      'account.key': (w, a, e) => `${w} guardó la clave de API de la cuenta “${e.label}”`,
+      'account.rename': (w, a, e) => `${w} renombró una cuenta de ${kind(e.kind)} a “${e.label}”`,
+      'account.remove': (w, a, e) => `${w} quitó la cuenta de ${kind(e.kind)} “${e.label}”`,
+      'tool.save': (w, a, e) => `${w} guardó la herramienta ${e.tool}`,
+      'tool.remove': (w, a, e) => `${w} quitó la herramienta ${e.tool}`,
+      'secret.set': (w, a, e) => `${w} ${e.cleared ? 'borró' : 'guardó'} el secreto ${e.name}`,
+      'access.change': (w, a, e) => `${w} cambió Personas y acceso: ${e.people} personas, lista ${e.allowlist ? 'activada' : 'desactivada'}`,
       'link.delete': (w, a, e) => `${w} desenlazó ${a} y ${nm(e.to)}`,
       'handoff.send': (w, a, e) => `${w} pasó el resultado de ${a} a ${nm(e.to)}`,
       'handoff.dismiss': (w, a, e) => `${w} omitió el relevo ${a} → ${nm(e.to)}`,
@@ -90,6 +118,8 @@
     if (e.event === 'agent.prompt' || e.event === 'chat.prompt') return e.text || '';
     if (e.event === 'agent.job') return [e.ask ? '“' + e.ask + '”' : '', e.said || e.title || ''].filter(Boolean).join(' → ');
     if (e.event === 'agent.end') return e.said || '';
+    if (e.event === 'worker.end') return e.said || '';
+    if (e.event === 'spawn.request' || e.event === 'spawn.approve' || e.event === 'spawn.deny') return e.task || '';
     if (e.event === 'agent.answer') return e.question || '';
     if (e.event === 'msg.agent') return e.text || '';
     if (e.event === 'handoff.send') return e.note || e.said || '';

@@ -1001,13 +1001,13 @@ async function endCheck(a) {
 }
 
 // Forget everything ORCA kept about a terminal; tell its linked agents.
-function forgetTerminal(t, name) {
+function forgetTerminal(t, name, { quiet = false } = {}) {
   const mine = state.links.filter(l => l.from === t || l.to === t);
   const others = [...new Set(mine.map(l => (l.from === t ? l.to : l.from)))];
   state.links = state.links.filter(l => l.from !== t && l.to !== t);
   for (const l of mine) delete state.handoffs[l.id];
   for (const m of state.msgs) if (m.state === 'queued' && m.to === t) m.state = 'failed';
-  for (const o of others) {
+  for (const o of quiet ? [] : others) {
     try { queueMsg({ from: t, to: o, text: `[ORCA] Agent ${name} was ended. Your link with it is gone, and operio-orca-send can no longer reach it. No reply needed.`, via: 'intro' }); } catch { /* best effort */ }
   }
   for (const k of ['tags', 'claims', 'seen', 'jobs', 'born']) if (state[k]) delete state[k][t];
@@ -1016,7 +1016,7 @@ function forgetTerminal(t, name) {
   return others.length;
 }
 
-async function endAgent(a) {
+async function endAgent(a, _who, { quiet = false } = {}) {
   // 1. Keep its last output for the journal.
   let text = '';
   try { text = await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '400', '--format', 'text']); }
@@ -1049,7 +1049,7 @@ async function endAgent(a) {
   const born = state.born[a.terminal];
   const ranFor = born?.at ? Date.now() - born.at : null;
   const jobs24 = jobStats(a.terminal).n;
-  const notified = forgetTerminal(a.terminal, nameOf(a));
+  const notified = forgetTerminal(a.terminal, nameOf(a), { quiet });
   prev.delete(a.pane); work.delete(a.pane); agentCache.delete(a.pane);
   layoutCache.at = 0;
   log('agent.end', { pane: a.pane, mode, closed });
@@ -1430,10 +1430,11 @@ async function finishWorker(a, reason) {
     const said = (await workerResult(a)).slice(0, 3800);
     const agents = await listAgents();
     const lead = i.leadTerminal && agents.find(x => x.terminal === i.leadTerminal);
-    const head = reason === 'timeout' ? `[ORCA] Worker ${nameOf(a)} ran out of time (${i.minutes} min) on its task. Its last reply:` : `[ORCA] Worker ${nameOf(a)} finished its task. Its result:`;
-    const text = `${head}\n${said || '(no text reply)'}\n\nThe task was: ${i.task.slice(0, 300)}`;
+    // The result starts on the first line: panels show a message's first line in lists.
+    const head = reason === 'timeout' ? `[ORCA] Worker ${nameOf(a)} ran out of time (${i.minutes} min). Last reply:` : `[ORCA] Worker ${nameOf(a)} finished. Result:`;
+    const text = `${head} ${said || '(no text reply)'}\n\nThe task was: ${i.task.slice(0, 300)}`;
     if (lead) {
-      state.msgs.push({ id: newId(), from: a.terminal, to: lead.terminal, text, at: Date.now(), via: 'handoff', state: 'queued' });
+      state.msgs.push({ id: newId(), from: a.terminal, fromName: nameOf(a), to: lead.terminal, text, at: Date.now(), via: 'handoff', state: 'queued' });
       mirrorToChat(state.msgs.at(-1), new Map(agents.map(x => [x.terminal, x])));
       saveState();
     } else {
@@ -2249,7 +2250,7 @@ async function api(req, res, url) {
     const byTerminal = new Map(agents.map(x => [x.terminal, x]));
     const list = state.msgs.filter(m => m.from === a.terminal || m.to === a.terminal).slice(-15).map(m => ({
       id: m.id, at: m.at, via: m.via, state: m.state, out: m.from === a.terminal,
-      other: (() => { const o = byTerminal.get(m.from === a.terminal ? m.to : m.from); return o ? { pane: o.pane, name: o.name } : null; })(),
+      other: (() => { const o = byTerminal.get(m.from === a.terminal ? m.to : m.from); return o ? { pane: o.pane, name: o.name } : m.fromName && m.from !== a.terminal ? { pane: null, name: m.fromName } : null; })(),
       text: m.via === 'agent' ? m.text.slice(0, 600) : m.text.split('\n')[0].slice(0, 200),
     }));
     return send(res, 200, { messages: list });
