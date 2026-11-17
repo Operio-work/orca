@@ -241,6 +241,8 @@ const T = {
     officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kTpl: 'plantillas', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdYou: 'Tú', rdSteps: '{0} pasos', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
   },
 };
+// Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
+if (window.ORCA_I18N?.app) T[window.ORCA_I18N.lang] = { ...T.en, ...window.ORCA_I18N.app };
 // Server errors arrive as short codes; this turns them into the visitor's language.
 const errText = err => T[lang]['e_' + err.message] || T.en['e_' + err.message] || t('e_generic');
 // Keys: drawn icons from the sprite where a symbol helps, words otherwise.
@@ -2562,7 +2564,6 @@ setInterval(() => { if (!document.hidden) loadMemory(); }, MEM_POLL_MS);
 function applyLang() {
   if (typeof labelTermBtn === 'function' && $('#term-theme')) labelTermBtn();
   document.documentElement.lang = lang;
-  $('#lang').textContent = lang === 'en' ? 'ES' : 'EN';
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle); el.setAttribute('aria-label', t(el.dataset.i18nTitle)); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
@@ -2573,15 +2574,11 @@ function applyLang() {
   render();
   document.dispatchEvent(new Event('operio-orca:lang'));
 }
-$('#lang').addEventListener('click', async () => {
-  lang = lang === 'en' ? 'es' : 'en';
-  safeSet('herdr-lang', lang);
-  applyLang();
-  buildKeys();
-  // Alerts follow the app's language.
+// Language menu (lang-boot.js). Alerts follow the app's language, so update them before reloading.
+window.orcaLangMenu($('#lang'), lang, async code => {
   if (pushSupported() && Notification.permission === 'granted') {
     const sub = await (await navigator.serviceWorker.ready).pushManager.getSubscription();
-    if (sub) post('/api/push/subscribe', { subscription: sub.toJSON(), lang }).catch(() => {});
+    if (sub) await post('/api/push/subscribe', { subscription: sub.toJSON(), lang: code }).catch(() => {});
   }
 });
 

@@ -177,7 +177,7 @@
     if (d.toDateString() === now.toDateString()) return hm;
     const y = new Date(now); y.setDate(now.getDate() - 1);
     if (d.toDateString() === y.toDateString()) return `${t('chatYesterday')} ${hm}`;
-    return `${d.toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { day: 'numeric', month: 'short' })} ${hm}`;
+    return `${d.toLocaleDateString(window.orcaLocale(lang), { day: 'numeric', month: 'short' })} ${hm}`;
   }
 
   // Text → nodes: links clickable, @Name highlighted. Never innerHTML.

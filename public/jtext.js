@@ -70,6 +70,8 @@
       error: (w, a, e) => `Error ${e.code} en ${e.path}${e.n > 1 ? ` ×${e.n}` : ''}`,
     },
   };
+  // Other languages: the pack's sentences get this file's helpers as parameters.
+  if (window.ORCA_I18N?.jtext) L[window.ORCA_I18N.lang] = { ...L.en, ...window.ORCA_I18N.jtextWords, ...window.ORCA_I18N.jtext({ kind, nm, mins, ran }) };
   const KINDS = { claude: 'Claude', opencode: 'opencode', hermes: 'Hermes', agy: 'Antigravity', codex: 'Codex', shell: 'shell' };
   function kind(k) { return KINDS[k] || k || '?'; }
   function nm(a) { return a ? (a.name || a.pane || '?') : '?'; }

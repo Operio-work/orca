@@ -26,6 +26,8 @@ const T = {
         noGl: 'Este dispositivo no puede dibujar 3D. Usa Mapa, Oficina o Islas.', quiet: 'Todo en calma.', needs: '{0} te necesitan', needs1: '1 te necesita',
         offline: 'Sin conexión — reintentando…', open: 'Abrir', show: 'Mostrar', zoom: 'Ampliar', booting: 'ENCENDIENDO MESA', st: { working: 'trabajando', idle: 'libre', blocked: 'te necesita', done: 'terminó', unknown: 'iniciando' } },
 };
+// Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
+if (window.ORCA_I18N?.holo) T[window.ORCA_I18N.lang] = { ...T.en, ...window.ORCA_I18N.holo };
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let THREE = null, loading = null, failed = false;
@@ -608,7 +610,7 @@ function stop() { running = false; cancelAnimationFrame(raf); }
 // ─── HUD ─────────────────────────────────────────────────────────────────────
 function clock() {
   const d = new Date(now());
-  clockEl.textContent = d.toLocaleTimeString(state.lang === 'es' ? 'es-MX' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  clockEl.textContent = d.toLocaleTimeString(state.window.orcaLocale(lang), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 function info() {
   if (failed) return;

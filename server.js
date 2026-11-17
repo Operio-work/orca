@@ -17,6 +17,7 @@ const fs   = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const crypto = require('crypto');
+const vm = require('vm');
 const { execFile } = require('child_process');
 const webpush = require('web-push');
 const guard = require('./lib/guard');
@@ -320,6 +321,18 @@ const PUSH = {
   en: { blocked: n => `${n} needs you`, done: n => `${n} finished`, taken: n => `${n} was taken over`, assigned: n => `${n} is yours now`, handoff: n => `${n} finished — hand off?`, chatty: n => `${n}: link paused`, mention: n => `${n} mentioned you`, reply: n => `${n} wrote`, agentReply: n => `${n} answered you`, room: 'Team', test: () => 'ORCA alerts are on', testBody: 'You’ll hear when an agent finishes or needs you.' },
   es: { blocked: n => `${n} te necesita`, done: n => `${n} terminó`, taken: n => `${n} fue tomado`, assigned: n => `${n} ahora es tuyo`, handoff: n => `${n} terminó — ¿pasar el relevo?`, chatty: n => `${n}: enlace en pausa`, mention: n => `${n} te mencionó`, reply: n => `${n} escribió`, agentReply: n => `${n} te respondió`, room: 'Equipo', test: () => 'Alertas de ORCA activas', testBody: 'Te avisaremos cuando un agente termine o te necesite.' },
 };
+// Language packs (public/i18n/<lang>.js, written for the browser) also carry the alert copy:
+// read once at start in a sandbox, merged over English so a missing line stays English.
+const LANGS = ['en', 'es'];
+for (const f of (() => { try { return fs.readdirSync(path.join(PUBLIC, 'i18n')); } catch { return []; } })()) {
+  const m = /^([a-z]{2})\.js$/.exec(f);
+  if (!m) continue;
+  try {
+    const box = {};
+    vm.runInNewContext(fs.readFileSync(path.join(PUBLIC, 'i18n', f), 'utf8'), { window: box, globalThis: box });
+    if (box.ORCA_I18N?.server) { PUSH[m[1]] = { ...PUSH.en, ...box.ORCA_I18N.server }; LANGS.push(m[1]); }
+  } catch (e) { log('i18n.pack_bad', { file: f, error: e.message }); }
+}
 function pushPayload(p, lang) {
   const L = PUSH[lang] || PUSH.en;
   const isChat = p.kind === 'mention' || p.kind === 'reply' || p.kind === 'agentReply';
@@ -2080,7 +2093,7 @@ async function api(req, res, url) {
   if (pathname === '/api/push/subscribe') {
     const sub = body.subscription;
     if (!sub?.endpoint || !/^https:\/\//.test(sub.endpoint) || !sub.keys?.p256dh || !sub.keys?.auth) throw new HttpError(400, 'bad_request');
-    const lang = body.lang === 'es' ? 'es' : 'en';
+    const lang = LANGS.includes(body.lang) ? body.lang : 'en';
     state.subs = state.subs.filter(s => s.endpoint !== sub.endpoint).concat([{ endpoint: sub.endpoint, keys: sub.keys, lang, login: loginOf(req) }]);
     saveState();
     log('push.subscribe', { devices: state.subs.length });

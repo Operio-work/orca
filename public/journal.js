@@ -7,7 +7,6 @@ const enc = encodeURIComponent;
 const safeGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
 const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* private mode */ } };
 let lang = safeGet('herdr-lang') || (navigator.language || 'en').slice(0, 2);
-if (lang !== 'es') lang = 'en';
 
 const T = {
   en: {
@@ -43,6 +42,9 @@ const T = {
     e_generic: 'Algo salió mal. Inténtalo de nuevo.', e_not_final: 'El día aún no termina — revísalo mañana.',
   },
 };
+// Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
+if (window.ORCA_I18N?.journal) T[window.ORCA_I18N.lang] = { ...T.en, ...window.ORCA_I18N.journal };
+if (!T[lang]) lang = 'en';
 const t = (k, ...a) => (T[lang][k] ?? T.en[k] ?? k).replace(/\{(\d)\}/g, (_, i) => a[i] ?? '');
 const GROUPS = ['lifecycle', 'work', 'coordination', 'security', 'errors'];
 const WHO_BG = ['var(--color-blue)', 'var(--color-yellow)', 'var(--color-info)', 'var(--text-primary)'];
@@ -70,7 +72,7 @@ const localDay = (ts = Date.now()) => { const d = new Date(ts); return `${d.getF
 function shiftDay(day, n) { const [y, m, d] = day.split('-').map(Number); return localDay(new Date(y, m - 1, d + n).getTime()); }
 function dayLabel(day) {
   const [y, m, d] = day.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date(y, m - 1, d).toLocaleDateString(window.orcaLocale(lang), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 const fmtDur = ms => window.OrcaJText.mins(ms, lang);
 
@@ -388,7 +390,6 @@ $('#tab-review').addEventListener('click', () => { setTab('review'); loadDigests
 
 function applyLang() {
   document.documentElement.lang = lang;
-  $('#lang').textContent = lang === 'en' ? 'ES' : 'EN';
   document.title = `ORCA ${t('title')}`;
   document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = t(n.dataset.i18n); });
   document.querySelectorAll('[data-i18n-title]').forEach(n => { n.title = t(n.dataset.i18nTitle); n.setAttribute('aria-label', n.title); });
@@ -396,7 +397,7 @@ function applyLang() {
   renderTimeline();
   renderDigests();
 }
-$('#lang').addEventListener('click', () => { lang = lang === 'en' ? 'es' : 'en'; safeSet('herdr-lang', lang); applyLang(); });
+window.orcaLangMenu($('#lang'), lang);
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#F4F4F5' : '#0A0A0A';

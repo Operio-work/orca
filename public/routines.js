@@ -47,7 +47,7 @@
 
   const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
   const btn = (label, cls, onClick) => { const b = mk('button', cls || 'chip small', label); b.type = 'button'; b.addEventListener('click', onClick); return b; };
-  const when = ms => (ms ? new Date(ms).toLocaleString(lang === 'es' ? 'es-MX' : 'en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : t('rtNever'));
+  const when = ms => (ms ? new Date(ms).toLocaleString(window.orcaLocale(lang), { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : t('rtNever'));
   const loc = v => (v && (v[lang] || v.en)) || '';
 
   function labelStatic() {

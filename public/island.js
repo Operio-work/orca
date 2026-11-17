@@ -76,6 +76,8 @@ const T = {
         needs: '¡{0} te necesitan!', needs1: '¡1 te necesita!', offline: 'Sin conexión — reintentando…',
         st: { working: 'trabajando', idle: 'libre', blocked: 'te necesita', done: 'terminó', unknown: 'llegando' } },
 };
+// Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
+if (window.ORCA_I18N?.island) T[window.ORCA_I18N.lang] = { ...T.en, ...window.ORCA_I18N.island };
 // Agent kind = character (token keys): hair, skin, shirt, trousers; robots and wings as extras.
 const KINDS = {
   claude:   { h: 'orangeDim', s: 'orangeBright', b: 'orangeStrong', p: 't3' },
@@ -675,7 +677,7 @@ function draw() {
     txt(fit(wsName(cur.ws), lay.W - bw - 90, 6.5, 800), bw + 10, HUD_H / 2 + 0.5, 6.5, C.orangeInk, 'left', 800);
   } else txt(L.title, 6, HUD_H / 2 + 0.5, 6.5, C.orangeInk, 'left', 800);
   const d = new Date(now());
-  const date = d.toLocaleString(state.lang === 'es' ? 'es-MX' : 'en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const date = d.toLocaleString(state.window.orcaLocale(lang), { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   txt(date, lay.W - 6, HUD_H / 2 + 0.5, 5.5, C.t2, 'right', 600);
 
   // Info bar: the selected agent, or the news

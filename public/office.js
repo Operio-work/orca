@@ -159,6 +159,8 @@ const T = {
         need1: '{0} TE NECESITA', needN: '{0} TE NECESITAN', counts: '{0} TRABAJANDO · {1} LIBRES · {2} TE NECESITAN',
         st: { working: 'TRABAJANDO', idle: 'LIBRE', blocked: 'TE NECESITA', done: 'TERMINO', unknown: 'INICIANDO' } },
 };
+// Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
+if (window.ORCA_I18N?.office) T[window.ORCA_I18N.lang] = { ...T.en, ...window.ORCA_I18N.office };
 
 GLYPHS['·'] = '000000010000000';
 GLYPHS['&'] = '010101010101011';
