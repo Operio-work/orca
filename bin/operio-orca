@@ -612,6 +612,7 @@ cmd_kb() {
   [ -n "$NODE_BIN" ] || die "node not found"
   # Hosted (meaning search on the client's key) comes from the environment, else from $CONFIG_DIR/env.
   local hosted="${OPERIO_ORCA_HOSTED:-}" model="${OPERIO_ORCA_KB_MODEL:-}"
+  # shellcheck disable=SC1090  # $ENV_FILE is the user's own settings file
   if [ -f "$ENV_FILE" ]; then
     [ -n "$hosted" ] || hosted="$( (set -a; . "$ENV_FILE" >/dev/null 2>&1; printf '%s' "${OPERIO_ORCA_HOSTED:-}") )"
     [ -n "$model" ] || model="$( (set -a; . "$ENV_FILE" >/dev/null 2>&1; printf '%s' "${OPERIO_ORCA_KB_MODEL:-}") )"
