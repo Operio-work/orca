@@ -32,6 +32,11 @@ const { createTemplates, TemplateError } = require('./lib/templates');
 const { createSkills, SkillError } = require('./lib/skills');
 const { createKb, KbError, installKnowledgeSkill } = require('./lib/kb');
 const { createKbAccess, scopeOf: kbScopeOf } = require('./lib/kb-access');
+const transcript = require('./lib/transcript');
+const { createProfiles, ProfileError, reportsError, BUILTIN: PROFILE_TOOLS } = require('./lib/profiles');
+const { createAccounts, AccountError } = require('./lib/accounts');
+const { createTools, ToolError } = require('./lib/tools');
+const { createOllama } = require('./lib/ollama');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -52,11 +57,13 @@ const CLI        = path.join(__dirname, 'bin', 'operio-orca');
 const POLL_MS    = CFG.POLL_MS;
 const MIN_WORK_MS = CFG.MIN_WORK_MS; // shorter turns don't alert
 const FOLDERS = CFG.FOLDERS;
-const KINDS = ['claude', 'codex', 'opencode', 'hermes', 'agy', 'shell'];
+const KINDS = ['claude', 'codex', 'gemini', 'opencode', 'ollama', 'hermes', 'agy', 'shell'];
 const KEYS  = ['enter', 'esc', 'ctrl+c', 'up', 'down', 'tab', '1', '2', '3'];
 // Models an agent can be switched to from its card. Claude takes "/model <alias>" as a plain
 // message and switches on the spot; the other kinds only have an on-screen picker, so none here.
-const MODELS = { claude: ['fable', 'opus', 'sonnet', 'haiku'] };
+// Local models (ollama kind) are whatever tool-capable models Ollama has right now (lib/ollama.js).
+const MODELS = { claude: ['fable', 'opus', 'sonnet', 'haiku'], get ollama() { return ollama.models(); } };
+const OLLAMA_OPENCODE = path.join(STATE_DIR, 'opencode-ollama.json');
 const SHELL_UNLOCK_MS = CFG.SHELL_UNLOCK_MS;
 
 const PUBLIC = path.join(__dirname, 'public');
@@ -148,6 +155,10 @@ function rememberPerson(login, p) {
 const hostPerson = login => (login.startsWith('h:') ? state.people?.[login] || null : null);
 // Viewers (client_viewer) read and comment; everyone else can act on agents.
 const canAct = login => hostPerson(login)?.role !== 'client_viewer';
+// Agent logins (accounts) and MCP tools hold credentials: on a hosted panel only Operio sets them up.
+const canManageLogins = login => !CFG.HOSTED || !!hostPerson(login)?.operio;
+// Saved agents and workers: free = you; hosted = the client's admins and Operio.
+const canSetupAgents = login => !CFG.HOSTED || !!hostPerson(login)?.operio || hostPerson(login)?.role === 'client_admin';
 // Operio staff read a client's team chat only when the client lets them (ORCA Host sends it).
 const chatAllowed = login => { const p = hostPerson(login); return !p || !p.operio || !!p.chat; };
 const TEAM = 'team:all';
@@ -180,6 +191,20 @@ const journal = createJournal({ dir: CFG.JOURNAL_DIR, log, keepDays: CFG.JOURNAL
 // Prompt templates. Free panel: your own only. ORCA Host: also Company (admins edit) and Operio's
 // library, which ORCA Host writes to operio-templates.json in the config folder (read-only here).
 const templates = createTemplates({ dir: CFG.CONFIG_DIR, operioFile: path.join(CFG.CONFIG_DIR, 'operio-templates.json'), company: CFG.HOSTED, operio: CFG.HOSTED, log });
+// Saved agents (profiles.js): instructions + skills + tools, started again and resumed. Admins edit;
+// whoever may start an agent in the profile's folder may start it. One live copy per profile.
+const profiles = createProfiles({ configDir: STATE_DIR, kinds: KINDS, models: MODELS, log });
+// Several logins per agent kind (accounts.js): an account = its own config folder for that CLI.
+const accounts = createAccounts({ configDir: STATE_DIR, home: HOME, log });
+// MCP servers for saved agents (tools.js): catalogue + write-only secrets, admins only.
+const tools = createTools({ configDir: STATE_DIR, log });
+const toolErr = e => { if (e instanceof ToolError) throw new HttpError(e.status, e.code, e.detail); throw e; };
+const accountErr = e => { if (e instanceof AccountError) throw new HttpError(e.status, e.code); throw e; };
+// Local models through Ollama on this computer (ollama.js), refreshed every 5 minutes.
+const ollama = createOllama({ url: process.env.HERDR_WEB_OLLAMA_URL || 'http://127.0.0.1:11434', ctx: Number(process.env.HERDR_WEB_OLLAMA_CTX || 20480), configFile: OLLAMA_OPENCODE, log });
+ollama.refresh();
+setInterval(() => ollama.refresh(), 300e3).unref();
+const profileErr = e => { if (e instanceof ProfileError) throw new HttpError(e.status, e.code, e.detail); throw e; };
 const tplErr = e => { if (e instanceof TemplateError) throw new HttpError(e.status, e.code); throw e; };
 // Skills (SKILL.md folders your agents read when a task matches; lib/skills.js). Free panel: the
 // bundled open skills in <app>/skills, installed and removed from the Skills dialog. ORCA Host:
@@ -378,6 +403,7 @@ function shapeAgent(a) {
     tags: state.tags[a.terminal_id] || [],
     model: state.models?.[a.terminal_id]?.model || null, // the last model picked from the card (not read from the agent)
     session: a.agent_session?.value || null,
+    profile: state.instances?.[a.terminal_id]?.profile || null, // started from a saved agent
     since: prev.get(a.pane_id)?.since || null, // ms epoch the current status began (poller-tracked)
     jobs: jobStats(a.terminal_id),
     fresh: isFresh(a.terminal_id), // finished a job nobody has opened yet (any device)
@@ -517,6 +543,7 @@ async function recordJob(a, from, end) {
 // pending AskUserQuestion (exact options) and the latest reply chips. Without it
 // (Codex, a permission prompt, an older session) the numbered menu on screen is read.
 const ORCA_DIR = path.join(HOME, '.claude', 'orca');
+const CLAUDE_PROJECTS = path.join(HOME, '.claude', 'projects');
 const { chipsFor, lastReply, replyAfter, turnReply } = require('./chips');
 const screenChips = new Map(); // pane -> { key, chips }: worked out once per agent state
 // Named by the Claude session id (survives the pane moving); older mods used the pane id.
@@ -604,12 +631,16 @@ async function poll() {
     if (!state.born[a.terminal]) { state.born[a.terminal] = { at: polledOnce ? now : null, kind: a.agent }; bornChanged = true; }
     lastLive.set(a.terminal, a);
     missing.delete(a.terminal);
+    // A saved agent's latest session, so Resume can pick up where it left off.
+    const inst = state.instances[a.terminal];
+    if (inst && a.session && state.profileSessions[inst.profile] !== a.session) { state.profileSessions[inst.profile] = a.session; bornChanged = true; }
   }
   for (const [t, a] of lastLive) {
     if (live.has(t)) continue;
     const n = (missing.get(t) || 0) + 1;
     if (n < 2) { missing.set(t, n); continue; } // one missed list can be a blip
     missing.delete(t); lastLive.delete(t);
+    if (state.instances[t]) { profiles.cleanRun(state.instances[t].run || state.instances[t].profile); delete state.instances[t]; delete state.firstPrompts[t]; bornChanged = true; }
     if (ended.has(t)) { ended.delete(t); continue; }
     const b = state.born[t];
     jr(null, 'agent.gone', a, { ranFor: b?.at ? now - b.at : null });
@@ -619,13 +650,80 @@ async function poll() {
   for (const t of live) if (state.born[t]) state.born[t].seen = now;
   if (bornChanged) saveState();
   polledOnce = true;
-  deliverQueued(agents).catch(e => log('msg.deliver_error', { detail: e.detail || e.message }))
+  try { linkProfileTeams(agents); } catch (e) { log('profile.team_error', { detail: e.message }); }
+  sweepWorkers(agents);
+  expireSpawns();
+  deliverFirstPrompts(agents).catch(e => log('profile.deliver_error', { detail: e.detail || e.message }))
+    .then(() => deliverQueued(agents)).catch(e => log('msg.deliver_error', { detail: e.detail || e.message }))
     .then(() => deliverAsks(agents)).catch(e => log('chat.deliver_error', { detail: e.detail || e.message }));
 }
 // Always track state (so the first alert after subscribing is correct); push only when subscribed.
 setInterval(poll, POLL_MS);
 
+// ─── Saved agents and workers: one start routine ─────────────────────────────
+// Agents: one live copy, may resume. Workers: "<setup>-<n>", start with their task, end themselves.
+async function startProfile(req, p, { task = null, leadTerminal = null, resume = false, tab } = {}) {
+  const agents = await listAgents();
+  let name = p.id, sessionId = null;
+  if (p.type === 'agent') {
+    if (agents.some(a => a.name === p.id || (state.instances[a.terminal]?.profile === p.id && state.instances[a.terminal]?.type !== 'worker'))) throw new HttpError(409, 'profile_running');
+    sessionId = resume ? state.profileSessions[p.id] : null;
+    if (resume && !sessionId) throw new HttpError(409, 'no_session');
+  } else {
+    if (!task) throw new HttpError(400, 'bad_task');
+    if (liveWorkers() >= MAX_WORKERS) throw new HttpError(409, 'worker_limit');
+    const taken = new Set(agents.map(a => a.name));
+    let n = 1;
+    while (taken.has(`${p.id}-${n}`)) n++;
+    name = `${p.id}-${n}`.slice(0, 32);
+  }
+  const all = profiles.list();
+  const leadAgent = leadTerminal ? agents.find(a => a.terminal === leadTerminal) : null;
+  let mcp = null;
+  if (p.kind === 'claude' && p.tools.mcp.length) {
+    try { mcp = tools.writeRun(path.join(profiles.RUNS, name), p.tools.mcp); } catch (e) { profiles.cleanRun(name); toolErr(e); }
+  }
+  const run = profiles.buildRun(p, {
+    mcpFile: mcp?.mcpFile,
+    name, skills: skills.list(), kb: kb.list().length > 0, resume: sessionId,
+    lead: leadAgent ? nameOf(leadAgent) : p.type === 'worker' ? null : p.reportsTo,
+    members: p.type === 'agent' ? all.filter(x => x.reportsTo === p.id).map(x => x.id) : [],
+    workers: p.type === 'agent' ? p.spawn.profiles.filter(id => all.some(x => x.id === id && x.type === 'worker')) : [],
+  });
+  let r;
+  try {
+    r = await startAgent(req, { name, kind: p.kind, folder: p.folder, tab, model: p.model, account: p.account },
+      { args: run.args, ro: [run.dir, skills.ROOT], envFiles: mcp?.envFile ? [mcp.envFile] : [],
+        detail: { profile: p.id, rev: p.rev, resume: !!sessionId, ...(mcp ? { mcp: mcp.ids } : {}), ...(task ? { worker: true, task: task.slice(0, 300) } : {}) } });
+  } catch (e) { profiles.cleanRun(name); throw e; }
+  if (r.terminal) {
+    state.instances[r.terminal] = {
+      profile: p.id, rev: p.rev, type: p.type, run: name, lead: p.reportsTo || null, at: Date.now(), by: loginOf(req) || 'local',
+      ...(p.type === 'worker' ? { task, leadTerminal, minutes: p.worker.maxMinutes, until: Date.now() + p.worker.maxMinutes * 60e3 } : {}),
+    };
+    // Non-Claude kinds read their instructions as the first message; a worker's task follows them.
+    const first = [run.firstPrompt, task ? `[ORCA] Your task:\n${task}` : null].filter(Boolean).join('\n\n');
+    if (first) state.firstPrompts[r.terminal] = { text: first, at: Date.now() };
+    saveState();
+  }
+  return { ...r, name };
+}
+
 // ─── New agent ────────────────────────────────────────────────────────────────
+// Who may start what: limited users only in their folders, always sandboxed (fail closed);
+// a shell needs the PIN. `ro` = extra read-only paths the sandbox must show (a profile's files).
+async function startAgent(req, body, { args = null, detail = {}, envFiles = [] } = {}) {
+  const login = loginOf(req);
+  if (!canAct(login)) throw new HttpError(403, 'read_only');
+  // Another login for a kind (accounts.js): free = you; hosted = Operio manages them.
+  if (body.account && body.account !== 'default' && !canManageLogins(login)) throw new HttpError(403, 'forbidden');
+  if (String(body.kind || '') === 'shell') requireShell(); // a shell needs a fresh confirmation first
+  const r = await newAgent(body, { args, envFiles });
+  jr(req, r.shell ? 'shell.new' : 'agent.new', { name: r.name, pane: r.pane, terminal: r.terminal || null, cwd: r.cwd, agent: r.kind },
+    { kind: r.kind, tab: body.tab || 'new', blocked: !!r.blocked, ...detail });
+  return r;
+}
+
 function resolveFolder(input) {
   const abs = path.resolve(expandHome(String(input || '~').trim()));
   if (abs !== HOME && !abs.startsWith(HOME + path.sep)) throw new HttpError(400, 'folder_outside');
@@ -635,13 +733,21 @@ function resolveFolder(input) {
   return abs;
 }
 
-async function newAgent({ name, kind, folder, tab, model }, { prepare } = {}) {
+async function newAgent({ name, kind, folder, tab, model, account }, { prepare, args = null, envFiles = [] } = {}) {
   name = String(name || '').trim();
   if (!AGENT_NAME_RE.test(name)) throw new HttpError(400, 'bad_agent_name');
   if (!KINDS.includes(kind)) throw new HttpError(400, 'bad_kind');
   // Optional starting model (only kinds listed in MODELS; empty = the agent's own default).
   model = String(model || '');
+  if (kind === 'ollama') {
+    await ollama.fresh();
+    const list = MODELS.ollama;
+    if (!list.length) throw new HttpError(503, 'ollama_off');
+    if (!model) model = list.includes(process.env.HERDR_WEB_OLLAMA_MODEL || 'qwen2.5:7b') ? (process.env.HERDR_WEB_OLLAMA_MODEL || 'qwen2.5:7b') : list[0];
+  }
   if (model && !(MODELS[kind] || []).includes(model)) throw new HttpError(400, 'bad_request');
+  let acct = null;
+  try { acct = accounts.startFor(kind, account); } catch (e) { accountErr(e); }
   const cwd = resolveFolder(folder);
 
   let pane;
@@ -668,6 +774,21 @@ async function newAgent({ name, kind, folder, tab, model }, { prepare } = {}) {
   }
   if (!pane) throw new HttpError(502, 'start_failed', 'no pane id returned');
   await new Promise(r => setTimeout(r, 400)); // let the shell print its prompt
+  // Another account for this kind (this pane only): point the CLI at its folder, and load its API
+  // key from the file (never typed, so it stays out of the screen and the shell history).
+  if (acct) {
+    const line = [...acct.exports.map(([k, v]) => `export ${k}=${shq1(v)}`), ...(acct.source ? [`set -a; . ${shq1(acct.source)}; set +a`] : [])].join('; ');
+    if (line) { await herdr(['pane', 'send-text', pane, ` ${line}\r`]); await new Promise(r => setTimeout(r, 250)); }
+  }
+  // Secrets the agent's MCP servers use (its own run file, read from disk: never typed).
+  for (const f of envFiles) { await herdr(['pane', 'send-text', pane, ` set -a; . ${shq1(f)}; set +a\r`]); await new Promise(r => setTimeout(r, 200)); }
+  if (kind === 'ollama') {
+    let id;
+    try { id = await ollama.prepare(model); } catch (e) { throw new HttpError(e.code === 'bad_model' ? 400 : 503, e.code === 'bad_model' ? 'bad_request' : 'ollama_off', e.message); }
+    await herdr(['pane', 'send-text', pane, ` export OPENCODE_CONFIG=${shq1(OLLAMA_OPENCODE)}\r`]);
+    await new Promise(r => setTimeout(r, 200));
+    startKind = 'opencode'; extra = ['--', '-m', id];
+  }
   if (prepare) await prepare(pane);
   // A plain shell: the pane is the result (named through its pane label).
   if (kind === 'shell') {
@@ -693,7 +814,7 @@ async function newAgent({ name, kind, folder, tab, model }, { prepare } = {}) {
     if (model) { state.models = state.models || {}; state.models[terminal] = { model, at: Date.now() }; }
     saveState();
   }
-  log('agent.new', { pane, name, kind, model: model || null, cwd: shortHome(cwd), tab: tab || 'new', blocked });
+  log('agent.new', { pane, name, kind, model: model || null, account: acct ? account : null, cwd: shortHome(cwd), tab: tab || 'new', blocked });
   layoutCache.at = 0;
   return { pane, blocked, terminal, name, kind, cwd: shortHome(cwd) };
 }
@@ -1063,9 +1184,30 @@ async function memory() {
 // (0600), never in the log. A link that passes LINK_HOURLY messages an hour is paused and
 // a person is alerted: two agents must not keep each other busy in a loop.
 state.links = state.links || [];       // { id, kind, from, to, at, by }
+state.instances = state.instances || {};             // terminal -> { profile, rev, type, at, by } (saved agents running now)
+state.profileSessions = state.profileSessions || {}; // profile id -> last agent session id (Resume)
+state.firstPrompts = state.firstPrompts || {};       // terminal -> { text, at }: instructions for non-Claude kinds
+
+// Non-Claude saved agents read their instructions as their first message: sent once the agent is
+// idle (after a "trust this folder?" question is answered), dropped after an hour.
+async function deliverFirstPrompts(agents) {
+  let changed = false;
+  for (const [t, f] of Object.entries(state.firstPrompts)) {
+    const a = agents.find(x => x.terminal === t);
+    if (!a || Date.now() - f.at > QUEUE_TTL) { if (Date.now() - f.at > QUEUE_TTL) { delete state.firstPrompts[t]; changed = true; } continue; }
+    if (a.status !== 'idle' && a.status !== 'done') continue;
+    try {
+      await herdr(['agent', 'prompt', a.pane, f.text], 10000); delete state.firstPrompts[t]; changed = true; log('profile.instructions_sent', { pane: a.pane });
+      const inst = state.instances[t];
+      if (inst?.type === 'worker' && !inst.taskSentAt) { inst.taskSentAt = Date.now(); sentAsk.set(t, { text: inst.task.slice(0, 200), at: inst.taskSentAt }); }
+    }
+    catch (e) { log('profile.instructions_failed', { pane: a.pane, code: e.code }); }
+  }
+  if (changed) saveState();
+}
 state.handoffs = state.handoffs || {}; // link id -> { end, ask, said }
 state.msgs = state.msgs || [];         // { id, from, to, text, at, via, state, sentAt? }
-const LINK_KINDS = ['depends', 'talk'];
+const LINK_KINDS = ['depends', 'talk', 'reports']; // reports: from = member, to = its lead (2 levels max)
 const MSG_MAX = 4000, MSG_KEEP = 300, MSG_TTL = 7 * 864e5, QUEUE_TTL = 3600e3;
 const LINK_HOURLY = CFG.LINK_HOURLY;
 const newId = () => crypto.randomBytes(6).toString('base64url');
@@ -1182,7 +1324,8 @@ async function deliverQueuedNow(agents) {
 // A job finished: every agent that depends on this one gets a hand-off offer (one per link,
 // the newest job replaces an unsent older offer).
 function offerHandoffs(a, job) {
-  const down = state.links.filter(l => l.kind === 'depends' && l.from === a.terminal);
+  if (state.instances[a.terminal]?.type === 'worker') return; // workers send their result themselves
+  const down = state.links.filter(l => (l.kind === 'depends' || l.kind === 'reports') && l.from === a.terminal);
   if (!down.length) return;
   for (const l of down) state.handoffs[l.id] = { end: job.end, ask: job.ask, said: job.said };
   saveState();
@@ -1208,8 +1351,122 @@ function handoffText(up, down, h, note, who) {
   ].filter(Boolean).join('\n');
 }
 
+// One link between two live agents (a = from, b = to). Checks the rules, stores it, and tells both
+// agents what they can now do (queued until each is idle; skipped when the pair was already linked).
+function addLink(kind, a, b, { by, intro = true, agents }) {
+  if (a.terminal === b.terminal) throw new HttpError(400, 'link_self');
+  const existing = pairOf(a.terminal, b.terminal);
+  if (existing.some(l => l.kind === kind && (kind === 'talk' || l.from === a.terminal))) throw new HttpError(409, 'link_exists');
+  if (kind === 'depends' && makesCycle(a.terminal, b.terminal)) throw new HttpError(409, 'link_cycle');
+  if (kind === 'reports') { const err = reportsError(state.links, a.terminal, b.terminal); if (err) throw new HttpError(409, err); }
+  const l = { id: newId(), kind, from: a.terminal, to: b.terminal, at: Date.now(), by };
+  state.links.push(l);
+  saveState();
+  log('link.add', { id: l.id, kind, from: a.pane, to: b.pane });
+  if (intro && (!existing.length || kind === 'reports')) { // a reporting line is a new role: always say so
+    const byTerminal = new Map(agents.map(x => [x.terminal, x]));
+    const [ra, rb] = kind === 'talk' ? ['talk', 'talk'] : kind === 'reports' ? ['lead', 'member'] : ['upstream', 'downstream'];
+    queueMsg({ from: b.terminal, to: a.terminal, text: introText(a, b, ra), via: 'intro' }, byTerminal);
+    queueMsg({ from: a.terminal, to: b.terminal, text: introText(b, a, rb), via: 'intro' }, byTerminal);
+  }
+  return l;
+}
+
+// Saved agents with a lead: when both run, link them (once per start). A rule clash (e.g. someone
+// already linked the member to another lead by hand) is logged once and left as a person made it.
+const teamSkipped = new Set();
+function linkProfileTeams(agents) {
+  const byProfile = new Map();
+  for (const a of agents) { const i = state.instances[a.terminal]; if (i && i.type !== 'worker') byProfile.set(i.profile, a); }
+  const byTerminal = new Map(agents.map(a => [a.terminal, a]));
+  for (const a of agents) {
+    const i = state.instances[a.terminal];
+    const lead = i?.leadTerminal ? byTerminal.get(i.leadTerminal) : i?.lead && i.type !== 'worker' && byProfile.get(i.lead);
+    if (!lead || state.links.some(l => l.kind === 'reports' && l.from === a.terminal && l.to === lead.terminal)) continue;
+    const key = a.terminal + '>' + lead.terminal;
+    if (teamSkipped.has(key)) continue;
+    try { addLink('reports', a, lead, { by: 'orca', agents, intro: i.type !== 'worker' }); jr(null, 'link.add', a, { kind: 'reports', to: jAgent(lead), auto: true }); }
+    catch (e) { teamSkipped.add(key); log('profile.team_skipped', { member: a.pane, lead: lead.pane, code: e.code }); }
+  }
+}
+
+// ─── Workers: temporary agents that do one task, report and close ─────────────
+// A worker starts with its task (first message). It is done when it goes back to waiting after
+// working on that task, or when its time is up. Its final reply goes to its lead as a message
+// (no approval needed: the lead asked for it, or a person started it for that lead), or to the
+// person who started it; then ORCA closes it. Hard cap: MAX_WORKERS live at once.
+const MAX_WORKERS = Number(process.env.HERDR_WEB_MAX_WORKERS || 6);
+const SPAWN_TTL = 3600e3;
+state.spawns = state.spawns || [];      // { id, lead: terminal, profile, task, at, state: pending|started|denied|expired }
+const finishing = new Set();
+const liveWorkers = () => Object.values(state.instances).filter(i => i.type === 'worker').length;
+
+function sweepWorkers(agents) {
+  const now = Date.now();
+  for (const a of agents) {
+    const i = state.instances[a.terminal];
+    if (i?.type !== 'worker' || finishing.has(a.terminal)) continue;
+    if (i.taskSentAt && a.status === 'working' && !i.sawWork) { i.sawWork = true; saveState(); }
+    const done = i.taskSentAt && now - i.taskSentAt > 8000 && (a.status === 'done' || (a.status === 'idle' && i.sawWork));
+    if (done) finishWorker(a, 'done');
+    else if (i.until && now > i.until) finishWorker(a, 'timeout');
+  }
+}
+
+// The worker's last reply: the transcript for Claude (exact text), else the screen.
+async function workerResult(a) {
+  try {
+    const file = a.session && transcript.findTranscript(CLAUDE_PROJECTS, a.session);
+    if (file) { const say = transcript.readBlocks(file).filter(b => b.t === 'say').at(-1); if (say?.text) return say.text; }
+  } catch { /* fall back to the screen */ }
+  try { return summarizeTurn(await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '300', '--format', 'text'])).said || ''; } catch { return ''; }
+}
+
+async function finishWorker(a, reason) {
+  finishing.add(a.terminal);
+  const i = state.instances[a.terminal];
+  try {
+    if (reason === 'timeout' && a.status === 'working') { await herdr(['agent', 'send-keys', a.pane, 'esc']).catch(() => {}); await sleep(1500); }
+    const said = (await workerResult(a)).slice(0, 3800);
+    const agents = await listAgents();
+    const lead = i.leadTerminal && agents.find(x => x.terminal === i.leadTerminal);
+    const head = reason === 'timeout' ? `[ORCA] Worker ${nameOf(a)} ran out of time (${i.minutes} min) on its task. Its last reply:` : `[ORCA] Worker ${nameOf(a)} finished its task. Its result:`;
+    const text = `${head}\n${said || '(no text reply)'}\n\nThe task was: ${i.task.slice(0, 300)}`;
+    if (lead) {
+      state.msgs.push({ id: newId(), from: a.terminal, to: lead.terminal, text, at: Date.now(), via: 'handoff', state: 'queued' });
+      mirrorToChat(state.msgs.at(-1), new Map(agents.map(x => [x.terminal, x])));
+      saveState();
+    } else {
+      pushAll({ name: nameOf(a), body: (reason === 'timeout' ? '⏱ ' : '✓ ') + (said || i.task).replace(/\s+/g, ' ').slice(0, 140), tag: 'worker-' + a.terminal, url: '/journal.html', kind: 'done' }, i.by && i.by !== 'local' ? i.by : null).catch(() => {});
+    }
+    jr(null, 'worker.end', a, { reason, profile: i.profile, task: i.task.slice(0, 300), said: said.slice(0, 1500), to: lead ? jAgent(lead) : undefined, ranFor: Date.now() - i.at });
+    await endAgent(a, 'orca', { quiet: true });
+    if (lead) deliverQueued(agents).catch(() => {});
+  } catch (e) {
+    log('worker.finish_failed', { pane: a.pane, reason, detail: e.detail || e.message });
+    if (i) i.until = Date.now() + 10 * 60e3; // try again later rather than every poll
+  } finally { finishing.delete(a.terminal); }
+}
+
+function expireSpawns() {
+  let changed = false;
+  for (const r of state.spawns) if (r.state === 'pending' && Date.now() - r.at > SPAWN_TTL) { r.state = 'expired'; changed = true; queueMsgSafe(r.lead, `[ORCA] Your request for a ${r.profile} worker expired: nobody approved it within an hour. Ask again only if it still matters.`); }
+  const before = state.spawns.length;
+  state.spawns = state.spawns.filter(r => r.state === 'pending' || Date.now() - r.at < 864e5).slice(-100);
+  if (changed || state.spawns.length !== before) saveState();
+}
+function queueMsgSafe(to, text) { try { queueMsg({ from: to, to, text, via: 'intro' }); } catch { /* best effort */ } }
+// Who may approve a worker a lead asked for: the person holding the lead, else any admin.
+const canApproveSpawn = (login, r) => { const h = holderLogin(r.lead); return h ? h === login : isAdmin(login); };
+
 function introText(me, other, relation) {
-  const rel = { upstream: `${nameOf(other)} depends on your work: when you finish a job, a person may hand your result to it.`, downstream: `You depend on ${nameOf(other)}: when it finishes a job, a person may hand its result to you.`, talk: `You and ${nameOf(other)} can message each other.` }[relation];
+  const rel = {
+    upstream: `${nameOf(other)} depends on your work: when you finish a job, a person may hand your result to it.`,
+    downstream: `You depend on ${nameOf(other)}: when it finishes a job, a person may hand its result to you.`,
+    talk: `You and ${nameOf(other)} can message each other.`,
+    lead: `You report to ${nameOf(other)}: send it your results and questions; when you finish a job, a person may hand your result to it.`,
+    member: `${nameOf(other)} reports to you: when it finishes a job, a person may hand its result to you, and you can give it work.`,
+  }[relation];
   return `[ORCA] You are now linked with agent ${nameOf(other)}. ${rel}\nMessage it: operio-orca-send ${nameOf(other)} "…" · its latest output: operio-orca-send --last ${nameOf(other)} · your links: operio-orca-send --list\nOnly message it when it helps the work — never just to acknowledge. No reply needed to this note.`;
 }
 
@@ -1285,7 +1542,8 @@ function linksOf(me, agents) {
   const byTerminal = new Map(agents.map(a => [a.terminal, a]));
   return state.links.filter(l => l.from === me.terminal || l.to === me.terminal).map(l => {
     const other = byTerminal.get(l.from === me.terminal ? l.to : l.from);
-    const relation = l.kind === 'talk' ? 'talks with' : l.to === me.terminal ? 'you depend on it' : 'depends on you';
+    const relation = l.kind === 'talk' ? 'talks with' : l.kind === 'reports' ? (l.from === me.terminal ? 'your lead' : 'reports to you')
+      : l.to === me.terminal ? 'you depend on it' : 'depends on you';
     return other ? { name: nameOf(other), pane: other.pane, status: other.status, relation } : null;
   }).filter(Boolean);
 }
@@ -1317,6 +1575,26 @@ const agentServer = http.createServer(async (req, res) => {
       return reply(200, { name: nameOf(other), status: other.status, text });
     }
 
+    // A lead asks for a temporary worker; a person approves it in ORCA first.
+    if (req.method === 'POST' && url.pathname === '/spawn') {
+      const mine = state.instances[me.terminal];
+      if (!mine || mine.type !== 'agent') throw new HttpError(403, 'spawn_not_allowed');
+      const lp = profiles.get(mine.profile);
+      const want = String(body.profile || '');
+      if (!lp?.spawn.profiles.includes(want) || profiles.get(want)?.type !== 'worker') throw new HttpError(403, 'spawn_not_allowed');
+      const task = String(body.text || '').trim();
+      if (!task) throw new HttpError(400, 'empty');
+      if (task.length > 4000) throw new HttpError(400, 'too_long');
+      const open = state.spawns.filter(r => r.lead === me.terminal && r.state === 'pending').length
+        + Object.values(state.instances).filter(i => i.type === 'worker' && i.leadTerminal === me.terminal).length;
+      if (open >= lp.spawn.max) throw new HttpError(429, 'spawn_limit');
+      const r = { id: newId(), lead: me.terminal, profile: want, task, at: Date.now(), state: 'pending' };
+      state.spawns.push(r); saveState();
+      const holder = holderLogin(me.terminal);
+      pushAll({ name: nameOf(me), body: `wants a ${want} worker: ${task.replace(/\s+/g, ' ').slice(0, 120)}`, tag: 'spawn-' + r.id, url: '/#spawn', kind: 'blocked' }, holder).catch(() => {});
+      jr(null, 'spawn.request', me, { profile: want, task: task.slice(0, 300) });
+      return reply(200, { ok: true, pending: true });
+    }
     if (req.method === 'POST' && url.pathname === '/send') {
       const other = findAgent(agents, body.to);
       if (!other) throw new HttpError(404, 'no_such_agent');
@@ -1361,7 +1639,20 @@ function accessView(login = 'local') {
 // ─── Terminal: mirror a pane into xterm.js in the browser ─────────────────────
 // herdr can't attach a browser PTY to a plain shell, so ORCA sends the screen as ANSI and
 // relays keystrokes. Shells only; typing into agents stays the panel's job.
+// Pane size changes rarely; the screen every poll. Size is cached 1.5 s so a poll is one herdr call.
+const termSize = new Map(); // pane -> { at, cols, rows }
 async function termScreen(pane) {
+  const hit = termSize.get(pane);
+  if (hit && Date.now() - hit.at < 1500) {
+    let text = '';
+    try { text = await herdr(['pane', 'read', pane, '--source', 'visible', '--format', 'ansi']); } catch { /* transient */ }
+    return { text, cols: hit.cols, rows: hit.rows };
+  }
+  const out = await termScreenFull(pane);
+  termSize.set(pane, { at: Date.now(), cols: out.cols, rows: out.rows });
+  return out;
+}
+async function termScreenFull(pane) {
   const g = (await herdrJson(['pane', 'get', pane])).result?.pane;
   if (!g) throw new HttpError(404, 'gone');
   // The terminal view zooms the pane, so it fills the tab's whole area — use that for cols/rows
@@ -1383,8 +1674,8 @@ async function termScreen(pane) {
 const GROUPS = {
   lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'agent.model', 'shell.new'],
   work: ['agent.prompt', 'chat.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
-  coordination: ['link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
-  security: ['shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
+  coordination: ['worker.end', 'spawn.request', 'spawn.approve', 'spawn.deny', 'profile.save', 'profile.delete', 'account.add', 'account.key', 'account.rename', 'account.remove', 'link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
+  security: ['tool.save', 'tool.remove', 'secret.set', 'shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
   errors: ['error'],
 };
 const groupOf = ev => Object.keys(GROUPS).find(g => GROUPS[g].includes(ev)) || 'other';
@@ -1400,7 +1691,20 @@ function describe(e) {
   const to = e.to ? (e.to.name || e.to.pane || '?') : '';
   const min = ms => (ms == null ? '' : ` after ${Math.max(1, Math.round(ms / 60e3))} min`);
   switch (e.event) {
-    case 'agent.new': return `${who} started ${ag} (${e.kind}) in ${e.agent?.cwd || '?'}`;
+    case 'agent.new': return `${who} ${e.resume ? 'resumed' : 'started'} ${ag} (${e.kind}${e.profile ? `, saved agent ${e.profile} v${e.rev}` : ''}) in ${e.agent?.cwd || '?'}`;
+    case 'profile.save': return `${who} saved the agent setup ${e.profile} v${e.rev} (${e.kind}, ${e.skills} skill(s), tools ${e.tools})`;
+    case 'profile.delete': return `${who} deleted the agent setup ${e.profile}`;
+    case 'account.add': return `${who} added the ${e.kind} account “${e.label}”`;
+    case 'worker.end': return `Worker ${ag} ${e.reason === 'timeout' ? 'ran out of time' : 'finished'}${e.to ? ` and reported to ${e.to.name || e.to.pane}` : ''}: ${e.said || '(no text)'}`;
+    case 'spawn.request': return `${ag} asked for a ${e.profile} worker: ${e.task}`;
+    case 'spawn.approve': return `${who} approved ${ag}'s request: worker ${e.worker} started`;
+    case 'spawn.deny': return `${who} declined ${ag}'s request for a ${e.profile} worker`;
+    case 'tool.save': return `${who} saved the ${e.type} tool ${e.tool}`;
+    case 'tool.remove': return `${who} removed the tool ${e.tool}`;
+    case 'secret.set': return `${who} ${e.cleared ? 'cleared' : 'set'} the secret ${e.name}`;
+    case 'account.key': return `${who} set the API key of the ${e.kind} account “${e.label}”`;
+    case 'account.rename': return `${who} renamed a ${e.kind} account to “${e.label}”`;
+    case 'account.remove': return `${who} removed the ${e.kind} account “${e.label}”`;
     case 'shell.new': return `${who} opened a new shell ${ag} in ${e.agent?.cwd || '?'}`;
     case 'agent.end': return `${who} ended ${ag} (${e.mode})${min(e.ranFor)}${e.said ? ` — last reply: ${e.said}` : ''}`;
     case 'agent.gone': return `${ag} exited on its own${min(e.ranFor)}`;
@@ -1801,6 +2105,7 @@ async function api(req, res, url) {
         if (!sameOrigin(req)) return send(res, 403, { error: 'cross-origin' });
         const body = await readBody(req);
         await herdr(['pane', 'zoom', pane, body.on ? '--on' : '--off']).catch(() => {});
+        termSize.delete(pane);
         jr(req, body.on ? 'shell.open' : 'shell.close', agentCache.get(pane) || { pane }, {});
         return send(res, 200, { ok: true });
       }
@@ -1839,6 +2144,57 @@ async function api(req, res, url) {
   if (req.method === 'GET' && pathname === '/api/templates') {
     const login = loginOf(req);
     return send(res, 200, templates.list(chatWho(login), { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', admin: isAdmin(login) }));
+  }
+
+  // Admin page: what each section shows on this panel, plus People & access and security status.
+  // Same sections in every ORCA; SAMIX (this panel) shows all of them, editable by admins.
+  if (req.method === 'GET' && pathname === '/api/admin') {
+    const login = loginOf(req);
+    if (!canSetupAgents(login)) throw new HttpError(403, 'forbidden');
+    // Same sections as every ORCA: free = one person (no People); hosted = people live in ORCA Host,
+    // and logins/MCP tools are Operio's to set up.
+    return send(res, 200, {
+      edition: CFG.HOSTED ? 'hosted' : 'free', me: login || null,
+      sections: { people: false, agents: true, tools: canManageLogins(login), skills: true, knowledge: true, templates: true, activity: true, security: true },
+      security: { pushDevices: state.subs.length, hosted: CFG.HOSTED },
+      counts: { tools: tools.list().length, profiles: profiles.list().length, accounts: accounts.list().filter(x => x.id !== 'default').length, skills: skills.list().length, docs: kb.list().length },
+    });
+  }
+
+  // Tools (admins): MCP servers saved agents can use, and which secrets they still need.
+  if (req.method === 'GET' && pathname === '/api/tools') {
+    if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
+    return send(res, 200, { tools: tools.view(), secrets: tools.secretNames(), usedBy: Object.fromEntries(tools.list().map(t => [t.id, profiles.list().filter(p => p.tools.mcp.includes(t.id)).map(p => p.id)])) });
+  }
+
+  // Accounts (admins): several logins per agent kind, with the command that signs each one in.
+  if (req.method === 'GET' && pathname === '/api/accounts') {
+    if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
+    return send(res, 200, { accounts: accounts.list() });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/profiles') {
+    const login = loginOf(req);
+    const live = new Map();
+    const workers = {};
+    const agentsNow = await listAgents();
+    for (const a of agentsNow) {
+      const i = state.instances[a.terminal];
+      if (!i) continue;
+      if (i.type === 'worker') (workers[i.profile] ||= []).push({ pane: a.pane, name: a.name, status: a.status, until: i.until, task: i.task.slice(0, 160) });
+      else live.set(i.profile, { pane: a.pane, status: a.status });
+    }
+    const byT = new Map(agentsNow.map(a => [a.terminal, a]));
+    const spawns = state.spawns.filter(r => r.state === 'pending' && byT.has(r.lead))
+      .map(r => ({ id: r.id, lead: nameOf(byT.get(r.lead)), leadPane: byT.get(r.lead).pane, profile: r.profile, task: r.task, at: r.at, canApprove: canApproveSpawn(login, r) }));
+    return send(res, 200, {
+      profiles: profiles.list().map(p => ({ ...p, running: live.get(p.id) || null, workers: workers[p.id] || [], canResume: !!state.profileSessions[p.id] })),
+      mcp: isAdmin(login) ? tools.view().map(t => ({ id: t.id, name: t.name, ready: !t.missing.length })) : [],
+      spawns, leads: agentsNow.filter(a => a.agent).map(a => ({ pane: a.pane, name: nameOf(a) })), maxWorkers: MAX_WORKERS,
+      canEdit: canSetupAgents(login), kinds: KINDS.filter(k => k !== 'shell'), models: MODELS, tools: Object.keys(PROFILE_TOOLS),
+      accounts: isAdmin(login) ? accounts.list().map(({ id, kind, label, signedIn, key }) => ({ id, kind, label, signedIn, key })) : [],
+      skills: skills.list().map(s => ({ key: s.key, name: s.name })),
+    });
   }
 
   if (req.method === 'GET' && pathname === '/api/skills') {
@@ -1918,11 +2274,32 @@ async function api(req, res, url) {
     return send(res, 200, { crew: crew(new Set(agents.map(a => a.name).filter(Boolean))) });
   }
 
+  // Reader source for Claude agents: the session transcript (see transcript.js). Others get
+  // { blocks: null } and the panel reads their screen as before.
+  if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/transcript$/.test(pathname)) {
+    const pane = decodeURIComponent(pathname.split('/')[3]);
+    if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
+    await requireActOn(loginOf(req), pane);
+    const a = agentCache.get(pane) || (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'not_found');
+    if (a.agent !== 'claude' || !a.session) return send(res, 200, { blocks: null });
+    const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session);
+    if (!f) return send(res, 200, { blocks: null });
+    let blocks, rev;
+    try { const st = fs.statSync(f); rev = `${a.session}:${st.size}:${Math.round(st.mtimeMs)}`; } catch { return send(res, 200, { blocks: null }); }
+    if (url.searchParams.get('rev') === rev) return send(res, 200, { same: true, rev });
+    try { blocks = transcript.readBlocks(f); } catch { return send(res, 200, { blocks: null }); }
+    return send(res, 200, { blocks, rev });
+  }
+
   if (req.method === 'GET' && pathname === '/api/meta') {
     const [tabsOut, wsOut] = await Promise.all([herdrJson(['tab', 'list']), herdrJson(['workspace', 'list'])]);
     const tabs = (tabsOut.result?.tabs || []).map(t => ({ id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null }));
     const workspaces = (wsOut.result?.workspaces || []).map(shapeWorkspace);
-    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, access: accessView(loginOf(req)) });
+    await ollama.fresh();
+    const login = loginOf(req);
+    const accs = canAct(login) ? accounts.list().map(({ id, kind, label, signedIn, key }) => ({ id, kind, label, signedIn, key })) : [];
+    return send(res, 200, { version: PANEL_VERSION, vapidKey: vapid.publicKey, tabs, workspaces, folders: FOLDERS, kinds: KINDS, keys: KEYS, models: MODELS, accounts: accs, access: accessView(login) });
   }
 
   // ── LLM keys: names and last 4 characters only; the values stay in llm.env (0600).
@@ -1938,12 +2315,32 @@ async function api(req, res, url) {
     const h = handoff(a);
     // A session's own file is always current; a pane-named one may be a previous agent's.
     const fresh = at => h?.own || !a.since || (at || 0) >= a.since - 60000;
+    // Claude agents: the transcript knows an unanswered AskUserQuestion and the exact last reply.
+    let tb = null;
+    if (a.agent === 'claude' && a.session) {
+      try { const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session); if (f) tb = transcript.readBlocks(f); } catch { /* unreadable: fall back */ }
+    }
+    const tAsk = tb?.at(-1)?.t === 'ask' ? tb.at(-1).questions : null;
     if (a.status === 'blocked') {
       if (h?.ask?.questions?.length && fresh(h.ask.at)) return send(res, 200, { ask: h.ask });
+      if (tAsk) return send(res, 200, { ask: { questions: tAsk } });
       const menu = screenMenu(await visible(pane));
       return send(res, 200, { screen: menu });
     }
     if (a.status === 'idle' || a.status === 'done') {
+      // A menu can be open while herdr reports idle (plan approval, a picker, a question the
+      // hook didn't flag): offer it as buttons whenever the selection cursor is on screen.
+      if (tAsk) return send(res, 200, { ask: { questions: tAsk } });
+      const scr = await visible(pane);
+      if (/^[\s│|]*❯\s*[1-9][.)]\s/m.test(scr.split('\n').slice(-25).join('\n'))) {
+        const menu = screenMenu(scr);
+        if (menu) return send(res, 200, { screen: menu, open: true });
+      }
+      const said = tb ? [...tb].reverse().find(b => b.t === 'say' || b.t === 'you') : null;
+      if (said?.t === 'say') {
+        const chips = chipsFor(said.text);
+        return send(res, 200, chips.length ? { chips: chips.slice(0, 10), from: 'transcript' } : {});
+      }
       if (Array.isArray(h?.chips) && fresh(h.updatedAt)) return send(res, 200, { chips: h.chips.slice(0, 10), from: 'mod' });
       // No mod in that session (started before it, or not Claude): read its last reply.
       const key = `${a.seq}:${a.since}`;
@@ -1981,7 +2378,8 @@ async function api(req, res, url) {
     // holds it (have=1), send only the screen and let the panel merge it.
     const ag = agentCache.get(pane);
     const key = ag ? `${ag.seq}:${ag.status}` : '';
-    if (url.searchParams.get('have') === '1' && key && deepRead.get(pane) === key) {
+    // screen=1: the Reader already has the transcript; only the screen (context bar, recap) is needed.
+    if (url.searchParams.get('screen') === '1' || (url.searchParams.get('have') === '1' && key && deepRead.get(pane) === key)) {
       return send(res, 200, { text: await herdr(['agent', 'read', pane, '--source', 'visible', '--format', 'text']) });
     }
     // Full-screen agents (alternate screen) can't have their history read while they work or
@@ -2165,21 +2563,8 @@ async function api(req, res, url) {
     const agents = await listAgents();
     const a = agents.find(x => x.pane === body.from), b = agents.find(x => x.pane === body.to);
     if (!a || !b) throw new HttpError(404, 'gone');
-    if (a.terminal === b.terminal) throw new HttpError(400, 'link_self');
-    const existing = pairOf(a.terminal, b.terminal);
-    if (existing.some(l => l.kind === kind && (kind === 'talk' || l.from === a.terminal))) throw new HttpError(409, 'link_exists');
-    if (kind === 'depends' && makesCycle(a.terminal, b.terminal)) throw new HttpError(409, 'link_cycle');
-    const l = { id: newId(), kind, from: a.terminal, to: b.terminal, at: Date.now(), by: 'local' };
-    state.links.push(l);
-    saveState();
-    log('link.add', { id: l.id, kind, from: a.pane, to: b.pane });
+    const l = addLink(kind, a, b, { by: loginOf(req) || 'local', intro: body.intro !== false, agents });
     jr(req, 'link.add', a, { kind, to: jAgent(b) });
-    // Tell both agents what they can now do (queued until each is idle). Skipped when the pair was already linked.
-    if (body.intro !== false && !existing.length) {
-      const byTerminal = new Map(agents.map(x => [x.terminal, x]));
-      queueMsg({ from: b.terminal, to: a.terminal, text: introText(a, b, kind === 'talk' ? 'talk' : 'upstream'), via: 'intro' }, byTerminal);
-      queueMsg({ from: a.terminal, to: b.terminal, text: introText(b, a, kind === 'talk' ? 'talk' : 'downstream'), via: 'intro' }, byTerminal);
-    }
     return send(res, 200, { ok: true, id: l.id });
   }
   if (pathname === '/api/links/delete') {
@@ -2251,13 +2636,108 @@ async function api(req, res, url) {
 
   // ── New agent or shell
   if (pathname === '/api/agents/new') {
-    // A shell needs a fresh confirmation first.
-    if (String(body.kind || '') === 'shell') requireShell();
-    const r = await newAgent(body);
-    jr(req, r.shell ? 'shell.new' : 'agent.new', { name: r.name, pane: r.pane, terminal: r.terminal || null, cwd: r.cwd, agent: r.kind },
-      { kind: r.kind, tab: body.tab || 'new', blocked: !!r.blocked });
+    const r = await startAgent(req, body);
     return send(res, 200, { pane: r.pane, blocked: r.blocked, shell: r.shell });
   }
+
+  // ── Tools (admins): save / remove an MCP server, set or clear a secret (value never comes back)
+  if (pathname === '/api/tools' || pathname === '/api/tools/delete' || pathname === '/api/tools/secret') {
+    if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
+    try {
+      if (pathname === '/api/tools') { const t = tools.put(body); jr(req, 'tool.save', null, { tool: t.id, type: t.type }); }
+      else if (pathname === '/api/tools/delete') {
+        const id = String(body.id || '');
+        if (profiles.list().some(p => p.tools.mcp.includes(id))) throw new HttpError(409, 'tool_in_use');
+        if (tools.remove(id)) jr(req, 'tool.remove', null, { tool: id });
+      } else { tools.setSecret(String(body.name || ''), body.value); jr(req, 'secret.set', null, { name: String(body.name || '').slice(0, 64), cleared: !body.value }); }
+    } catch (e) { toolErr(e); }
+    return send(res, 200, { ok: true });
+  }
+
+  // ── Accounts (admins): add / rename / remove a login for an agent kind
+  if (pathname === '/api/accounts' || pathname === '/api/accounts/key' || pathname === '/api/accounts/rename' || pathname === '/api/accounts/delete') {
+    if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
+    let r;
+    try {
+      if (pathname === '/api/accounts') { r = accounts.add({ kind: String(body.kind || ''), label: body.label, key: body.key || null }); jr(req, 'account.add', null, { kind: r.kind, label: r.label, key: !!body.key }); }
+      else if (pathname === '/api/accounts/key') { r = accounts.setKey(String(body.id || ''), body.key); jr(req, 'account.key', null, { kind: r.kind, label: r.label }); r = { id: r.id, kind: r.kind, label: r.label }; }
+      else if (pathname === '/api/accounts/rename') { accounts.rename(String(body.kind || ''), String(body.id || ''), body.label); jr(req, 'account.rename', null, { kind: body.kind, label: String(body.label || '').slice(0, 60) }); }
+      else {
+        if (profiles.list().some(p => p.account === body.id)) throw new HttpError(409, 'account_in_use');
+        r = accounts.remove(String(body.id || ''));
+        if (r) jr(req, 'account.remove', null, { kind: r.kind, label: r.label });
+      }
+    } catch (e) { accountErr(e); }
+    return send(res, 200, { ok: true, account: r || null });
+  }
+
+  // ── Saved agents (profiles): admins save/delete; start = the same rules as a new agent.
+  if (pathname === '/api/profiles') {
+    if (!canSetupAgents(loginOf(req))) throw new HttpError(403, 'forbidden');
+    let p;
+    try { p = profiles.put(body, loginOf(req) || 'local'); } catch (e) { profileErr(e); }
+    jr(req, 'profile.save', null, { profile: p.id, rev: p.rev, kind: p.kind, type: p.type, skills: p.skills.length, tools: p.tools.builtin });
+    return send(res, 200, { ok: true, profile: p });
+  }
+  if (pathname === '/api/profiles/delete') {
+    if (!canSetupAgents(loginOf(req))) throw new HttpError(403, 'forbidden');
+    const id = String(body.id || '');
+    if (Object.values(state.instances).some(i => i.profile === id)) throw new HttpError(409, 'profile_running');
+    if (profiles.list().some(x => x.reportsTo === id)) throw new HttpError(409, 'has_members');
+    let removed;
+    try { removed = profiles.remove(id); } catch (e) { profileErr(e); }
+    if (removed) { delete state.profileSessions[id]; saveState(); jr(req, 'profile.delete', null, { profile: id }); }
+    return send(res, 200, { ok: true, removed });
+  }
+  if (pathname === '/api/profiles/start') {
+    const p = profiles.get(String(body.id || ''));
+    if (!p) throw new HttpError(404, 'gone');
+    if (p.type !== 'agent') throw new HttpError(400, 'bad_request'); // workers start with a task: /api/workers
+    const r = await startProfile(req, p, { resume: !!body.resume, tab: body.tab });
+    return send(res, 200, { pane: r.pane, blocked: r.blocked });
+  }
+  // A person starts a worker: a worker setup + its task, optionally for a running lead (pane).
+  if (pathname === '/api/workers') {
+    const p = profiles.get(String(body.profile || ''));
+    if (!p || p.type !== 'worker') throw new HttpError(404, 'gone');
+    const task = String(body.task || '').trim();
+    if (!task || task.length > 4000) throw new HttpError(400, 'bad_task');
+    let leadTerminal = null;
+    if (body.lead) {
+      const lead = (await listAgents()).find(a => a.pane === body.lead);
+      if (!lead) throw new HttpError(404, 'gone');
+      await requireActOn(loginOf(req), lead.pane);
+      leadTerminal = lead.terminal;
+    } else if (p.reportsTo) {
+      // No lead picked: the setup's own lead, when it is running.
+      for (const [t, i] of Object.entries(state.instances)) if (i.profile === p.reportsTo && i.type === 'agent') leadTerminal = t;
+    }
+    const r = await startProfile(req, p, { task, leadTerminal, tab: body.tab });
+    return send(res, 200, { pane: r.pane, blocked: r.blocked, name: r.name });
+  }
+  // A lead's request for a worker: the person holding the lead (else an admin) approves or denies.
+  if (pathname === '/api/spawns/approve' || pathname === '/api/spawns/deny') {
+    const login = loginOf(req);
+    const r = state.spawns.find(x => x.id === body.id && x.state === 'pending');
+    if (!r) throw new HttpError(404, 'gone');
+    if (!canApproveSpawn(login, r)) throw new HttpError(403, 'forbidden');
+    const lead = (await listAgents()).find(a => a.terminal === r.lead);
+    if (pathname.endsWith('/deny')) {
+      r.state = 'denied'; saveState();
+      queueMsgSafe(r.lead, `[ORCA] Your request for a ${r.profile} worker was not approved. Carry on without it, or ask the person why.`);
+      jr(req, 'spawn.deny', lead || null, { profile: r.profile, task: r.task.slice(0, 300) });
+      return send(res, 200, { ok: true });
+    }
+    if (!lead) { r.state = 'expired'; saveState(); throw new HttpError(409, 'lead_gone'); }
+    const p = profiles.get(r.profile);
+    if (!p || p.type !== 'worker') throw new HttpError(404, 'gone');
+    const w = await startProfile(req, p, { task: r.task, leadTerminal: r.lead });
+    r.state = 'started'; r.worker = w.name; saveState();
+    queueMsgSafe(r.lead, `[ORCA] Approved: worker ${w.name} is on your task. Its result comes back to you when it finishes; no need to check on it.`);
+    jr(req, 'spawn.approve', lead, { profile: r.profile, worker: w.name, task: r.task.slice(0, 300) });
+    return send(res, 200, { ok: true, pane: w.pane, name: w.name });
+  }
+
 
   // ── Per-agent actions
   const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end|model)$/);
@@ -2407,7 +2887,8 @@ async function api(req, res, url) {
   if (action === 'answer') {
     const a = (await listAgents()).find(x => x.pane === pane);
     if (!a) throw new HttpError(404, 'gone');
-    if (a.status !== 'blocked') throw new HttpError(409, 'not_asking');
+    // Idle with a menu on screen counts too (see /reply); the screen check below is the guard.
+    if (a.status === 'working') throw new HttpError(409, 'not_asking');
     const screen = await visible(pane);
     autoClaim(a.terminal, loginOf(req));
     if (Number.isInteger(body.screen)) {
@@ -2418,7 +2899,10 @@ async function api(req, res, url) {
       jr(req, 'agent.answer', a, { question: menu.question, picked: [menu.options.find(o => o.n === body.screen)?.label || String(body.screen)] });
       return send(res, 200, { ok: true });
     }
-    const qs = handoff(a)?.ask?.questions;
+    let qs = handoff(a)?.ask?.questions;
+    if (!qs?.length && a.agent === 'claude' && a.session) {
+      try { const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session); const tb = f && transcript.readBlocks(f); if (tb?.at(-1)?.t === 'ask') qs = tb.at(-1).questions; } catch { /* none */ }
+    }
     const answers = Array.isArray(body.answers) ? body.answers : [];
     if (!qs?.length) throw new HttpError(409, 'question_gone');
     if (answers.length !== qs.length) throw new HttpError(400, 'bad_request');

@@ -37,6 +37,10 @@ const T = {
     chatAskNo_no_access: 'You can’t send work to {0}.', chatAskNo_limit_person: 'Not sent to {0}: 5 agent requests an hour each.', chatAskNo_limit_agent: 'Not sent: {0} already got 5 requests this hour.', chatAskNo_queue_full: 'Not sent: {0} already has 5 waiting.',
     chatTranslate: 'Translate', chatTranslating: 'Translating…', chatTranslated: 'Translated from {0}', chatShowOriginal: 'Show original', chatShowTranslation: 'Show translation', chatTrFailed: 'Translation failed — try again', chatTrKey: 'Translation needs a working Anthropic API key (Model access)',
     chatAutoTr: 'Auto-translate', chatAutoTrOn: 'Messages in other languages are translated into English', chatAutoTrOff: 'Translate messages in other languages automatically', langName_en: 'English', langName_es: 'Spanish',
+    agOpenBtn: 'Saved agents', agFromSaved: 'Start a saved agent', agTitle: 'Saved agents', agIntro: 'An agent you set up once: its instructions, skills and tools. Start it any time; Resume picks up its last conversation. One copy runs at a time.', agNone: 'No saved agents yet. Tap New to set one up.', agNoneView: 'No saved agents yet. An admin can set them up.', agOff: 'Off', agOn: 'Running', agWorking: 'Working', agNeedsYou: 'Needs you', agOpen: 'Open', agResume: 'Resume', agSkillsN: '{0} skill(s)', agTool_default: 'All tools', agType: 'Type', agTypeAgent: 'Agent (reusable)', agTypeWorker: 'Worker (one task, then closes)', agMinutes: 'Time limit (minutes)', agSpawn: 'Can ask for workers', agSpawnNone: 'No worker setups yet. Create one with Type = Worker.', agSpawnMax: 'At most at once', agWorkerMin: 'Worker · {0} min', agCanSpawn: 'asks for: {0}', agWorkersN: '{0} working', agWorkerIdle: 'Worker', agStartWorker: 'Start worker', agTaskPh: 'The task, with everything the worker needs to do it alone', agNoLeadWorker: 'Report to me (no agent)', agReportTo: 'Report to {0}', agWorkerStarted: '{0} started', agMinLeft: '{0} min left', agSpawnAsk: '{0} asks for a {1} worker', agSpawnOther: 'Waiting for the person who holds it', agApprove: 'Approve', agDecline: 'Decline', agDeclined: 'Declined', e_bad_task: 'Write the task first (4000 characters max).', e_worker_limit: 'Too many workers running. Wait for one to finish.', e_lead_gone: 'The agent that asked is gone.', agTool_noedit: 'No edit tools', agTool_readonly: 'Read only', agToolHint_default: 'Everything the agent normally has.', agToolHint_noedit: 'No Edit/Write tools. The shell still runs, so it can still change files that way.', agToolHint_readonly: 'Reads and searches only. No shell, so it can’t search business documents or message other agents.', agStarting: 'Starting {0}…', agStarted: '{0} is running', agStartedBlocked: '{0} started — it asks something first', agDeleted: '{0} deleted', agSaved: '{0} saved', agModelDefault: 'Default', agLabel: 'Title', agLabelPh: 'e.g. Sales lead', agKindNote: 'This agent gets its instructions as its first message. Skills are listed in them; tool limits apply to Claude only.', agInstructions: 'Instructions', agInstructionsPh: 'Who this agent is, what it does, how it writes, what it must never do.', agSkills: 'Skills', agSkillsNone: 'No skills installed yet. Add them with the Skills button.', agTools: 'Tools',
+    e_bad_profile: 'Check the fields: name, agent, model, folder and instructions (8000 characters max).', e_profile_exists: 'A saved agent with that name already exists.', e_profile_running: 'That agent is already running — open it, or end it first.', e_no_session: 'Nothing to resume yet — start it fresh.', e_stale: 'Someone else just changed this. Close and open it again.', e_too_many: 'Too many saved agents.', e_has_lead: 'That agent already reports to someone. Remove that link first.', e_lead_has_lead: 'A lead can’t report to anyone (2 levels max). Pick an agent that reports to no one.', e_member_has_members: 'Agents report to this one, so it can’t report to anyone (2 levels max).', e_lead_missing: 'That lead isn’t a saved agent any more.', e_has_members: 'Other saved agents report to this one. Change them first.', agReportsTo: 'Reports to', agNoLead: 'No one', agLeadOf: 'Leads: {0}', agReportsHint: 'When both run, ORCA links them: the lead gets its members’ results to hand on, and they can message each other.', agLeadsHint: '{0} report to this agent, so it can’t report to anyone (2 levels max).',
+    adm_tools: 'Tools (MCP)', admToolsIntro: 'Connect agents to other systems with MCP servers. Add a server once here, then tick it on a saved agent (Claude agents). Keys go in Secrets below: write ${NAME} where a key belongs.', admToolLocal: 'Runs on this computer', admToolReady: 'Ready', admToolMissing: 'Needs secret: {0}', admToolUsedBy: 'used by {0}', admToolNone: 'No tools yet.', admToolAdd: 'Add an MCP server', admToolIdPh: 'id (e.g. github)', admToolNamePh: 'Name shown to people', admToolCmdPh: 'Command (e.g. npx)', admToolArgsPh: 'Arguments, one per line', admToolEnvPh: 'Environment, one per line: NAME=value or NAME=${SECRET}', admToolHeadPh: 'Headers, one per line: Authorization: Bearer ${TOKEN}', admToolSecretHint: 'Never paste a key here — use ${NAME} and set NAME under Secrets.', admSaved2: '{0} saved', admSecrets: 'Secrets', admSecretsHave: 'Set: {0}. Values are never shown again.', admSecretsNone: 'No secrets yet.', admSecretNamePh: 'NAME', admSecretValPh: 'value (empty = clear)', admSecretSaved: '{0} saved', admSecretHow: 'Each agent only gets the secrets of the tools it uses.', agMcp: 'Connected tools (MCP)', agMcpOnly: 'Only these (not my usual ones)', agMcpHint: 'Claude agents only. ⚠ = a secret is missing (Admin → Tools).', agMcpNone: 'No tools yet. Add MCP servers in Admin → Tools.', e_bad_tool: 'Check the tool: id, command or https URL, and NAME=value lines.', e_tool_in_use: 'A saved agent uses this tool. Untick it there first.', e_secret_missing: 'A tool this agent uses needs a secret that isn’t set (Admin → Tools).', e_bad_secret_name: 'Secret names: CAPITALS, digits and _ (not PATH or HOME).', e_bad_secret: 'The value must be one line.', 
+    back: 'Back', admOpen: 'Admin', admTitle: 'Admin', adm_people: 'People & access', adm_agents: 'Agents & accounts', adm_skills: 'Skills', adm_knowledge: 'Knowledge', adm_templates: 'Templates', adm_activity: 'Activity', adm_security: 'Security', admPeopleIntro: 'Who can open ORCA on this panel, and what they can do. Admins see and run everything. Members only work with agents in their folders, and their terminals are sandboxed.', admAllowlist: 'Only people on this list can open ORCA', admAllowOn: 'On: anyone not on the list is turned away.', admAllowOff: 'Off: anyone who reaches this panel on the private network gets in. Turn it on.', admLoginPh: 'their sign-in email', admAdd: 'Add', admNamePh: 'Name', admRoleAdmin: 'Admin', admRoleMember: 'Member', admRemove: 'Remove', admYou: 'you', admFolders: 'Folders', admFoldersPh: 'Folders, comma-separated (e.g. ~/Projects/client)', admRolesHint: 'Changes apply right away, no restart. You can’t remove yourself as admin here, so you can’t lock yourself out.', admSaved: 'People & access saved', admUnsaved: 'Save or cancel your changes first', admAgentsIntro: '{0} saved agent(s), {1} extra account(s). Set up agents once (instructions, skills, tools) and the logins they run on.', admSkillsIntro: '{0} skill(s) installed. Skills teach agents a task step by step.', admKnowledgeIntro: '{0} document(s). Business documents agents search before answering.', admTemplatesIntro: 'Company templates are edited where they are used: in any agent’s message box, open Templates (key T) → Company.', admActivityIntro: 'What people and agents did (Journal) and how much of the plan is used (Usage).', admSecList: 'Access list', admSecSingle: 'Single user: no list, everyone is admin', admSecOn: 'On · {0} people', admSecOffN: 'Off · {0} listed', admSecSandbox: 'Terminal sandbox for members', admSecPin: 'Your shell PIN is set', admSecPush: 'Phones getting alerts', admYes: 'Yes', admNo: 'No', e_bad_login: 'That isn’t a sign-in email.', e_duplicate_login: 'That person is already on the list.', e_bad_role: 'Pick Admin or Member.', e_bad_folder: 'Folders must be inside your home folder.', e_need_admin: 'With the list on, keep at least one admin.', e_keep_yourself: 'Keep yourself on the list as an admin (so you can’t lock yourself out).',
     chatAnswerTook: 'answered in {0}', chatSeeOutput: 'See full output', chatNoText: 'Finished without a text reply.', chatAgentTag: 'agent', tplOpen: 'Prompt templates', tplTitle: 'Prompt templates', tplNew: 'New', tplSearch: 'Search templates', tplName: 'Name', tplText: 'Text', tplWho: 'Who can use it', tplHint: 'Tip: write {client} or {date} — after you pick the template, the first {…} is selected so you can type over it.', tpl_personal: 'Mine', tpl_company: 'Company', tpl_operio: 'Operio library', tplScopeMine: 'Only me', tplScopeCompany: 'Everyone on this panel', tplUse: 'Use', tplEdit: 'Edit', tplDelete: 'Delete', tplDeleteSure: 'Delete?', tplYes: 'Yes, delete', tplNone_personal: 'No templates yet. Tap New — or write a prompt first, then New saves it.', tplNone_company: 'No company templates yet.', tplNone_operio: 'Nothing from Operio yet.', tplNoMatch: 'No template matches.', tplSaved: 'Template saved', tplDeleted: 'Template deleted', tplFilled: 'Template added — edit, then send', tplReadOnly: 'From Operio — read-only', skOpen: 'Skills', skTitle: 'Skills', skIntroLocal: 'Skills teach your agents a task, step by step. Install one and your agents use it when a request matches. These only read and draft — nothing is sent.', skIntroHosted: 'Skills teach your agents a task, step by step. Ask for one and Operio reviews it and installs it for your team.', skIntroHostedView: 'Skills your agents can use. Your admin can ask Operio for more.', skInstalled: 'Installed v{0}', skRequested: 'Requested — Operio reviews it', skRejected: 'Not approved', skFailed: 'Install failed — Operio is on it', skAvailable: 'Available', skInstall: 'Install', skRemove: 'Remove', skRequest: 'Request', skRequestAgain: 'Ask again', skInstalledToast: '{0} installed — your agents use it from their next task', skRemovedToast: '{0} removed', skRequestedToast: 'Requested — Operio reviews it', skNone: 'No skills here yet.', skNoneHosted: 'Operio hasn’t shared skills with this panel yet.',
     kbOpen: 'Knowledge', kbTitle: 'Knowledge', kbIntro: 'Your agents search these documents before they answer questions about your business, and say where they read it.', kbIntroView: 'Your agents search these documents before they answer questions about your business. Your admin adds and removes them.',
     kbStatus: '{0} documents · {1} passages', kbSemOn: 'Meaning search on ({0})', kbSemFree: 'Keyword search', kbSemNoKey: 'Keyword search — add a Voyage or OpenAI key for meaning search', kbTry: 'Try a question', kbTryPh: 'e.g. What time do you close on Saturday?', kbAsk: 'Search', kbSearching: 'Searching…', kbNoHits: 'Nothing found — your agents will say so instead of guessing.',
@@ -56,7 +60,7 @@ const T = {
     
     e_shell_locked: 'Confirm opening a shell first.', e_confirm_needed: 'Confirm opening a shell first.', e_not_ready: 'That draft isn’t ready to approve.', e_bad_schedule: 'That schedule isn’t a valid cron line (5 fields).', shellConfirmTitle: 'Open a real shell?', shellConfirmSub: 'A shell types straight into this computer as you. Anyone who can reach this page can use it. Shells stay open for {0} min after you confirm.', shellConfirmGo: 'Open shell', shellConfirmed: 'Shells open for {0} min', 
     memTitle: 'Memory', memAgents: 'Agents {0}', memMachine: 'Machine {0} / {1}', memSwap: 'Swap {0} / {1}', memProcs: '{0} processes', memSwapped: '+{0} swapped', memNone: 'not measured', memEmpty: 'No agents running', memOpen: 'Open {0}',
-    linksTitle: 'Links', relWaitsOn: 'Depends on', relFeeds: 'Feeds', relTalk: 'Talks with', linkAdd: 'Link', linkRemove: 'Remove link with {0}', linkPick: 'Pick an agent', linkNone: 'No links yet', linkAdded: 'Linked with {0}', linkRemoved: 'Link removed', linksN: '{0} linked',
+    linksTitle: 'Links', relWaitsOn: 'Depends on', relFeeds: 'Feeds', relTalk: 'Talks with', relReportsTo: 'Reports to', relLeads: 'Leads', linkAdd: 'Link', linkRemove: 'Remove link with {0}', linkPick: 'Pick an agent', linkNone: 'No links yet', linkAdded: 'Linked with {0}', linkRemoved: 'Link removed', linksN: '{0} linked',
     linkHint: 'Linked agents can message each other (orca-send). When an agent it depends on finishes, you approve the hand-off — nothing is sent without you.',
     handTitle: '{0} finished', handTo: 'Hand its result to {0}?', handNote: 'Note for {0} (optional)', handSend: 'Send to {0}', handDismiss: 'Not now', handSent: 'Handed to {0}', handQueued: 'Queued for {0} — it gets it when idle', handBadge: 'Hand-off', tHand: 'hand off', tWaits: 'waits on {0}', tMsgs: '{0} messages in 24h',
     msgsTitle: 'Messages', msgNone: 'No messages yet', msgIntro: 'ORCA note', msgHandoff: 'Hand-off', msgQueued: 'queued', msgFailed: 'not delivered', tTalk: '{0} ↔ {1} · {2} messages in 24h · last {3} ago', tTalkQueued: ' · {0} waiting', tTalkOpen: 'Open the messages',
@@ -125,7 +129,11 @@ const T = {
     e_same_place: 'It’s already there. Pick another place.',
     e_ws_gone: 'That workspace was closed. Pick another place.',
     e_move_failed: 'The move didn’t finish. Check the desktop and try again.',
-    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kTpl: 'templates', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', rdReader: 'Reader', rdTerm: 'Terminal', rdYou: 'You', rdSteps: '{0} steps', rdCopied: 'Copied {0}', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kHide: 'hide keys', kClose: 'close', showKeys: 'Keys', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: links, history, name, tags, move',
+    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kTpl: 'templates', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', rdReader: 'Reader', rdTerm: 'Terminal', rdAnswerBelow: 'Answer with the buttons below.', ltLocked: 'The live terminal needs your PIN.', ltUnlock: 'Unlock with PIN', rdYou: 'You', rdSteps: '{0} steps', rdCopied: 'Copied {0}', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kHide: 'hide keys', kClose: 'close', showKeys: 'Keys', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: links, history, name, tags, move',
+    // From the live panel: saved agents, workers, accounts, Admin, tools.
+    usage: "Plan usage", usageTip: "Plan usage — {0}", umSession: "5-hour session {0} %", umWeekly: "weekly {0} %", umStale: "(last reading)", notYours: "Not in your folders", sandboxOff: "Shell sandbox is off — ask Sam to enable it", pinTitle: "Defuse to open a shell", pinDefuse: "Defuse", pinSet: "Set a shell PIN", pinSetSub: "Pick a 4–8 digit PIN. You’ll enter it to open shells.", pinAskSub: "Enter your PIN to open shells for {0} min.", pinNew: "New PIN", pinSave: "Save PIN", pinWrong: "Wrong PIN — {0} left before it blows", pinBoom: "💥 Boom! Locked for {0}s", pinLocked: "Locked — wait {0}s", pinOk: "Defused — shells open for {0} min", pinUnlockedMsg: "Shells unlocked", pinShort: "PIN must be 4–8 digits", pinChange: "Change PIN", pinCurrent: "Current PIN", e_not_yours: "That agent isn’t in your folders.", e_no_pin: "Set a shell PIN first.", e_bad_pin: "Wrong PIN.", e_bomb: "Too many tries — locked briefly.", e_bad_pin_format: "PIN must be 4–8 digits.", kd_gemini: "Google · Gemini CLI", kd_ollama: "Local models on this computer (slow)", kindGemini: "Gemini", kindOllama: "Local (Ollama)", accTitle: "Accounts", accOpen: "Accounts", accIntro: "Run one kind of agent under several accounts. Claude and Codex: add an account, then sign it in once on this computer with the command shown. Google (Gemini and Antigravity): paste an API key from that Google account. Agents pick the account when they start.", accDefault: "Default login", accSignedIn: "Signed in", accNeedsSignIn: "Not signed in", accAdd: "Add account", accName: "Name", accNamePh: "e.g. the account’s email", accKind: "Agent", accRemove: "Remove", accRemoveSure: "Remove? Its login is deleted", accRename: "Rename", accSignIn: "Sign in: run this in a terminal on this computer", accCopy: "Copy", accCopied: "Command copied", accAdded: "{0} added — now sign it in", accRemoved: "{0} removed", accPick: "Account", accUnnamed: "unnamed", e_ollama_off: "Ollama isn’t running on this computer, or has no model that can use tools.", e_bad_account: "That account doesn’t belong to this agent kind any more. Pick another.", e_account_exists: "An account with that name already exists for this agent.", e_account_name: "Give the account a name.", e_account_in_use: "A saved agent uses this account. Change it first.", e_needs_key: "This account has no API key yet. Add it under Saved agents → Accounts.", e_needs_account: "Gemini needs an account with an API key. Add one under Saved agents → Accounts.", accGoogle: "Google key (Gemini + Antigravity)", accKey: "API key", accKeyPh: "Paste the key (AIza…)", accKeyHow: "Sign in to aistudio.google.com/apikey with this Google account, create a key and paste it here. ORCA keeps it on this computer and never shows it again.", accSetKey: "Replace key", accSaveKey: "Save key", accKeySaved: "Key saved for {0}", accKeyMissing: "No key yet",
+    // From the live panel: saved agents, workers, accounts, Admin, tools.
+    admSecHosted: "People and sign-in are managed by Operio in ORCA Host.", admSecFree: "One person, this computer: ORCA only answers on this machine. Anyone who can use it can drive your agents.", admToolsFreeWarn: "An MCP server you add runs with your own rights on this computer. Only add servers you trust.", 
   },
   es: {
     journal: 'Bitácora — actividad y revisión diaria', journalN: 'Bitácora — {0} días por revisar',
@@ -150,6 +158,10 @@ const T = {
     chatAskNo_no_access: 'No puedes enviar trabajo a {0}.', chatAskNo_limit_person: 'No enviado a {0}: máximo 5 pedidos a agentes por hora.', chatAskNo_limit_agent: 'No enviado: {0} ya recibió 5 pedidos esta hora.', chatAskNo_queue_full: 'No enviado: {0} ya tiene 5 en espera.',
     chatTranslate: 'Traducir', chatTranslating: 'Traduciendo…', chatTranslated: 'Traducido del {0}', chatShowOriginal: 'Ver original', chatShowTranslation: 'Ver traducción', chatTrFailed: 'No se pudo traducir — inténtalo de nuevo', chatTrKey: 'Para traducir hace falta una clave de API de Anthropic válida (Acceso al modelo)',
     chatAutoTr: 'Traducir todo', chatAutoTrOn: 'Los mensajes en otros idiomas se traducen al español', chatAutoTrOff: 'Traducir automáticamente los mensajes en otros idiomas', langName_en: 'inglés', langName_es: 'español',
+    agOpenBtn: 'Agentes guardados', agFromSaved: 'Arrancar un agente guardado', agTitle: 'Agentes guardados', agIntro: 'Un agente que configuras una vez: sus instrucciones, habilidades y herramientas. Arráncalo cuando quieras; Retomar sigue su última conversación. Corre una copia a la vez.', agNone: 'Aún no hay agentes guardados. Toca Nuevo para crear uno.', agNoneView: 'Aún no hay agentes guardados. Un admin puede crearlos.', agOff: 'Apagado', agOn: 'Activo', agWorking: 'Trabajando', agNeedsYou: 'Te necesita', agOpen: 'Abrir', agResume: 'Retomar', agSkillsN: '{0} habilidad(es)', agTool_default: 'Todas las herramientas', agType: 'Tipo', agTypeAgent: 'Agente (reutilizable)', agTypeWorker: 'Trabajador (una tarea y se cierra)', agMinutes: 'Tiempo máximo (minutos)', agSpawn: 'Puede pedir trabajadores', agSpawnNone: 'Aún no hay trabajadores configurados. Crea uno con Tipo = Trabajador.', agSpawnMax: 'Máximo a la vez', agWorkerMin: 'Trabajador · {0} min', agCanSpawn: 'pide: {0}', agWorkersN: '{0} trabajando', agWorkerIdle: 'Trabajador', agStartWorker: 'Iniciar trabajador', agTaskPh: 'La tarea, con todo lo que el trabajador necesita para hacerla solo', agNoLeadWorker: 'Reportar a mí (sin agente)', agReportTo: 'Reportar a {0}', agWorkerStarted: '{0} inició', agMinLeft: 'quedan {0} min', agSpawnAsk: '{0} pide un trabajador {1}', agSpawnOther: 'Esperando a quien lo tiene asignado', agApprove: 'Aprobar', agDecline: 'Rechazar', agDeclined: 'Rechazado', e_bad_task: 'Escribe la tarea primero (máx. 4000 caracteres).', e_worker_limit: 'Hay demasiados trabajadores activos. Espera a que termine uno.', e_lead_gone: 'El agente que lo pidió ya no está.', agTool_noedit: 'Sin edición', agTool_readonly: 'Solo lectura', agToolHint_default: 'Todo lo que el agente tiene normalmente.', agToolHint_noedit: 'Sin las herramientas Edit/Write. La terminal sigue activa, así que aún puede cambiar archivos por ahí.', agToolHint_readonly: 'Solo lee y busca. Sin terminal: no puede buscar en los documentos del negocio ni escribir a otros agentes.', agStarting: 'Arrancando {0}…', agStarted: '{0} está activo', agStartedBlocked: '{0} arrancó — primero pregunta algo', agDeleted: '{0} eliminado', agSaved: '{0} guardado', agModelDefault: 'Predeterminado', agLabel: 'Puesto', agLabelPh: 'p. ej. Líder de ventas', agKindNote: 'Este agente recibe sus instrucciones como primer mensaje. Las habilidades van listadas ahí; los límites de herramientas aplican solo a Claude.', agInstructions: 'Instrucciones', agInstructionsPh: 'Quién es este agente, qué hace, cómo escribe y qué no debe hacer nunca.', agSkills: 'Habilidades', agSkillsNone: 'Aún no hay habilidades instaladas. Agrégalas con el botón Habilidades.', agTools: 'Herramientas',
+    e_bad_profile: 'Revisa los campos: nombre, agente, modelo, carpeta e instrucciones (máx. 8000 caracteres).', e_profile_exists: 'Ya existe un agente guardado con ese nombre.', e_profile_running: 'Ese agente ya está activo: ábrelo o termínalo primero.', e_no_session: 'Aún no hay nada que retomar: arráncalo de nuevo.', e_stale: 'Alguien acaba de cambiar esto. Ciérralo y ábrelo otra vez.', e_too_many: 'Demasiados agentes guardados.', e_has_lead: 'Ese agente ya reporta a alguien. Quita ese enlace primero.', e_lead_has_lead: 'Un líder no puede reportar a nadie (máx. 2 niveles). Elige un agente que no reporte a nadie.', e_member_has_members: 'Otros agentes reportan a este, así que no puede reportar a nadie (máx. 2 niveles).', e_lead_missing: 'Ese líder ya no es un agente guardado.', e_has_members: 'Otros agentes guardados reportan a este. Cámbialos primero.', agReportsTo: 'Reporta a', agNoLead: 'Nadie', agLeadOf: 'Dirige a: {0}', agReportsHint: 'Cuando ambos están activos, ORCA los enlaza: el líder recibe los resultados de su equipo para pasarlos, y pueden escribirse.', agLeadsHint: '{0} reportan a este agente, así que no puede reportar a nadie (máx. 2 niveles).',
+    adm_tools: 'Herramientas (MCP)', admToolsIntro: 'Conecta agentes con otros sistemas mediante servidores MCP. Agrega un servidor una vez aquí y márcalo en un agente guardado (agentes Claude). Las claves van en Secretos: escribe ${NOMBRE} donde va una clave.', admToolLocal: 'Corre en este equipo', admToolReady: 'Listo', admToolMissing: 'Falta el secreto: {0}', admToolUsedBy: 'lo usa {0}', admToolNone: 'Aún no hay herramientas.', admToolAdd: 'Agregar un servidor MCP', admToolIdPh: 'id (p. ej. github)', admToolNamePh: 'Nombre visible', admToolCmdPh: 'Comando (p. ej. npx)', admToolArgsPh: 'Argumentos, uno por línea', admToolEnvPh: 'Entorno, uno por línea: NOMBRE=valor o NOMBRE=${SECRETO}', admToolHeadPh: 'Encabezados, uno por línea: Authorization: Bearer ${TOKEN}', admToolSecretHint: 'Nunca pegues una clave aquí: usa ${NOMBRE} y guarda NOMBRE en Secretos.', admSaved2: '{0} guardado', admSecrets: 'Secretos', admSecretsHave: 'Guardados: {0}. Los valores no se vuelven a mostrar.', admSecretsNone: 'Aún no hay secretos.', admSecretNamePh: 'NOMBRE', admSecretValPh: 'valor (vacío = borrar)', admSecretSaved: '{0} guardado', admSecretHow: 'Cada agente solo recibe los secretos de las herramientas que usa.', agMcp: 'Herramientas conectadas (MCP)', agMcpOnly: 'Solo estas (no las de siempre)', agMcpHint: 'Solo agentes Claude. ⚠ = falta un secreto (Administración → Herramientas).', agMcpNone: 'Aún no hay herramientas. Agrega servidores MCP en Administración → Herramientas.', e_bad_tool: 'Revisa la herramienta: id, comando o URL https, y líneas NOMBRE=valor.', e_tool_in_use: 'Un agente guardado usa esta herramienta. Desmárcala ahí primero.', e_secret_missing: 'Una herramienta de este agente necesita un secreto que no está guardado (Administración → Herramientas).', e_bad_secret_name: 'Nombres de secreto: MAYÚSCULAS, dígitos y _ (no PATH ni HOME).', e_bad_secret: 'El valor debe ser de una línea.', 
+    back: 'Atrás', admOpen: 'Administración', admTitle: 'Administración', adm_people: 'Personas y acceso', adm_agents: 'Agentes y cuentas', adm_skills: 'Habilidades', adm_knowledge: 'Conocimiento', adm_templates: 'Plantillas', adm_activity: 'Actividad', adm_security: 'Seguridad', admPeopleIntro: 'Quién puede abrir ORCA en este panel y qué puede hacer. Los admins ven y manejan todo. Los miembros solo trabajan con agentes en sus carpetas y sus terminales van en sandbox.', admAllowlist: 'Solo las personas de esta lista pueden abrir ORCA', admAllowOn: 'Activada: quien no esté en la lista no entra.', admAllowOff: 'Desactivada: cualquiera que llegue a este panel por la red privada entra. Actívala.', admLoginPh: 'su correo de acceso', admAdd: 'Agregar', admNamePh: 'Nombre', admRoleAdmin: 'Admin', admRoleMember: 'Miembro', admRemove: 'Quitar', admYou: 'tú', admFolders: 'Carpetas', admFoldersPh: 'Carpetas separadas por comas (p. ej. ~/Projects/cliente)', admRolesHint: 'Los cambios aplican al momento, sin reiniciar. Aquí no puedes quitarte como admin, así que no te quedas fuera.', admSaved: 'Personas y acceso guardado', admUnsaved: 'Guarda o cancela tus cambios primero', admAgentsIntro: '{0} agente(s) guardado(s), {1} cuenta(s) extra. Configura los agentes una vez (instrucciones, habilidades, herramientas) y las cuentas con las que corren.', admSkillsIntro: '{0} habilidad(es) instalada(s). Las habilidades enseñan a los agentes una tarea paso a paso.', admKnowledgeIntro: '{0} documento(s). Documentos del negocio que los agentes consultan antes de responder.', admTemplatesIntro: 'Las plantillas de la empresa se editan donde se usan: en el cuadro de mensaje de cualquier agente, abre Plantillas (tecla T) → Empresa.', admActivityIntro: 'Lo que hicieron personas y agentes (Bitácora) y cuánto del plan se usa (Uso).', admSecList: 'Lista de acceso', admSecSingle: 'Un solo usuario: sin lista, todos son admin', admSecOn: 'Activada · {0} personas', admSecOffN: 'Desactivada · {0} en la lista', admSecSandbox: 'Sandbox de terminal para miembros', admSecPin: 'Tu PIN de terminal está puesto', admSecPush: 'Teléfonos con alertas', admYes: 'Sí', admNo: 'No', e_bad_login: 'Eso no es un correo de acceso.', e_duplicate_login: 'Esa persona ya está en la lista.', e_bad_role: 'Elige Admin o Miembro.', e_bad_folder: 'Las carpetas deben estar dentro de tu carpeta personal.', e_need_admin: 'Con la lista activada, deja al menos un admin.', e_keep_yourself: 'Déjate en la lista como admin (para no quedarte fuera).',
     chatAnswerTook: 'respondió en {0}', chatSeeOutput: 'Ver salida completa', chatNoText: 'Terminó sin respuesta en texto.', chatAgentTag: 'agente', tplOpen: 'Plantillas de instrucciones', tplTitle: 'Plantillas de instrucciones', tplNew: 'Nueva', tplSearch: 'Buscar plantillas', tplName: 'Nombre', tplText: 'Texto', tplWho: 'Quién puede usarla', tplHint: 'Consejo: escribe {cliente} o {fecha} — al elegir la plantilla, el primer {…} queda seleccionado para que escribas encima.', tpl_personal: 'Mías', tpl_company: 'Empresa', tpl_operio: 'Biblioteca Operio', tplScopeMine: 'Solo yo', tplScopeCompany: 'Todos en este panel', tplUse: 'Usar', tplEdit: 'Editar', tplDelete: 'Borrar', tplDeleteSure: '¿Borrar?', tplYes: 'Sí, borrar', tplNone_personal: 'Aún no hay plantillas. Toca Nueva — o escribe primero una instrucción y Nueva la guarda.', tplNone_company: 'Aún no hay plantillas de la empresa.', tplNone_operio: 'Aún no hay nada de Operio.', tplNoMatch: 'Ninguna plantilla coincide.', tplSaved: 'Plantilla guardada', tplDeleted: 'Plantilla borrada', tplFilled: 'Plantilla añadida — edítala y envía', tplReadOnly: 'De Operio — solo lectura', skOpen: 'Habilidades', skTitle: 'Habilidades', skIntroLocal: 'Las habilidades enseñan a tus agentes una tarea, paso a paso. Instala una y tus agentes la usan cuando un pedido coincide. Solo leen y redactan — no se envía nada.', skIntroHosted: 'Las habilidades enseñan a tus agentes una tarea, paso a paso. Pide una y Operio la revisa y la instala para tu equipo.', skIntroHostedView: 'Habilidades que tus agentes pueden usar. Tu administrador puede pedir más a Operio.', skInstalled: 'Instalada v{0}', skRequested: 'Pedida — Operio la revisa', skRejected: 'No aprobada', skFailed: 'No se pudo instalar — Operio lo revisa', skAvailable: 'Disponible', skInstall: 'Instalar', skRemove: 'Quitar', skRequest: 'Pedir', skRequestAgain: 'Pedir de nuevo', skInstalledToast: '{0} instalada — tus agentes la usan desde su próxima tarea', skRemovedToast: '{0} quitada', skRequestedToast: 'Pedida — Operio la revisa', skNone: 'Aún no hay habilidades.', skNoneHosted: 'Operio aún no ha compartido habilidades con este panel.',
     kbOpen: 'Conocimiento', kbTitle: 'Conocimiento', kbIntro: 'Tus agentes buscan en estos documentos antes de responder sobre tu negocio, y dicen dónde lo leyeron.', kbIntroView: 'Tus agentes buscan en estos documentos antes de responder sobre tu negocio. Tu administrador los agrega y los quita.',
     kbStatus: '{0} documentos · {1} fragmentos', kbSemOn: 'Búsqueda por significado activa ({0})', kbSemFree: 'Búsqueda por palabras', kbSemNoKey: 'Búsqueda por palabras — agrega una clave de Voyage u OpenAI para buscar por significado', kbTry: 'Prueba una pregunta', kbTryPh: 'p. ej. ¿A qué hora cierran el sábado?', kbAsk: 'Buscar', kbSearching: 'Buscando…', kbNoHits: 'No se encontró nada — tus agentes lo dirán en vez de adivinar.',
@@ -169,7 +181,7 @@ const T = {
     
     e_shell_locked: 'Primero confirma que quieres abrir una terminal.', e_confirm_needed: 'Primero confirma que quieres abrir una terminal.', e_not_ready: 'Ese borrador aún no está listo para aprobar.', e_bad_schedule: 'Ese horario no es una línea cron válida (5 campos).', shellConfirmTitle: '¿Abrir una terminal real?', shellConfirmSub: 'Una terminal escribe directo en esta computadora con tu usuario. Cualquiera que llegue a esta página puede usarla. Las terminales quedan abiertas {0} min después de confirmar.', shellConfirmGo: 'Abrir terminal', shellConfirmed: 'Terminales abiertas por {0} min', 
     memTitle: 'Memoria', memAgents: 'Agentes {0}', memMachine: 'Equipo {0} / {1}', memSwap: 'Swap {0} / {1}', memProcs: '{0} procesos', memSwapped: '+{0} en swap', memNone: 'sin medir', memEmpty: 'No hay agentes', memOpen: 'Abrir {0}',
-    linksTitle: 'Enlaces', relWaitsOn: 'Depende de', relFeeds: 'Alimenta a', relTalk: 'Habla con', linkAdd: 'Enlazar', linkRemove: 'Quitar enlace con {0}', linkPick: 'Elige un agente', linkNone: 'Sin enlaces', linkAdded: 'Enlazado con {0}', linkRemoved: 'Enlace quitado', linksN: '{0} enlazados',
+    linksTitle: 'Enlaces', relWaitsOn: 'Depende de', relFeeds: 'Alimenta a', relTalk: 'Habla con', relReportsTo: 'Reporta a', relLeads: 'Dirige a', linkAdd: 'Enlazar', linkRemove: 'Quitar enlace con {0}', linkPick: 'Elige un agente', linkNone: 'Sin enlaces', linkAdded: 'Enlazado con {0}', linkRemoved: 'Enlace quitado', linksN: '{0} enlazados',
     linkHint: 'Los agentes enlazados pueden escribirse (orca-send). Cuando termina un agente del que depende, tú apruebas el relevo — nada se envía sin ti.',
     handTitle: '{0} terminó', handTo: '¿Pasar su resultado a {0}?', handNote: 'Nota para {0} (opcional)', handSend: 'Enviar a {0}', handDismiss: 'Ahora no', handSent: 'Pasado a {0}', handQueued: 'En cola para {0} — lo recibe al quedar libre', handBadge: 'Relevo', tHand: 'relevo', tWaits: 'espera a {0}', tMsgs: '{0} mensajes en 24 h',
     msgsTitle: 'Mensajes', msgNone: 'Sin mensajes', msgIntro: 'Nota de ORCA', msgHandoff: 'Relevo', msgQueued: 'en cola', msgFailed: 'no entregado', tTalk: '{0} ↔ {1} · {2} mensajes en 24 h · último hace {3}', tTalkQueued: ' · {0} en espera', tTalkOpen: 'Abrir los mensajes',
@@ -238,7 +250,11 @@ const T = {
     e_same_place: 'Ya está ahí. Elige otro lugar.',
     e_ws_gone: 'Ese espacio de trabajo se cerró. Elige otro lugar.',
     e_move_failed: 'No se completó el movimiento. Revisa el escritorio e inténtalo de nuevo.',
-    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kTpl: 'plantillas', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdYou: 'Tú', rdSteps: '{0} pasos', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
+    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kTpl: 'plantillas', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdAnswerBelow: 'Responde con los botones de abajo.', ltLocked: 'La terminal en vivo necesita tu PIN.', ltUnlock: 'Desbloquear con PIN', rdYou: 'Tú', rdSteps: '{0} pasos', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
+    // From the live panel: saved agents, workers, accounts, Admin, tools.
+    usage: "Uso del plan", usageTip: "Uso del plan — {0}", umSession: "sesión de 5 horas {0} %", umWeekly: "semanal {0} %", umStale: "(última lectura)", notYours: "Fuera de tus carpetas", sandboxOff: "El sandbox de terminal está apagado — pídeselo a Sam", pinTitle: "Desactiva para abrir una terminal", pinDefuse: "Desactivar", pinSet: "Crea un PIN de terminal", pinSetSub: "Elige un PIN de 4 a 8 dígitos. Lo pedirás para abrir terminales.", pinAskSub: "Escribe tu PIN para abrir terminales por {0} min.", pinNew: "PIN nuevo", pinSave: "Guardar PIN", pinWrong: "PIN incorrecto — quedan {0} antes de estallar", pinBoom: "💥 ¡Boom! Bloqueado {0}s", pinLocked: "Bloqueado — espera {0}s", pinOk: "Desactivado — terminales por {0} min", pinUnlockedMsg: "Terminales desbloqueadas", pinShort: "El PIN debe tener 4–8 dígitos", pinChange: "Cambiar PIN", pinCurrent: "PIN actual", e_not_yours: "Ese agente no está en tus carpetas.", e_no_pin: "Primero crea un PIN de terminal.", e_bad_pin: "PIN incorrecto.", e_bomb: "Demasiados intentos — bloqueado un momento.", e_bad_pin_format: "El PIN debe tener 4–8 dígitos.", kd_gemini: "Google · Gemini CLI", kd_ollama: "Modelos locales en este equipo (lento)", kindGemini: "Gemini", kindOllama: "Local (Ollama)", accTitle: "Cuentas", accOpen: "Cuentas", accIntro: "Usa un tipo de agente con varias cuentas. Claude y Codex: agrega una cuenta y conéctala una vez en este equipo con el comando que aparece. Google (Gemini y Antigravity): pega una clave de API de esa cuenta de Google. Los agentes eligen la cuenta al arrancar.", accDefault: "Cuenta predeterminada", accSignedIn: "Conectada", accNeedsSignIn: "Sin conectar", accAdd: "Agregar cuenta", accName: "Nombre", accNamePh: "p. ej. el correo de la cuenta", accKind: "Agente", accRemove: "Quitar", accRemoveSure: "¿Quitar? Se borra su sesión", accRename: "Renombrar", accSignIn: "Conectar: ejecuta esto en una terminal de este equipo", accCopy: "Copiar", accCopied: "Comando copiado", accAdded: "{0} agregada: ahora conéctala", accRemoved: "{0} quitada", accPick: "Cuenta", accUnnamed: "sin nombre", e_ollama_off: "Ollama no está corriendo en este equipo o no tiene un modelo que use herramientas.", e_bad_account: "Esa cuenta ya no corresponde a este tipo de agente. Elige otra.", e_account_exists: "Ya existe una cuenta con ese nombre para este agente.", e_account_name: "Ponle un nombre a la cuenta.", e_account_in_use: "Un agente guardado usa esta cuenta. Cámbialo primero.", e_needs_key: "Esta cuenta aún no tiene clave de API. Agrégala en Agentes guardados → Cuentas.", e_needs_account: "Gemini necesita una cuenta con clave de API. Agrégala en Agentes guardados → Cuentas.", accGoogle: "Clave de Google (Gemini + Antigravity)", accKey: "Clave de API", accKeyPh: "Pega la clave (AIza…)", accKeyHow: "Entra a aistudio.google.com/apikey con esta cuenta de Google, crea una clave y pégala aquí. ORCA la guarda en este equipo y no la vuelve a mostrar.", accSetKey: "Cambiar clave", accSaveKey: "Guardar clave", accKeySaved: "Clave guardada para {0}", accKeyMissing: "Sin clave",
+    // From the live panel: saved agents, workers, accounts, Admin, tools.
+    admSecHosted: "Operio administra las personas y el acceso en ORCA Host.", admSecFree: "Una persona, este equipo: ORCA solo responde en esta máquina. Quien pueda usarla puede manejar tus agentes.", admToolsFreeWarn: "Un servidor MCP que agregues corre con tus propios permisos en este equipo. Agrega solo servidores de confianza.", 
   },
 };
 // Other languages: the pack loaded by lang-boot.js (missing strings fall back to English).
@@ -641,6 +657,7 @@ function select(pane) {
     outEl.textContent = '';
     outEl.dataset.pane = '';
     readerEl.replaceChildren();
+    Object.assign(tr, { pane: null, rev: '', blocks: null });
     outLoading(true);
   }
   // Phone: the agent page is a full screen, so the system Back closes it.
@@ -654,6 +671,7 @@ function select(pane) {
   stickBottom = true;
   render();
   loadOutput(true);
+  if (outMode === 'term') liveStart();
   // After the page has risen: output at its end.
   setTimeout(() => {
     if (stickBottom) outEl.scrollTop = outEl.scrollHeight;
@@ -673,6 +691,7 @@ function closeSheet(fromBack = false) {
   if (selected) drafts.set(selected, promptEl.value);
   selected = null;
   sheetOpen = false;
+  liveStop();
   setExtra(false);
   sheet.classList.remove('in');
   scrim.classList.remove('in');
@@ -687,7 +706,7 @@ function renderSheet() {
   if (!selected) return;
   const a = byPane.get(selected);
   if (!a) { closeSheet(); return; }
-  sheet.className = `sheet ${a.status === 'done' ? 'idle' : a.status}` + (sheet.classList.contains('in') ? ' in' : '');
+  sheet.className = `sheet ${a.status === 'done' ? 'idle' : a.status}` + (sheet.classList.contains('in') ? ' in' : '') + (outMode === 'term' ? ' mode-term' : '');
   const st = ['working', 'idle', 'blocked', 'done'].includes(a.status) ? a.status : 'unknown';
   const badge = $('#sheet-badge');
   if (badge.dataset.st !== st) {
@@ -1070,17 +1089,117 @@ let outMode = safeGet('orca-out-mode') === 'term' ? 'term' : 'reader';
 let readerStick = true;
 let readerSrc = null;
 const readerOpen = new Set();
+// ─── Live terminal in the card ────────────────────────────────────────────────
+// The pane's screen (ANSI) is redrawn every ~0.4 s; what you type goes straight to the pane.
+// Same PIN and folder rules as shells (server: /api/term). History stays the Reader's job.
+const live = { term: null, pane: null, poll: null, last: '', busy: false, buf: '', flush: null, size: '' };
+const liveHost = $('#live-term'), liveLocked = $('#live-locked'), liveLockBtn = $('#live-lock');
+function liveShowLocked(on) {
+  liveLocked.hidden = !on; liveHost.hidden = on; liveLockBtn.hidden = on;
+}
+function liveEnsure() {
+  if (live.term) return live.term;
+  live.term = new window.Terminal({ fontFamily: '"JetBrains Mono", ui-monospace, monospace', fontSize: 12, cursorBlink: true, scrollback: 0, theme: termTheme(), convertEol: false });
+  live.term.open(liveHost);
+  live.term.onData(d => {
+    if (!live.pane) return;
+    live.buf += d;
+    if (live.flush) return;
+    live.flush = setTimeout(() => {
+      const text = live.buf, pane = live.pane; live.buf = ''; live.flush = null;
+      if (text && pane) post(`/api/term/${enc(pane)}/input`, { text }).then(() => setTimeout(livePoll, 120)).catch(e => { if (e.message === 'shell_locked') liveShowLocked(true); });
+    }, 25);
+  });
+  return live.term;
+}
+// Fit the font so the pane's width fits the card; below 8 px it scrolls sideways instead.
+function liveFit(cols, rows) {
+  const w = liveHost.clientWidth - 14;
+  const fs = Math.max(8, Math.min(13, Math.floor((w / cols) / 0.6)));
+  const key = `${cols}x${rows}@${fs}`;
+  if (key === live.size) return;
+  live.size = key;
+  try { live.term.options.fontSize = fs; } catch { /* */ }
+  try { live.term.resize(cols, rows); } catch { /* */ }
+}
+async function livePoll() {
+  if (live.busy || !live.pane || document.hidden || liveHost.hidden) return;
+  live.busy = true;
+  const pane = live.pane;
+  try {
+    const r = await call(`/api/term/${enc(pane)}`);
+    if (live.pane !== pane) return;
+    liveFit(Math.max(20, r.cols || 80), Math.max(8, r.rows || 30));
+    if (typeof r.text === 'string' && r.text !== live.last) {
+      live.last = r.text;
+      live.term.write('\x1b[2J\x1b[3J\x1b[H' + r.text.replace(/\r?\n/g, '\r\n'));
+    }
+  } catch (e) {
+    if (e.message === 'shell_locked') { liveStop(); liveShowLocked(true); }
+    else if (e.message === 'not_yours' || e.message === 'gone') { liveStop(); toast(errText(e), true); }
+  } finally { live.busy = false; }
+}
+function liveStart() {
+  if (!selected || !sheetOpen || outMode !== 'term') return;
+  if (!shellUnlocked()) { liveStop(); liveShowLocked(true); return; }
+  liveShowLocked(false);
+  liveEnsure();
+  try { live.term.options.theme = termTheme(); } catch { /* */ }
+  if (live.pane !== selected) {
+    if (live.pane) post(`/api/term/${enc(live.pane)}/zoom`, { on: false }).catch(() => {});
+    live.pane = selected; live.last = ''; live.size = ''; live.term.reset();
+    // Zoom the pane on the desktop while it is open here: a split is often ~35 columns wide.
+    post(`/api/term/${enc(live.pane)}/zoom`, { on: true }).catch(() => {});
+  }
+  if (!live.poll) live.poll = setInterval(livePoll, 400);
+  livePoll();
+}
+function liveStop() {
+  if (live.poll) { clearInterval(live.poll); live.poll = null; }
+  if (live.pane) post(`/api/term/${enc(live.pane)}/zoom`, { on: false }).catch(() => {}); // restore the split
+  live.pane = null;
+}
+$('#live-unlock').addEventListener('click', () => openShellConfirm(() => liveStart()));
+liveLockBtn.addEventListener('click', async () => {
+  try { await post('/api/shell/lock'); access.shell.unlockedUntil = 0; } catch { /* */ }
+  liveStop(); liveShowLocked(true); toast(t('lockNow'));
+});
+
+// Terminal is a live xterm of the agent's pane (keys go straight in), behind the shell PIN.
+// The text mirror (#sheet-output) stays as the hidden source for the recap, context and screen Reader.
 function applyOutMode() {
   const reader = outMode === 'reader';
-  outEl.hidden = reader;
+  outEl.hidden = true;
   readerEl.hidden = !reader;
+  $('.dock').classList.toggle('mode-term', !reader);
+  sheet.classList.toggle('mode-term', !reader);
   document.querySelectorAll('.term-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === outMode)));
-  if (reader) renderReader(true); else { outEl.scrollTop = outEl.scrollHeight; stickBottom = true; }
+  if (reader) { liveStop(); renderReader(true); if (selected) loadOutput(true); } else liveStart();
 }
+// Claude agents: the Reader shows the session transcript (exact text); others: the screen.
+const tr = { pane: null, rev: '', blocks: null, busy: false };
+async function loadTranscript() {
+  const pane = selected;
+  const a = byPane.get(pane);
+  if (!pane || outMode !== 'reader' || tr.busy) return;
+  if (a && a.agent !== 'claude') { if (tr.pane !== pane) Object.assign(tr, { pane, rev: '', blocks: null }); return; }
+  tr.busy = true;
+  try {
+    const r = await call(`/api/agents/${enc(pane)}/transcript${tr.pane === pane && tr.rev ? '?rev=' + encodeURIComponent(tr.rev) : ''}`);
+    if (selected !== pane) return;
+    if (r.same) return;
+    Object.assign(tr, { pane, rev: r.rev || '', blocks: r.blocks || null });
+    renderReader();
+  } catch { /* keep the screen Reader */ }
+  finally { tr.busy = false; if (selected === pane) outLoading(false); }
+}
+// The Reader follows a working agent about once a second (an unchanged transcript costs one stat).
+setInterval(() => { if (sheetOpen && selected && outMode === 'reader' && !document.hidden) loadTranscript(); }, 1000);
 function renderReader(toBottom = false) {
   if (outMode !== 'reader' || termBox.hidden || !window.OrcaReader) return;
+  const useTr = tr.pane === selected && Array.isArray(tr.blocks) && tr.blocks.length;
   const text = outEl.textContent;
-  const key = (outEl.dataset.pane || '') + '\u0000' + text;
+  const key = (outEl.dataset.pane || '') + '\u0000' + (useTr ? 'tr:' + tr.rev : text);
   if (key === readerSrc && !toBottom) return;
   const sameAgent = readerSrc != null && readerSrc.split('\u0000')[0] === (outEl.dataset.pane || '');
   if (!sameAgent) readerOpen.clear();
@@ -1088,12 +1207,25 @@ function renderReader(toBottom = false) {
   readerEl.querySelectorAll('details[open]').forEach(d => readerOpen.add(d.dataset.key));
   const fromEnd = readerEl.scrollHeight - readerEl.scrollTop;
   try {
-    readerEl.replaceChildren(OrcaReader.render(OrcaReader.parse(text), document, readerOpen, t));
+    readerEl.replaceChildren(useTr ? OrcaReader.renderTranscript(tr.blocks, document, readerOpen, t) : OrcaReader.render(OrcaReader.parse(text), document, readerOpen, t));
   } catch { readerEl.textContent = text; }
-  if (toBottom || readerStick || !sameAgent) { readerEl.scrollTop = readerEl.scrollHeight; readerStick = true; }
+  if (toBottom || readerStick || !sameAgent) {
+    readerEl.scrollTop = readerEl.scrollHeight; readerStick = true;
+    // Again once layout settles (fonts, the sheet's rise), so the last line is never cut.
+    requestAnimationFrame(() => { if (readerStick) readerEl.scrollTop = readerEl.scrollHeight; });
+    setTimeout(() => { if (readerStick) readerEl.scrollTop = readerEl.scrollHeight; }, 350);
+  }
   else readerEl.scrollTop = readerEl.scrollHeight - fromEnd;
 }
-readerEl.addEventListener('scroll', () => { readerStick = readerEl.scrollHeight - readerEl.scrollTop - readerEl.clientHeight < 24; });
+// Only a person scrolling unpins the Reader from the end; layout growing under a programmatic
+// scroll (fonts, the sheet's rise, a re-render) must not.
+let readerUserAt = 0;
+for (const ev of ['wheel', 'touchstart', 'pointerdown', 'keydown']) readerEl.addEventListener(ev, () => { readerUserAt = Date.now(); }, { passive: true });
+readerEl.addEventListener('scroll', () => {
+  if (Date.now() - readerUserAt > 1500) return;
+  readerStick = readerEl.scrollHeight - readerEl.scrollTop - readerEl.clientHeight < 24;
+});
+new ResizeObserver(() => { if (readerStick && !readerEl.hidden) readerEl.scrollTop = readerEl.scrollHeight; }).observe(readerEl);
 readerEl.addEventListener('toggle', e => { const d = e.target; if (d.dataset?.key) d.open ? readerOpen.add(d.dataset.key) : readerOpen.delete(d.dataset.key); }, true);
 function copyPath(elm) {
   const v = elm.dataset.copy;
@@ -1130,8 +1262,11 @@ function renderReply() {
   const d = reply.pane === selected ? reply.data : {};
   const box = $('#answers');
   const dock = $('.dock');
-  const qs = a?.status === 'blocked' ? d.ask?.questions || null : null;
-  const menu = a?.status === 'blocked' && !qs ? d.screen : null;
+  // The server offers a question or menu only while one is open (blocked, or idle with a menu on screen).
+  const live = a && a.status !== 'working';
+  const qs = live ? d.ask?.questions || null : null;
+  const menu = live && !qs && (a.status === 'blocked' || d.open) ? d.screen : null;
+  dock.classList.toggle('blocked', a?.status === 'blocked');
   const showing = !!(qs?.length || menu?.options?.length);
   dock.classList.toggle('asking', showing);
   box.hidden = !showing;
@@ -1293,6 +1428,7 @@ function parseRecap(text) {
   const m = all.match(/^(.*?)\s*\bNext(?:,|:)\s*(.+)$/);
   return m ? { sum: m[1], next: m[2].replace(/^./, c => c.toUpperCase()) } : { sum: all, next: '' };
 }
+$('#sheet-recap').addEventListener('click', e => { if (!e.target.closest('a')) e.currentTarget.classList.toggle('open'); });
 function renderRecap() {
   const box = $('#sheet-recap');
   const r = selected && recapSeen.get(selected);
@@ -1358,11 +1494,15 @@ function mergeOutput(pane, next) {
 
 async function loadOutput(toBottom = false) {
   if (!selected) return;
+  if (outMode === 'term') { outLoading(false); return; } // the live terminal polls on its own
   loadReply();
+  loadTranscript();
   const pane = selected;
   const atBottom = stickBottom;
+  // With the transcript the Reader needs only the screen (context bar, recap): one cheap read.
+  const screenOnly = tr.pane === pane ? Array.isArray(tr.blocks) : byPane.get(pane)?.agent === 'claude';
   try {
-    const { text } = await call(`/api/agents/${enc(pane)}/read?lines=1000${outSeen.has(pane) ? '&have=1' : ''}`);
+    const { text } = await call(screenOnly ? `/api/agents/${enc(pane)}/read?lines=60&screen=1` : `/api/agents/${enc(pane)}/read?lines=1000${outSeen.has(pane) ? '&have=1' : ''}`);
     if (selected !== pane) return;
     const rc = parseRecap(text);
     if (rc) recapSeen.set(pane, rc);
@@ -2117,7 +2257,7 @@ navigator.serviceWorker?.addEventListener('message', e => {
 // The server keeps links by terminal and sends them by pane. depends: `to` waits on `from`.
 // A hand-off is offered when `from` finishes; nothing reaches `to` until someone taps Send.
 const linksOf = pane => links.filter(l => l.from === pane || l.to === pane);
-const relationOf = (l, pane) => (l.kind === 'talk' ? 'talk' : l.to === pane ? 'waitsOn' : 'feeds');
+const relationOf = (l, pane) => (l.kind === 'talk' ? 'talk' : l.kind === 'reports' ? (l.from === pane ? 'reportsTo' : 'leads') : l.to === pane ? 'waitsOn' : 'feeds');
 const otherOf = (l, pane) => (l.from === pane ? l.to : l.from);
 const handoffsFor = pane => handoffs.filter(h => h.to === pane || h.from === pane);
 
@@ -2172,7 +2312,7 @@ function drawLinks() {
     let cx, cy;
     if (Math.hypot(x2 - x1, y2 - y1) < 48) {
       // Neighbours: an arc between them — depends over the top, talk underneath — so both show.
-      const top = l.kind === 'depends';
+      const top = l.kind !== 'talk';
       const [L, R] = A.x <= B.x ? [A, B] : [B, A];
       const pL = [L.x + L.w * 0.72, top ? L.y : L.y + L.h], pR = [R.x + R.w * 0.28, top ? R.y : R.y + R.h];
       [[x1, y1], [x2, y2]] = L === A ? [pL, pR] : [pR, pL];
@@ -2183,12 +2323,12 @@ function drawLinks() {
       const bend = Math.min(40, len * 0.18) * (l.kind === 'talk' ? -1 : 1);
       cx = mx - ((y2 - y1) / len) * bend; cy = my + ((x2 - x1) / len) * bend;
     }
-    const hand = l.kind === 'depends' && handoffs.some(h => h.from === l.from && h.to === l.to);
+    const hand = l.kind !== 'talk' && handoffs.some(h => h.from === l.from && h.to === l.to);
     const hot = selected && (l.from === selected || l.to === selected);
     const p = document.createElementNS(SVGNS, 'path');
     p.setAttribute('d', `M${x1.toFixed(1)} ${y1.toFixed(1)} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}`);
     p.setAttribute('class', `lk ${l.kind}` + (hand ? ' hand' : '') + (hot ? ' hot' : '') + (selected && !hot ? ' faint' : ''));
-    if (l.kind === 'depends') p.setAttribute('marker-end', hand ? 'url(#arrow-hand)' : 'url(#arrow)');
+    if (l.kind !== 'talk') p.setAttribute('marker-end', hand ? 'url(#arrow-hand)' : l.kind === 'reports' ? 'url(#arrow-lead)' : 'url(#arrow)');
     paths.push(p);
     const tk = talkOf.get(l.id);
     if (tk) {
@@ -2221,7 +2361,7 @@ function talkByLink() {
   if (!talk.length) return out;
   const byPair = new Map(talk.map(x => [x.a + '|' + x.b, x]));
   const taken = new Set();
-  for (const pass of ['talk', 'depends']) {
+  for (const pass of ['talk', 'reports', 'depends']) {
     for (const l of links) {
       if (l.kind !== pass) continue;
       const key = [l.from, l.to].sort().join('|');
@@ -2322,7 +2462,7 @@ function renderLinks(a) {
     const o = byPane.get(otherOf(l, a.pane));
     const rel = relationOf(l, a.pane);
     const li = el('li', 'link-row ' + rel);
-    li.append(el('span', 'l-rel', t(rel === 'waitsOn' ? 'relWaitsOn' : rel === 'feeds' ? 'relFeeds' : 'relTalk')));
+    li.append(el('span', 'l-rel', t({ waitsOn: 'relWaitsOn', feeds: 'relFeeds', talk: 'relTalk', reportsTo: 'relReportsTo', leads: 'relLeads' }[rel])));
     const go = el('button', 'l-name ' + (o?.status || ''), label(o));
     go.type = 'button';
     go.addEventListener('click', () => o && select(o.pane));
@@ -2370,7 +2510,10 @@ linkForm.addEventListener('submit', async e => {
   const other = linkForm.elements.other.value;
   if (!a || !other) { linkForm.elements.other.focus(); return; }
   const rel = linkForm.elements.rel.value;
-  const body = rel === 'talk' ? { kind: 'talk', from: a.pane, to: other } : rel === 'waitsOn' ? { kind: 'depends', from: other, to: a.pane } : { kind: 'depends', from: a.pane, to: other };
+  const body = {
+    talk: { kind: 'talk', from: a.pane, to: other }, waitsOn: { kind: 'depends', from: other, to: a.pane }, feeds: { kind: 'depends', from: a.pane, to: other },
+    reportsTo: { kind: 'reports', from: a.pane, to: other }, leads: { kind: 'reports', from: other, to: a.pane },
+  }[rel];
   const btn = linkForm.querySelector('button');
   btn.disabled = true;
   try {
@@ -2600,6 +2743,7 @@ $('#term-theme').addEventListener('click', () => {
   if (next === document.documentElement.dataset.theme) { delete document.documentElement.dataset.term; safeSet('orca-term', ''); }
   else { document.documentElement.dataset.term = next; safeSet('orca-term', next); }
   labelTermBtn();
+  if (live.term) try { live.term.options.theme = termTheme(); } catch { /* */ }
 });
 labelTermBtn();
 $('#theme').addEventListener('click', () => {
@@ -2614,7 +2758,7 @@ const dialog = $('#new-dialog');
 const form = $('#new-form');
 
 const KIND_LABEL = k => t('kind' + k.charAt(0).toUpperCase() + k.slice(1)) || k;
-const KIND_MARK = { claude: 'C', hermes: 'H', opencode: 'O', agy: 'A', codex: 'X', shell: '$' };
+const KIND_MARK = { claude: 'C', hermes: 'H', opencode: 'O', agy: 'A', codex: 'X', gemini: 'G', ollama: 'L', shell: '$' };
 function radio(name, value, checked, inner, cls) {
   const l = document.createElement('label');
   l.className = cls;
@@ -2631,7 +2775,18 @@ function fillModels() {
   const pick = list.includes(prev) ? prev : '';
   $('#model-seg').replaceChildren(
     radio('model', '', pick === '', `<span class="sg-name">${esc(t('modelDefault'))}</span><small>${esc(t('modelDefaultHint'))}</small>`, 'sg'),
-    ...list.map(m => radio('model', m, pick === m, `<span class="sg-name">${esc(m.charAt(0).toUpperCase() + m.slice(1))}</span><small>${esc(t('md_' + m))}</small>`, 'sg')));
+    ...list.map(m => radio('model', m, pick === m, `<span class="sg-name">${esc(kind === 'ollama' ? m : m.charAt(0).toUpperCase() + m.slice(1))}</span><small>${esc(T.en['md_' + m] ? t('md_' + m) : '')}</small>`, 'sg')));
+  fillAccounts(kind);
+}
+// Account picker: only when this kind has more than its default login.
+function accountLabel(a) { return a.id === 'default' ? (a.label ? `${a.label} · ${t('accDefault')}` : t('accDefault')) : a.label; }
+function fillAccounts(kind) {
+  const list = (meta.accounts || []).filter(a => (a.kinds || [a.kind]).includes(kind));
+  const sel = form.elements.account;
+  $('#account-group').hidden = !(list.length > 1 || (list.length === 1 && list[0].id !== 'default'));
+  const prev = sel.value;
+  sel.replaceChildren(...list.map(a => new Option(accountLabel(a) + (a.signedIn ? '' : ` (${t('accNeedsSignIn')})`), a.id)));
+  if (list.some(a => a.id === prev)) sel.value = prev;
 }
 function fillDialog() {
   const prevKind = form.querySelector('input[name="kind"]:checked')?.value || safeGet('orca-new-kind') || 'claude';

@@ -266,7 +266,120 @@
     return frag;
   }
 
-  const api = { parse, layout, render };
+  // ── Transcript blocks (Claude agents): the reply text is markdown, exactly as written. ──
+  // Inline: `code`, **bold**, [label](url); the rest goes through inline() (links, copyable paths).
+  function inlineMd(doc, parent, text) {
+    const re = /`([^`\n]+)`|\*\*([^*\n]+)\*\*|\[([^\]\n]+)\]\((https?:\/\/[^)\s]+)\)/g;
+    let at = 0;
+    for (const m of String(text).matchAll(re)) {
+      if (m.index > at) inline(doc, parent, text.slice(at, m.index));
+      if (m[1] != null) {
+        const c = doc.createElement('code');
+        if (/^(~|\/)[\w./-]+$/.test(m[1])) { c.className = 'rp'; c.dataset.copy = m[1]; c.tabIndex = 0; c.setAttribute('role', 'button'); }
+        c.textContent = m[1]; parent.appendChild(c);
+      } else if (m[2] != null) { const b = doc.createElement('b'); inline(doc, b, m[2]); parent.appendChild(b); }
+      else { const a = doc.createElement('a'); a.href = m[4]; a.textContent = m[3]; a.target = '_blank'; a.rel = 'noopener noreferrer'; parent.appendChild(a); }
+      at = m.index + m[0].length;
+    }
+    if (at < text.length) inline(doc, parent, text.slice(at));
+  }
+  function md(doc, parent, text) {
+    const lines = String(text || '').replace(/\r/g, '').split('\n');
+    let i = 0;
+    while (i < lines.length) {
+      const l = lines[i];
+      if (!l.trim()) { i++; continue; }
+      const fence = l.match(/^\s*(```|~~~)/);
+      if (fence) {
+        const buf = []; i++;
+        while (i < lines.length && !lines[i].trim().startsWith(fence[1])) buf.push(lines[i++]);
+        i++;
+        const pre = doc.createElement('pre'); pre.className = 'rcode'; pre.textContent = buf.join('\n'); parent.appendChild(pre); continue;
+      }
+      if (/^\s*\|.*\|\s*$/.test(l)) {
+        const rows = [];
+        while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) rows.push(lines[i++]);
+        const cells = r => r.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
+        const wrap = doc.createElement('div'); wrap.className = 'rtable';
+        const table = doc.createElement('table');
+        rows.forEach((r, k) => {
+          if (/^\s*\|?[\s:|-]+\|?\s*$/.test(r) && r.includes('-')) return; // the |---| line
+          const tr = doc.createElement('tr');
+          for (const c of cells(r)) { const td = doc.createElement(k === 0 ? 'th' : 'td'); inlineMd(doc, td, c); tr.appendChild(td); }
+          table.appendChild(tr);
+        });
+        wrap.appendChild(table); parent.appendChild(wrap); continue;
+      }
+      const h = l.match(/^\s*#{1,6}\s+(.*)$/);
+      if (h) { const p = doc.createElement('p'); p.className = 'rh'; inlineMd(doc, p, h[1].replace(/\s*#+\s*$/, '')); parent.appendChild(p); i++; continue; }
+      if (/^\s*(---+|\*\*\*+)\s*$/.test(l)) { parent.appendChild(doc.createElement('hr')); i++; continue; }
+      const li = l.match(/^(\s*)([-*•]|\d{1,3}[.)])\s+(.*)$/);
+      if (li) {
+        let text = li[3]; i++;
+        // Continuation lines of the same item (indented, not a new item).
+        while (i < lines.length && lines[i].trim() && /^\s{2,}\S/.test(lines[i]) && !/^\s*([-*•]|\d{1,3}[.)])\s+/.test(lines[i])) text += ' ' + lines[i++].trim();
+        const d = doc.createElement('div'); d.className = 'rli'; d.style.setProperty('--lv', Math.min(3, Math.floor(li[1].length / 2)));
+        const mk = doc.createElement('span'); mk.className = 'rmk'; mk.textContent = /^\d/.test(li[2]) ? li[2] : '•';
+        const tx = doc.createElement('span'); inlineMd(doc, tx, text.replace(/^\[( |x)\]\s*/i, (m0, x) => (x.trim() ? '☑ ' : '☐ ')));
+        d.append(mk, tx); parent.appendChild(d); continue;
+      }
+      if (/^\s*>/.test(l)) {
+        const buf = [];
+        while (i < lines.length && /^\s*>/.test(lines[i])) buf.push(lines[i++].replace(/^\s*>\s?/, ''));
+        const q = doc.createElement('blockquote'); q.className = 'rquote'; md(doc, q, buf.join('\n')); parent.appendChild(q); continue;
+      }
+      // Paragraph: consecutive plain lines (a hard break inside keeps its line).
+      const buf = [];
+      while (i < lines.length && lines[i].trim() && !/^\s*(```|~~~|\||#{1,6}\s|>|([-*•]|\d{1,3}[.)])\s+)/.test(lines[i])) buf.push(lines[i++].trim());
+      if (!buf.length) { buf.push(lines[i++].trim()); }
+      const p = doc.createElement('p'); inlineMd(doc, p, buf.join('\n')); parent.appendChild(p);
+    }
+  }
+
+  function renderTranscript(blocks, doc, open, t) {
+    const frag = doc.createDocumentFragment();
+    blocks.forEach((b, n) => {
+      if (b.t === 'you') {
+        const d = doc.createElement('div'); d.className = 'ryou';
+        const lab = doc.createElement('span'); lab.className = 'rwho'; lab.textContent = t('rdYou');
+        d.appendChild(lab);
+        const body = doc.createElement('div'); body.className = 'rtext'; md(doc, body, b.text); d.appendChild(body);
+        frag.appendChild(d);
+      } else if (b.t === 'say') {
+        const d = doc.createElement('div'); d.className = 'rsay'; md(doc, d, b.text); frag.appendChild(d);
+      } else if (b.t === 'tools') {
+        const key = 't' + n + ':' + (b.items[0]?.name || '');
+        const det = doc.createElement('details'); det.className = 'rtool'; det.dataset.key = key;
+        if (open?.has(key)) det.open = true;
+        const names = new Map();
+        for (const it of b.items) names.set(it.name, (names.get(it.name) || 0) + 1);
+        const sum = doc.createElement('summary');
+        sum.textContent = [...names].map(([nm, c]) => c > 1 ? `${nm} ×${c}` : nm).join(' · ');
+        const ul = doc.createElement('ol'); ul.className = 'rsteps';
+        for (const it of b.items) {
+          const li = doc.createElement('li');
+          const nm = doc.createElement('b'); nm.textContent = it.name;
+          li.appendChild(nm);
+          if (it.what) li.appendChild(doc.createTextNode(' ' + it.what));
+          ul.appendChild(li);
+        }
+        det.append(sum, ul); frag.appendChild(det);
+      } else if (b.t === 'ask') {
+        const d = doc.createElement('div'); d.className = 'rask';
+        for (const q of b.questions || []) {
+          const p = doc.createElement('p'); p.className = 'rask-q'; p.textContent = q.question; d.appendChild(p);
+          const ol = doc.createElement('ol');
+          for (const o of q.options || []) { const li = doc.createElement('li'); const b2 = doc.createElement('b'); b2.textContent = o.label; li.appendChild(b2); if (o.description) li.appendChild(doc.createTextNode(' — ' + o.description)); ol.appendChild(li); }
+          d.appendChild(ol);
+        }
+        const hint = doc.createElement('p'); hint.className = 'rask-hint'; hint.textContent = t('rdAnswerBelow'); d.appendChild(hint);
+        frag.appendChild(d);
+      }
+    });
+    return frag;
+  }
+
+  const api = { parse, layout, render, renderTranscript, md };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.OrcaReader = api;
 })(this);
