@@ -137,6 +137,7 @@
 <section class="section" aria-labelledby="whats-new">
   <div class="container">
     <div class="section-head"><h2 id="whats-new">{h.whatsNew.title}</h2></div>
+    <div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name="operio-orca-0.4" lazy /></div>
     <div class="shots">
       {#each h.whatsNew.shots as s}
         <figure>
@@ -737,4 +738,5 @@
     .final { padding: 48px 0; }
     .final-inner { gap: 16px; }
   }
+  .new-video { max-width: 860px; margin: 0 auto 28px; }
 </style>

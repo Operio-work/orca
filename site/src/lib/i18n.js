@@ -166,7 +166,8 @@ const en = {
         }
       ],
       "note": "Also in 0.3.0: agents talking on the map, prompt templates, skills and knowledge for agents.",
-      "changelog": 'Full changelog'
+      "changelog": 'Full changelog',
+      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.4, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.4, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.4: saved agents, teams, workers, tools and five languages." }
     },
 
     bizTitle: 'Run a business?',
@@ -722,7 +723,8 @@ vsTitle: 'Cómo se compara ORCA',
         }
       ],
       "note": "También en la 0.3.0: agentes conversando en el mapa, plantillas, habilidades y conocimiento para los agentes.",
-      "changelog": 'Registro de cambios completo'
+      "changelog": 'Registro de cambios completo',
+      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.4, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.4, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.4: agentes guardados, equipos, trabajadores, herramientas y cinco idiomas." }
     },
 
     bizTitle: '¿Tienes un negocio?',

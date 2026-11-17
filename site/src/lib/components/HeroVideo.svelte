@@ -6,10 +6,11 @@
   import { tick } from 'svelte';
 
   /** @type {{ lang: string, s: { play: string, length: string, playLabel: string, label: string, close: string, captions: string, posterAlt: string } }} */
-  let { lang, s } = $props();
+  // name: the files' prefix in /media; lazy: a video further down the page (no high-priority poster).
+  let { lang, s, name = 'operio-orca', lazy = false } = $props();
 
   const PORTRAIT = '(max-width: 600px) and (orientation: portrait)';
-  const base = $derived(`/media/operio-orca-${lang}`);
+  const base = $derived(`/media/${name}-${lang}`);
 
   let playing = $state(false);
   let cut = $state('16x9');
@@ -70,7 +71,7 @@
   {:else}
     <a class="poster" href="{base}-16x9.mp4" onclick={open} bind:this={trigger} aria-label={s.playLabel}>
       <picture>
-        <img src="{base}-16x9-poster.webp" width="1280" height="720" alt={s.posterAlt} fetchpriority="high" />
+        <img src="{base}-16x9-poster.webp" width="1280" height="720" alt={s.posterAlt} fetchpriority={lazy ? 'auto' : 'high'} loading={lazy ? 'lazy' : 'eager'} />
       </picture>
       <span class="cue" aria-hidden="true">
         <span class="disc">
