@@ -112,57 +112,52 @@ const en = {
     ],
 
     whatsNew: {
-      title: 'What’s new in 0.3.0',
-      items: [
+      "title": "What’s new in 0.4.0",
+      "shots": [
         {
-          title: 'See your agents talk',
-          body: 'When one agent messages another, a line joins their cards on the map with a count for the last 24 hours, and each card shows its messages.'
+          "id": "agents",
+          "caption": "Saved agents and workers",
+          "alt": "The Saved agents list: a request from the sales lead for a researcher worker with Approve and Decline, a worker setup with one worker on a task and its minutes left, and the sales lead."
         },
         {
-          title: 'Prompt templates',
-          body: 'Press T in an agent’s prompt box, pick a template and fill in the blanks. The first one is selected so you can type over it. Nothing is sent until you press Send.'
+          "id": "admin",
+          "caption": "Admin → Tools",
+          "alt": "The Admin page on Tools: one connected calendar server marked Ready, a warning that servers you add run with your rights, and the form to add another."
         },
         {
-          title: 'Skills for your agents',
-          body: 'Install ready-made skills from the Skills dialog: review reply drafts, a weekly owner summary and bilingual message polish. They read and draft only.'
-        },
-        {
-          title: 'Knowledge for agents',
-          body: 'Put your price lists, hours, policies and PDFs in one folder. Agents look facts up before they answer and say where they read them. Search runs on your machine; nothing is sent anywhere.'
-        },
-        {
-          title: 'Choose who sees which documents',
-          body: 'Limit a folder to some agents by name or tag, and try a search as one of them to see what it would find.'
-        },
-        {
-          title: 'New commands',
-          body: 'operio-orca kb search, add, list, status and reindex, so agents and scripts can use the same documents.'
+          "id": "languages",
+          "caption": "Five languages",
+          "alt": "The language menu open in the header: English, Español, Français, Português and Italiano."
         }
       ],
-      note: 'Also in 0.2.0: a map you can rearrange, the office tower, API keys from the panel and doctor.',
-      changelog: 'Full changelog',
-      shots: [
+      "items": [
         {
-          id: 'talk',
-          caption: 'Agents talking',
-          alt: 'The map: two pairs of agent cards joined by a dotted line with a message count, and a mail badge on each card.'
+          "title": "Saved agents",
+          "body": "Set an agent up once: instructions, skills, tools and which account it uses. Start it any time, or Resume to pick up its last conversation."
         },
         {
-          id: 'templates',
-          caption: 'Templates',
-          alt: 'The prompt templates dialog: a search box and four templates, each with a placeholder in braces.'
+          "title": "Teams, two levels",
+          "body": "An agent can report to a lead. When a member finishes a job, its result is offered to the lead, and the two can message each other."
         },
         {
-          id: 'skills',
-          caption: 'Skills',
-          alt: 'The skills dialog: Business knowledge installed, Review reply drafts ready to install.'
+          "title": "Workers for one task",
+          "body": "Start a worker with a task and it reports back to its lead and closes itself. A lead can ask for one; you approve it first."
         },
         {
-          id: 'knowledge',
-          caption: 'Knowledge',
-          alt: 'The knowledge dialog: a test search for the salmon price run as the menu-post agent, with the answer and the file and lines it came from.'
+          "title": "Connect tools (MCP)",
+          "body": "Add an MCP server once in Admin and tick it on an agent. Keys are saved once and never shown again; each agent only gets the keys it uses."
+        },
+        {
+          "title": "More agents and accounts",
+          "body": "Gemini and local models through Ollama join Claude, Codex and the rest. Several logins per agent kind, and Google API keys for Gemini and Antigravity."
+        },
+        {
+          "title": "One Admin page, five languages",
+          "body": "Agents, accounts, tools, skills, knowledge and activity in one place. The panel now speaks French, Portuguese and Italian too (machine-translated, review in progress)."
         }
-      ]
+      ],
+      "note": "Also in 0.3.0: agents talking on the map, prompt templates, skills and knowledge for agents.",
+      "changelog": 'Full changelog'
     },
 
     bizTitle: 'Run a business?',
@@ -653,57 +648,52 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      title: 'Novedades de la 0.3.0',
-      items: [
+      "title": "Novedades de la 0.4.0",
+      "shots": [
         {
-          title: 'Mira a tus agentes conversar',
-          body: 'Cuando un agente le escribe a otro, una línea une sus recuadros en el mapa con el conteo de las últimas 24 horas, y cada recuadro muestra sus mensajes.'
+          "id": "agents",
+          "caption": "Agentes guardados y trabajadores",
+          "alt": "La lista de agentes guardados: una solicitud del líder de ventas para un trabajador investigador con Aprobar y Rechazar, un trabajador en una tarea con los minutos que le quedan, y el líder de ventas."
         },
         {
-          title: 'Plantillas de instrucciones',
-          body: 'Pulsa T en la caja de instrucciones de un agente, elige una plantilla y completa los espacios. El primero queda seleccionado para que escribas encima. No se envía nada hasta que pulses Enviar.'
+          "id": "admin",
+          "caption": "Administración → Herramientas",
+          "alt": "La página de administración en Herramientas: un servidor de calendario conectado y listo, un aviso de que los servidores que agregas corren con tus permisos, y el formulario para agregar otro."
         },
         {
-          title: 'Habilidades para tus agentes',
-          body: 'Instala habilidades listas desde el cuadro Habilidades: borradores de respuesta a reseñas, un resumen semanal para el dueño y pulido de mensajes bilingües. Solo leen y redactan.'
-        },
-        {
-          title: 'Conocimiento para los agentes',
-          body: 'Pon tus listas de precios, horarios, políticas y PDFs en una carpeta. Los agentes consultan los datos antes de responder y dicen dónde los leyeron. La búsqueda corre en tu equipo; no se envía nada.'
-        },
-        {
-          title: 'Elige quién ve qué documentos',
-          body: 'Limita una carpeta a algunos agentes por nombre o etiqueta, y prueba una búsqueda como uno de ellos para ver qué encontraría.'
-        },
-        {
-          title: 'Comandos nuevos',
-          body: 'operio-orca kb search, add, list, status y reindex, para que agentes y scripts usen los mismos documentos.'
+          "id": "languages",
+          "caption": "Cinco idiomas",
+          "alt": "El menú de idioma abierto en el encabezado: English, Español, Français, Português e Italiano."
         }
       ],
-      note: 'También en la 0.2.0: un mapa que puedes reacomodar, la torre de oficina, claves de API desde el panel y doctor.',
-      changelog: 'Registro de cambios completo',
-      shots: [
+      "items": [
         {
-          id: 'talk',
-          caption: 'Agentes conversando',
-          alt: 'El mapa: dos pares de recuadros de agentes unidos por una línea punteada con el conteo de mensajes, y un ícono de correo en cada recuadro.'
+          "title": "Agentes guardados",
+          "body": "Configura un agente una vez: instrucciones, habilidades, herramientas y la cuenta que usa. Arráncalo cuando quieras o usa Retomar para seguir su última conversación."
         },
         {
-          id: 'templates',
-          caption: 'Plantillas',
-          alt: 'El cuadro de plantillas: un buscador y cuatro plantillas, cada una con un espacio entre llaves.'
+          "title": "Equipos de dos niveles",
+          "body": "Un agente puede reportar a un líder. Cuando un miembro termina un trabajo, su resultado se le ofrece al líder, y pueden escribirse."
         },
         {
-          id: 'skills',
-          caption: 'Habilidades',
-          alt: 'El cuadro de habilidades: Conocimiento del negocio instalada, Borradores de respuesta a reseñas lista para instalar.'
+          "title": "Trabajadores para una tarea",
+          "body": "Inicia un trabajador con una tarea: le reporta a su líder y se cierra solo. Un líder puede pedir uno; tú lo apruebas primero."
         },
         {
-          id: 'knowledge',
-          caption: 'Conocimiento',
-          alt: 'El cuadro de conocimiento: una búsqueda de prueba del precio del salmón como el agente menu-semanal, con la respuesta y el archivo y las líneas de donde salió.'
+          "title": "Conecta herramientas (MCP)",
+          "body": "Agrega un servidor MCP una vez en Administración y márcalo en un agente. Las claves se guardan una vez y no se vuelven a mostrar; cada agente recibe solo las que usa."
+        },
+        {
+          "title": "Más agentes y cuentas",
+          "body": "Gemini y modelos locales con Ollama se suman a Claude, Codex y los demás. Varias cuentas por tipo de agente, y claves de API de Google para Gemini y Antigravity."
+        },
+        {
+          "title": "Una página de administración, cinco idiomas",
+          "body": "Agentes, cuentas, herramientas, habilidades, conocimiento y actividad en un solo lugar. El panel ahora también habla francés, portugués e italiano (traducción automática, en revisión)."
         }
-      ]
+      ],
+      "note": "También en la 0.3.0: agentes conversando en el mapa, plantillas, habilidades y conocimiento para los agentes.",
+      "changelog": 'Registro de cambios completo'
     },
 
     bizTitle: '¿Tienes un negocio?',

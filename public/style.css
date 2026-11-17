@@ -1943,3 +1943,4 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
 .adm-secrets { display: grid; gap: 6px; }
 .adm-secrets .adm-add { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; }
 @media (max-width: 520px) { .adm-secrets .adm-add { grid-template-columns: 1fr; } }
+.ag-spawns { flex: none; overflow: visible; max-height: none; }

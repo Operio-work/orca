@@ -2186,7 +2186,7 @@ async function api(req, res, url) {
     }
     const byT = new Map(agentsNow.map(a => [a.terminal, a]));
     const spawns = state.spawns.filter(r => r.state === 'pending' && byT.has(r.lead))
-      .map(r => ({ id: r.id, lead: nameOf(byT.get(r.lead)), leadPane: byT.get(r.lead).pane, profile: r.profile, task: r.task, at: r.at, canApprove: canApproveSpawn(login, r) }));
+      .map(r => ({ id: r.id, lead: nameOf(byT.get(r.lead)), leadPane: byT.get(r.lead).pane, profile: r.profile, label: profiles.get(r.profile)?.label || r.profile, task: r.task, at: r.at, canApprove: canApproveSpawn(login, r) }));
     return send(res, 200, {
       profiles: profiles.list().map(p => ({ ...p, running: live.get(p.id) || null, workers: workers[p.id] || [], canResume: !!state.profileSessions[p.id] })),
       mcp: isAdmin(login) ? tools.view().map(t => ({ id: t.id, name: t.name, ready: !t.missing.length })) : [],

@@ -111,7 +111,7 @@
   // A lead asked for a worker: whoever holds the lead (or an admin) approves or declines.
   function spawnRow(r) {
     const li = el('li', 'skl-card ag-spawn-req');
-    li.append(el('div', 'tpl-name', t('agSpawnAsk', r.lead, r.profile)), el('p', 'skl-sum', r.task));
+    li.append(el('div', 'tpl-name', t('agSpawnAsk', r.lead, r.label || r.profile)), el('p', 'skl-sum', r.task));
     const go = el('div', 'ag-go');
     if (r.canApprove) {
       go.append(button(t('agDecline'), 'ghost', () => decide(r, 'deny'), r.id), button(t('agApprove'), 'primary', () => decide(r, 'approve'), r.id));

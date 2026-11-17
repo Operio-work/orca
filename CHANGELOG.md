@@ -3,6 +3,36 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.4.0] - 2026-11-17
+
+### Panel
+- **Saved agents:** set an agent up once (instructions, skills, tools, which account it runs on)
+  and start it from Saved agents; **Resume** continues a Claude agent's last conversation. One
+  live copy per saved agent. Claude reads the instructions as part of its system prompt; other
+  kinds get them as their first message. Files per run in `~/.config/operio-orca/runs/<name>`.
+- **Teams (2 levels):** a new link kind, *reports to*. One lead per agent; a lead reports to no
+  one. When both run, ORCA links a saved agent to its lead; a member's finished job is offered to
+  the lead as a hand-off. `orca-send --team` lists your lead and members.
+- **Workers:** a saved setup of type *worker* starts with a task, sends its final reply to its
+  lead (or to you) and closes itself, or stops at its time limit (5–480 min). A lead may ask for
+  one with `orca-send --spawn <setup> "task"`; a person approves it first. At most 6 at once.
+- **Accounts:** several logins per agent kind — Claude and Codex in their own config folders, and
+  Google API keys for Gemini and Antigravity (one key serves both). Keys stay in a 0600 file and
+  never come back to the page. Hosted panels: accounts are set up by Operio.
+- **New agent kinds:** Gemini (`gemini`) and local models through Ollama (`ollama`, via opencode;
+  each model runs as a `<model>-orca` copy with a 20k context).
+- **Tools (MCP):** Admin → Tools registers MCP servers (stdio or HTTP) with write-only secrets
+  (`${NAME}` templates). A Claude agent gets only its servers and only their secrets
+  (`--mcp-config`, optionally `--strict-mcp-config`). Free panel: add your own, with a warning;
+  hosted panels: Operio staff only.
+- **Admin page** (gear): Agents & accounts, Tools, Skills, Knowledge, Templates, Activity,
+  Security. Hosted: people are managed in ORCA Host; client admins set up agents.
+- **Agent card:** the Reader reads Claude's own transcript (no garbled screen text, menus as
+  buttons on idle agents); the Terminal tab is a live, typeable terminal (confirmation first);
+  one mode at a time; compact header.
+- **Languages:** French, Portuguese (Brazil) and Italian packs (machine-translated, review in
+  progress) besides English and Spanish; a language menu; dates and phone alerts follow it.
+
 ## [0.3.0] - 2026-11-16
 
 ### Panel
