@@ -112,64 +112,55 @@ const en = {
     ],
 
     whatsNew: {
-      title: 'What’s new in 0.2.0',
+      title: 'What’s new in 0.3.0',
       items: [
         {
-          title: 'A map you can rearrange',
-          body: 'Drag an agent next to another one, onto a tab, or to the bar at the bottom for a new tab or workspace. Drag a box header to reorder, and rename workspaces and tabs from the pencil.'
+          title: 'See your agents talk',
+          body: 'When one agent messages another, a line joins their cards on the map with a count for the last 24 hours, and each card shows its messages.'
         },
         {
-          title: 'Office view is a tower',
-          body: 'One floor per workspace, a lift that carries agents between floors, a red room and a flag on the roof when an agent needs you, and a sky that follows your clock.'
+          title: 'Prompt templates',
+          body: 'Press T in an agent’s prompt box, pick a template and fill in the blanks. The first one is selected so you can type over it. Nothing is sent until you press Send.'
         },
         {
-          title: 'A hover card on desktop',
-          body: 'The task, the last reply, agent and model, folder and jobs at a glance.'
+          title: 'Skills for your agents',
+          body: 'Install ready-made skills from the Skills dialog: review reply drafts, a weekly owner summary and bilingual message polish. They read and draft only.'
         },
         {
-          title: 'Switch a Claude agent’s model from its card',
-          body: 'Fable, Opus, Sonnet or Haiku, while the agent is idle.'
+          title: 'Knowledge for agents',
+          body: 'Put your price lists, hours, policies and PDFs in one folder. Agents look facts up before they answer and say where they read them. Search runs on your machine; nothing is sent anywhere.'
         },
         {
-          title: 'API keys from the panel',
-          body: 'The key icon in the header adds or removes keys for your agents and applies them when no agent is working. Values are never shown back and never reach the log. Subscriptions keep signing in inside the agent, as before.'
+          title: 'Choose who sees which documents',
+          body: 'Limit a folder to some agents by name or tag, and try a search as one of them to see what it would find.'
         },
         {
           title: 'New commands',
-          body: 'doctor (one line per check, with the fix), logs, open, backup and restore, and update --check.'
-        },
-        {
-          title: 'Windows (WSL2) without systemd',
-          body: 'The installer starts the panel by hand and prints the recipe that makes it start with Ubuntu.'
+          body: 'operio-orca kb search, add, list, status and reindex, so agents and scripts can use the same documents.'
         }
       ],
-      note: 'Also new: the icon, and the header now reads “ORCA · by Operio”.',
+      note: 'Also in 0.2.0: a map you can rearrange, the office tower, API keys from the panel and doctor.',
       changelog: 'Full changelog',
       shots: [
         {
-          id: 'map',
-          caption: 'Map',
-          alt: 'The map: agent cards grouped by tab and workspace, with one card being dragged to another tab.'
+          id: 'talk',
+          caption: 'Agents talking',
+          alt: 'The map: two pairs of agent cards joined by a dotted line with a message count, and a mail badge on each card.'
         },
         {
-          id: 'office',
-          caption: 'Office',
-          alt: 'The office view as a tower: one floor per workspace, a lift between floors, and a red room with a flag on the roof.'
+          id: 'templates',
+          caption: 'Templates',
+          alt: 'The prompt templates dialog: a search box and four templates, each with a placeholder in braces.'
         },
         {
-          id: 'keys',
-          caption: 'Keys',
-          alt: 'The keys panel: the keys set for the agents, by name and last four characters, and the Apply button.'
+          id: 'skills',
+          caption: 'Skills',
+          alt: 'The skills dialog: Business knowledge installed, Review reply drafts ready to install.'
         },
         {
-          id: 'move',
-          caption: 'Move',
-          alt: 'An agent card being dragged onto another tab’s box, with the drop targets lit.'
-        },
-        {
-          id: 'rename',
-          caption: 'Rename',
-          alt: 'The rename field open on a workspace box header.'
+          id: 'knowledge',
+          caption: 'Knowledge',
+          alt: 'The knowledge dialog: a test search for the salmon price run as the menu-post agent, with the answer and the file and lines it came from.'
         }
       ]
     },
@@ -662,64 +653,55 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      title: 'Novedades de la 0.2.0',
+      title: 'Novedades de la 0.3.0',
       items: [
         {
-          title: 'Un mapa que puedes reacomodar',
-          body: 'Arrastra un agente junto a otro, a una pestaña o a la barra de abajo para crear una pestaña o un espacio de trabajo nuevos. Arrastra la cabecera de un recuadro para reordenar, y renombra espacios de trabajo y pestañas desde el lápiz.'
+          title: 'Mira a tus agentes conversar',
+          body: 'Cuando un agente le escribe a otro, una línea une sus recuadros en el mapa con el conteo de las últimas 24 horas, y cada recuadro muestra sus mensajes.'
         },
         {
-          title: 'La vista de oficina es una torre',
-          body: 'Un piso por espacio de trabajo, un elevador que lleva a los agentes entre pisos, un cuarto en rojo y una bandera en el techo cuando un agente te necesita, y un cielo que sigue tu reloj.'
+          title: 'Plantillas de instrucciones',
+          body: 'Pulsa T en la caja de instrucciones de un agente, elige una plantilla y completa los espacios. El primero queda seleccionado para que escribas encima. No se envía nada hasta que pulses Enviar.'
         },
         {
-          title: 'Una tarjeta al pasar el cursor, en escritorio',
-          body: 'La tarea, la última respuesta, agente y modelo, carpeta y trabajos de un vistazo.'
+          title: 'Habilidades para tus agentes',
+          body: 'Instala habilidades listas desde el cuadro Habilidades: borradores de respuesta a reseñas, un resumen semanal para el dueño y pulido de mensajes bilingües. Solo leen y redactan.'
         },
         {
-          title: 'Cambia el modelo de un agente de Claude desde su recuadro',
-          body: 'Fable, Opus, Sonnet o Haiku, mientras el agente está inactivo.'
+          title: 'Conocimiento para los agentes',
+          body: 'Pon tus listas de precios, horarios, políticas y PDFs en una carpeta. Los agentes consultan los datos antes de responder y dicen dónde los leyeron. La búsqueda corre en tu equipo; no se envía nada.'
         },
         {
-          title: 'Claves de API desde el panel',
-          body: 'El ícono de llave en la cabecera agrega o quita claves para tus agentes y las aplica cuando ninguno está trabajando. Los valores nunca se muestran de vuelta ni llegan al registro. Las suscripciones siguen iniciando sesión dentro del agente, como antes.'
+          title: 'Elige quién ve qué documentos',
+          body: 'Limita una carpeta a algunos agentes por nombre o etiqueta, y prueba una búsqueda como uno de ellos para ver qué encontraría.'
         },
         {
           title: 'Comandos nuevos',
-          body: 'doctor (una línea por revisión, con el arreglo), logs, open, backup y restore, y update --check.'
-        },
-        {
-          title: 'Windows (WSL2) sin systemd',
-          body: 'El instalador arranca el panel a mano y muestra la receta para que arranque con Ubuntu.'
+          body: 'operio-orca kb search, add, list, status y reindex, para que agentes y scripts usen los mismos documentos.'
         }
       ],
-      note: 'También nuevos: el ícono, y la cabecera ahora dice “ORCA · por Operio”.',
+      note: 'También en la 0.2.0: un mapa que puedes reacomodar, la torre de oficina, claves de API desde el panel y doctor.',
       changelog: 'Registro de cambios completo',
       shots: [
         {
-          id: 'map',
-          caption: 'Mapa',
-          alt: 'El mapa: recuadros de agentes agrupados por pestaña y espacio de trabajo, con uno arrastrándose a otra pestaña.'
+          id: 'talk',
+          caption: 'Agentes conversando',
+          alt: 'El mapa: dos pares de recuadros de agentes unidos por una línea punteada con el conteo de mensajes, y un ícono de correo en cada recuadro.'
         },
         {
-          id: 'office',
-          caption: 'Oficina',
-          alt: 'La vista de oficina como torre: un piso por espacio de trabajo, un elevador entre pisos y un cuarto en rojo con una bandera en el techo.'
+          id: 'templates',
+          caption: 'Plantillas',
+          alt: 'El cuadro de plantillas: un buscador y cuatro plantillas, cada una con un espacio entre llaves.'
         },
         {
-          id: 'keys',
-          caption: 'Claves',
-          alt: 'El panel de claves: las claves guardadas para los agentes, por nombre y últimos cuatro caracteres, y el botón Aplicar.'
+          id: 'skills',
+          caption: 'Habilidades',
+          alt: 'El cuadro de habilidades: Conocimiento del negocio instalada, Borradores de respuesta a reseñas lista para instalar.'
         },
         {
-          id: 'move',
-          caption: 'Mover',
-          alt: 'Un recuadro de agente arrastrándose al cuadro de otra pestaña, con los destinos iluminados.'
-        },
-        {
-          id: 'rename',
-          caption: 'Renombrar',
-          alt: 'El campo para renombrar abierto en la cabecera del cuadro de un espacio de trabajo.'
+          id: 'knowledge',
+          caption: 'Conocimiento',
+          alt: 'El cuadro de conocimiento: una búsqueda de prueba del precio del salmón como el agente menu-semanal, con la respuesta y el archivo y las líneas de donde salió.'
         }
       ]
     },

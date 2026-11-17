@@ -17,9 +17,9 @@
   // Pixel sizes of the demo crops in static/pains (phone crops are 2x captures).
   /** @type {Record<string, [number, number]>} */
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050] };
-  // Pixel sizes of the 0.2.0 captures in static/shots (map, office, keys, move, rename).
+  // Pixel sizes of the 0.3.0 captures in static/shots (talk, templates, skills, knowledge).
   /** @type {Record<string, [number, number]>} */
-  const SHOT2 = { map: [910, 560], office: [910, 560], keys: [910, 560], move: [910, 560], rename: [910, 560] };
+  const SHOT2 = { talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
 </script>
 
 <Seo title={h.title} description={h.description} {lang} ogLocale={t.ogLocale} />
@@ -471,10 +471,9 @@
   .how h3 { font-size: var(--text-xl); margin-bottom: 10px; }
   .how p { color: var(--text-secondary); max-width: 32ch; }
 
-  /* ── What's new in 0.2.0: five framed captures in two rows (3 + 2), then a two-column list ── */
+  /* ── What's new in 0.3.0: four framed captures in two rows (2 + 2), then a two-column list ── */
   .shots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin-bottom: 40px; }
-  .shots figure { grid-column: span 2; min-width: 0; }
-  .shots figure:nth-child(n + 4) { grid-column: span 3; }
+  .shots figure { grid-column: span 3; min-width: 0; }
   .shots img {
     width: 100%;
     border: 1px solid var(--color-border);
@@ -677,7 +676,7 @@
     .how-n { grid-row: span 2; margin-bottom: 0; }
     .how h3 { font-size: var(--text-lg); margin: 8px 0 4px; }
 
-    /* What's new: the five captures become one swipeable row (the page does not grow with
+    /* What's new: the four captures become one swipeable row (the page does not grow with
        each capture); the list is one column. */
     .shots {
       display: flex; gap: 12px; margin: 0 calc(-1 * var(--gutter)) 24px; padding: 0 var(--gutter) 6px;
