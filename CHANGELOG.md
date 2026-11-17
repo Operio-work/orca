@@ -3,6 +3,51 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.3.0] - 2026-11-16
+
+### Panel
+- **Map shows agents talking:** when one agent messages another, a line flows between their
+  cards, a badge counts the last 24 hours and a dot marks each new message. The server sends
+  counts and times only; the message text stays behind the usual permission check.
+- **Prompt templates:** a button in the agent's prompt box (key **T**) opens your templates.
+  Search, pick, and the text fills in at the cursor with the first `{placeholder}` selected so you
+  can type over it. Nothing is sent until you press Send. Free panel: your own templates (Mine).
+  ORCA Host adds Company templates (admins edit) and Operio's read-only EN/ES library, which
+  ORCA Host writes to `operio-templates.json` (re-read on change, no restart).
+- **Skills:** a Skills dialog in the header. The free panel ships three read/draft-only skills
+  (Review reply drafts, Weekly owner summary, Bilingual message polish) with Install / Remove.
+  A skill is a `SKILL.md` folder in `~/.config/operio-orca/skills/<key>`, linked into
+  `~/.claude/skills` and listed in a managed block in `~/.codex/AGENTS.md` and
+  `~/.gemini/GEMINI.md` when those folders exist. ORCA never replaces a link, folder or text that
+  isn't its own. Limits: 20 files, 256 KB, relative paths only. On ORCA Host the dialog shows
+  Operio's gallery and a client admin requests a skill; Operio approves and installs it.
+  Journal: `skill.install`, `skill.remove`. `uninstall --purge` removes ORCA's links and blocks.
+- **Knowledge for agents:** a Knowledge dialog in the header. Put the business's documents in
+  `~/.config/operio-orca/knowledge` (a first-level folder is a collection): md, txt, csv, json,
+  html and pdf (needs `pdftotext`, from poppler-utils; without it PDFs are skipped with the
+  reason). Up to 5 MB a file and 2,000 files. Search is keyword ranking (BM25) in plain
+  JavaScript, re-indexing only what changed. Upload, remove, test a search and see the status
+  from the dialog. Journal `kb.add` / `kb.remove` keep the path and size, never the content.
+  The first indexed document installs the bundled **business-knowledge** skill, which tells
+  agents to look things up with `operio-orca kb search` before stating a fact about the business.
+  Hosted panels with `VOYAGE_API_KEY` or `OPENAI_API_KEY` in `llm.env` also rank by meaning
+  (hybrid); any failure falls back to keyword results with a note. The free panel is keyword only.
+- **Per-agent knowledge access:** limit a collection to some agents by name or tag
+  (`kb-access.json`, mode 600); no entry means every agent. "Search as" previews what one agent
+  would find. This scopes search results; it is not a security wall.
+- **Team chat (ORCA Host):** messages and hand-offs between agents now show in both agents'
+  threads, posted as the sending agent and marked `→ receiver`. They are never read for
+  `@mentions`, so agents can't set each other off in a loop.
+- Phone header: icon buttons slimmed to fit at 360 px.
+
+### CLI
+- `operio-orca kb search "question" [-n 5] [--collection NAME] [--json]`, `kb add PATH`,
+  `kb remove`, `kb list`, `kb status`, `kb reindex`. Give `-` (or nothing) as the question to read
+  it from stdin, so it never sits on a command line; `kb add` reads the file on stdin.
+- `operio-orca skills install|remove KEY|list|catalog-set` and
+  `operio-orca templates set|show|clear`: used by ORCA Host. JSON is read on stdin, never from
+  arguments, and a bad catalogue or library never replaces the good one.
+
 ## [0.2.0] - 2026-11-15
 
 ### Panel
