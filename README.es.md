@@ -3,7 +3,7 @@
 ![Demo de ORCA: la rutina de reservas pregunta dónde sentar a un grupo de ocho, un toque lo responde y sigue trabajando](docs/readme-demo.gif)
 
 Un panel de control gratuito y autoalojado para los agentes de IA que corres en tu propia
-computadora (Claude Code, Codex, opencode y otros), con **rutinas** programadas cuyos
+computadora (Claude Code, Codex, Gemini, opencode, modelos locales y otros), con **rutinas** programadas cuyos
 borradores esperan tu aprobación. Por [Operio](https://make.operio.work). Licencia MIT.
 
 ORCA significa **Orquesta, Responde, Controla, Aprueba**.
@@ -15,6 +15,10 @@ ORCA significa **Orquesta, Responde, Controla, Aprueba**.
 - Alertas en el teléfono (web push, opcional) cuando un agente termina o te necesita.
 - Rutinas: un agente arranca en un horario con una tarea fija y escribe un borrador o reporte.
   Nunca se envía, publica ni manda por correo nada por ti.
+- Agentes guardados (instrucciones, habilidades, herramientas), equipos con un líder y
+  trabajadores que hacen una tarea, reportan y se cierran solos.
+- Herramientas MCP por agente con secretos que no se vuelven a mostrar, varias cuentas por tipo de
+  agente, y el panel en inglés, español, francés, portugués o italiano.
 
 ORCA **funciona sobre [herdr](https://github.com/herdrdev/herdr)**, el espacio de trabajo
 en terminal para agentes de IA de Can Celik y colaboradores (Apache-2.0). herdr no es nuestro:
@@ -133,6 +137,29 @@ La lista completa, con las rutinas que Operio opera por ti, está en `catalog/ca
   entrada, con llaves y tokens ocultos antes de escribirse. Los días de más de 7 se comprimen y los
   de más de 90 se borran. No se envía nada a ningún lado ni se llama a ningún modelo; la revisión
   es un resumen que ORCA arma con las entradas.
+
+## Agentes guardados, equipos y trabajadores
+
+- **Agentes guardados** (Administración → Agentes y cuentas, o el botón Agentes guardados): un
+  agente que configuras una vez — instrucciones, habilidades, herramientas integradas (todas / sin
+  edición / solo lectura), herramientas MCP y la cuenta con la que corre. **Arráncalo** cuando
+  quieras; **Retomar** sigue la última conversación de un agente Claude. Una copia activa por
+  agente guardado. Los archivos de cada arranque viven en `~/.config/operio-orca/runs/<nombre>` (0600).
+- **Equipos**: un agente guardado puede *reportar a* un líder (máximo dos niveles: un líder no le
+  reporta a nadie). Cuando ambos corren, ORCA los enlaza; el trabajo terminado de un miembro se le
+  ofrece al líder. Los agentes ven su equipo con `orca-send --team`.
+- **Trabajadores**: una configuración de tipo *trabajador* arranca con una tarea, manda su respuesta
+  final a su líder (o a ti) y se cierra sola, o se detiene al llegar a su tiempo máximo. Un líder
+  pide uno con `orca-send --spawn <configuración> "tarea"`; tú lo apruebas primero. Máximo seis a la vez.
+- **Herramientas (MCP)**: Administración → Herramientas registra servidores MCP (un comando local o
+  una URL HTTPS). Escribe `${NOMBRE}` donde va una clave y guarda NOMBRE en Secretos: los valores
+  quedan en un archivo 0600 y no se vuelven a mostrar, y cada agente Claude recibe solo sus
+  servidores y sus secretos. Un servidor que agregues corre con tus permisos en esta computadora:
+  agrega solo los de confianza.
+- **Cuentas**: varias cuentas por tipo de agente — Claude y Codex en sus propias carpetas de
+  configuración, y claves de API de Google para Gemini y Antigravity.
+- **Modelos locales**: el agente *Local (Ollama)* corre un modelo de Ollama que usa herramientas, a
+  través de opencode. Es lento en GPUs pequeñas.
 
 ## Ajustes
 

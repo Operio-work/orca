@@ -45,7 +45,7 @@ const en = {
     },
 
     painsTitle: 'Several agents should not mean babysitting them',
-    painsLead: 'Four things that slow you down once more than one agent is running, and what ORCA does about each.',
+    painsLead: 'Five things that slow you down once more than one agent is running, and what ORCA does about each.',
     painLabel: 'The problem',
     fixLabel: 'With ORCA',
     pains: [
@@ -84,13 +84,22 @@ const en = {
         fixBody:
           'Save a task once and pick when it runs. What it writes waits in the Routines tab until you approve it.',
         alt: 'The Routines tab on a phone: a review-reply draft marked “needs approval”, with Approve and Reject buttons.'
+      },
+      {
+        id: 'team',
+        pain: 'Every agent starts from scratch, and one agent ends up doing everything',
+        painBody: 'You paste the same instructions into each new agent, and side jobs pile up on whichever one is open.',
+        fix: 'Saved agents, a lead, and workers that report back',
+        fixBody:
+          'Set an agent up once with its instructions, skills and tools. Give it a lead, and let it hand side jobs to workers that report back and close themselves, after you approve.',
+        alt: 'Saved agents: a request from the sales lead for a researcher worker with Approve and Decline, a worker on a task with minutes left, and the sales lead.'
       }
     ],
 
     vsTitle: 'How ORCA compares',
     vsLines: [
       'herdr runs the terminals. ORCA adds the phone, the alerts, the routines and the approvals.',
-      'Claude Code, Codex and opencode on one board, with a phone alert and one-tap answers, free on your own computer.',
+      'Claude Code, Codex, Gemini, opencode and local models on one board, with a phone alert and one-tap answers, free on your own computer.',
       'Want it always on, without your computer? ORCA Managed by Operio runs it for you.'
     ],
     vsMore: 'Compare ORCA with five other tools',
@@ -103,7 +112,7 @@ const en = {
       },
       {
         title: 'Start your agents',
-        body: 'Open Claude Code, Codex or opencode with the New button. Each one gets a tile on the board.'
+        body: 'Open Claude Code, Codex, Gemini or opencode with the New button, or start one of your saved agents. Each one gets a tile on the board.'
       },
       {
         title: 'Answer from anywhere',
@@ -443,6 +452,14 @@ const en = {
         body: 'With your own subscription or key. Nothing to configure on your side.'
       },
       {
+        title: 'Agents set up for you',
+        body: 'Operio sets up your first saved agents and workers with your instructions. Your admins adjust them; viewers can’t.'
+      },
+      {
+        title: 'Connected to your tools',
+        body: 'Operio connects your calendar, CRM or shop through MCP. The keys stay with Operio and each agent only gets what it needs.'
+      },
+      {
         title: 'Updates, monitoring and backups',
         body: 'Handled by Operio. If something breaks, Operio sees it and fixes it.'
       }
@@ -476,6 +493,9 @@ const en = {
       ['Ask an agent from the chat', 'No', 'Yes. @agent sends the message as work and the answer comes back in the thread'],
       ['Translation EN/ES', 'No', 'Any message, with one tap'],
       ['Model access', 'Your own key file, or sign in inside the agent', 'Set up by Operio, with your subscription or key'],
+      ['Saved agents, teams and workers', 'Yes, you set them up', 'Yes. Operio sets up the first ones; your admins adjust them'],
+      ['Connected tools (MCP)', 'Your own servers, on your computer', 'Your business tools, connected by Operio; keys kept by Operio'],
+      ['Panel languages', 'English, Spanish, French, Portuguese, Italian', 'The same five'],
       ['Routines', '5, free. They write reports or drafts', '23. The managed ones send'],
       ['Sending to customers', 'Never. You copy, paste and send', 'Yes, behind the approvals you set'],
       ['Updates', 'You run operio-orca update', 'Operio'],
@@ -492,7 +512,7 @@ const en = {
       },
       {
         title: 'Operio sets up your panel',
-        body: 'Your panel at orca.operio.work, your model access, and the routines you pick.'
+        body: 'Your panel at orca.operio.work, your model access, your first agents, the tools they connect to, and the routines you pick.'
       },
       {
         title: 'Your team signs in',
@@ -581,7 +601,7 @@ const es = {
     },
 
     painsTitle: 'Tener varios agentes no debería significar cuidarlos todo el día',
-    painsLead: 'Cuatro cosas que te frenan en cuanto corre más de un agente, y lo que ORCA hace con cada una.',
+    painsLead: 'Cinco cosas que te frenan en cuanto corre más de un agente, y lo que ORCA hace con cada una.',
     painLabel: 'El problema',
     fixLabel: 'Con ORCA',
     pains: [
@@ -620,13 +640,22 @@ const es = {
         fixBody:
           'Guarda una tarea una vez y elige cuándo corre. Lo que escribe te espera en la pestaña Rutinas hasta que lo apruebas.',
         alt: 'La pestaña Rutinas en un celular: un borrador de respuestas a reseñas marcado “por aprobar”, con los botones Aprobar y Rechazar.'
+      },
+      {
+        id: 'team',
+        pain: 'Cada agente empieza de cero, y uno termina haciendo todo',
+        painBody: 'Pegas las mismas instrucciones en cada agente nuevo, y los pendientes se acumulan en el que tengas abierto.',
+        fix: 'Agentes guardados, un líder y trabajadores que reportan',
+        fixBody:
+          'Configura un agente una vez con sus instrucciones, habilidades y herramientas. Dale un líder y deja que pase pendientes a trabajadores que reportan y se cierran solos, después de que tú apruebas.',
+        alt: 'Agentes guardados: una solicitud del líder de ventas para un trabajador investigador con Aprobar y Rechazar, un trabajador en una tarea con los minutos que le quedan, y el líder de ventas.'
       }
     ],
 
 vsTitle: 'Cómo se compara ORCA',
     vsLines: [
       'herdr corre las terminales. ORCA le suma el celular, los avisos, las rutinas y las aprobaciones.',
-      'Claude Code, Codex y opencode en un tablero, con aviso al celular y respuestas con un toque, gratis en tu propia computadora.',
+      'Claude Code, Codex, Gemini, opencode y modelos locales en un tablero, con aviso al celular y respuestas con un toque, gratis en tu propia computadora.',
       '¿Lo quieres siempre prendido, sin tu computadora? ORCA Gestionado por Operio lo opera por ti.'
     ],
     vsMore: 'Compara ORCA con otras cinco herramientas',
@@ -639,7 +668,7 @@ vsTitle: 'Cómo se compara ORCA',
       },
       {
         title: 'Arranca tus agentes',
-        body: 'Abre Claude Code, Codex u opencode con el botón Nuevo. Cada uno aparece como un recuadro en el tablero.'
+        body: 'Abre Claude Code, Codex, Gemini u opencode con el botón Nuevo, o arranca uno de tus agentes guardados. Cada uno aparece como un recuadro en el tablero.'
       },
       {
         title: 'Responde desde donde estés',
@@ -979,6 +1008,14 @@ vsTitle: 'Cómo se compara ORCA',
         body: 'Con tu propia suscripción o tu clave. Nada que configurar de tu lado.'
       },
       {
+        title: 'Agentes configurados para ti',
+        body: 'Operio configura tus primeros agentes guardados y trabajadores con tus instrucciones. Tus administradores los ajustan; los observadores no.'
+      },
+      {
+        title: 'Conectado a tus herramientas',
+        body: 'Operio conecta tu calendario, tu CRM o tu tienda por MCP. Las claves se quedan con Operio y cada agente recibe solo lo que necesita.'
+      },
+      {
         title: 'Actualizaciones, monitoreo y respaldos',
         body: 'A cargo de Operio. Si algo falla, Operio lo ve y lo arregla.'
       }
@@ -1012,6 +1049,9 @@ vsTitle: 'Cómo se compara ORCA',
       ['Pedirle algo a un agente desde el chat', 'No', 'Sí. @agente le manda el mensaje como trabajo y la respuesta vuelve al hilo'],
       ['Traducción EN/ES', 'No', 'Cualquier mensaje, con un toque'],
       ['Acceso a los modelos', 'Tu propio archivo de claves, o inicias sesión dentro del agente', 'Lo configura Operio, con tu suscripción o tu clave'],
+      ['Agentes guardados, equipos y trabajadores', 'Sí, tú los configuras', 'Sí. Operio configura los primeros; tus administradores los ajustan'],
+      ['Herramientas conectadas (MCP)', 'Tus propios servidores, en tu computadora', 'Las herramientas de tu negocio, conectadas por Operio; las claves las guarda Operio'],
+      ['Idiomas del panel', 'Inglés, español, francés, portugués e italiano', 'Los mismos cinco'],
       ['Rutinas', '5, gratis. Escriben reportes o borradores', '23. Las gestionadas envían'],
       ['Envíos a clientes', 'Nunca. Tú copias, pegas y envías', 'Sí, con las aprobaciones que tú pones'],
       ['Actualizaciones', 'Tú corres operio-orca update', 'Operio'],
@@ -1028,7 +1068,7 @@ vsTitle: 'Cómo se compara ORCA',
       },
       {
         title: 'Operio configura tu panel',
-        body: 'Tu panel en orca.operio.work, tu acceso a los modelos y las rutinas que elijas.'
+        body: 'Tu panel en orca.operio.work, tu acceso a los modelos, tus primeros agentes, las herramientas a las que se conectan y las rutinas que elijas.'
       },
       {
         title: 'Tu equipo entra',

@@ -16,7 +16,7 @@
 
   // Pixel sizes of the demo crops in static/pains (phone crops are 2x captures).
   /** @type {Record<string, [number, number]>} */
-  const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050] };
+  const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050], team: [910, 560] };
   // Pixel sizes of the 0.3.0 captures in static/shots (talk, templates, skills, knowledge).
   /** @type {Record<string, [number, number]>} */
   const SHOT2 = { agents: [910, 560], admin: [910, 560], languages: [910, 560], talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
@@ -413,13 +413,14 @@
     background: #F4F4F5;
     box-shadow: var(--shadow-shot);
   }
-  .stage:not([data-shot='needs-you']):not([data-shot='board']) img {
+  .stage:not([data-shot='needs-you']):not([data-shot='board']):not([data-shot='team']) img {
     top: 32px; border-bottom: 0; border-radius: 28px 28px 0 0;
   }
   .stage[data-shot='needs-you'] img {
     bottom: 32px; border-top: 0; border-radius: 0 0 28px 28px;
   }
-  .stage[data-shot='board'] img {
+  .stage[data-shot='board'] img,
+  .stage[data-shot='team'] img {
     left: 28px; top: 50%;
     width: 600px;
     transform: translateY(-50%);
@@ -656,10 +657,12 @@
     .fix-body { grid-column: 1 / -1; margin-top: 6px; }
     .stage { height: auto; aspect-ratio: 2 / 1; background-image: none; }
     .stage[data-shot='board'] { aspect-ratio: 910 / 340; }
+    .stage[data-shot='team'] { aspect-ratio: 910 / 560; }
     .stage img,
-    .stage:not([data-shot='needs-you']):not([data-shot='board']) img,
+    .stage:not([data-shot='needs-you']):not([data-shot='board']):not([data-shot='team']) img,
     .stage[data-shot='needs-you'] img,
-    .stage[data-shot='board'] img {
+    .stage[data-shot='board'] img,
+    .stage[data-shot='team'] img {
       position: static; transform: none;
       width: 100%; height: 100%;
       object-fit: cover; object-position: 50% var(--crop-y, 0%);

@@ -3,7 +3,7 @@
 // does not cover says "not listed" or "unclear"; something announced but not shipped says
 // "in progress". Re-check Buzz (mobile, push) and Hyperagent before each publish.
 
-export const CHECKED = '2026-11-09';
+export const CHECKED = '2026-11-17';
 
 /**
  * Cell states. `yes`/`no`/`partial`/`progress`/`unclear` draw an icon and a short word;
@@ -41,7 +41,10 @@ export const TOOLS = [
     id: 'remote-control',
     name: 'Claude Code Remote Control',
     by: l('Anthropic', 'Anthropic'),
-    sources: [{ label: 'code.claude.com/docs/en/remote-control', url: 'https://code.claude.com/docs/en/remote-control' }],
+    sources: [
+      { label: 'code.claude.com/docs/en/remote-control', url: 'https://code.claude.com/docs/en/remote-control' },
+      { label: 'code.claude.com/docs/llms.txt (subagents, agent teams, MCP)', url: 'https://code.claude.com/docs/llms.txt' }
+    ],
     pick: l(
       'Pick Claude Code Remote Control if you only use Claude Code and already have a paid Claude plan: the official app gives you alerts and replies with nothing extra to install.',
       'Elige Claude Code Remote Control si solo usas Claude Code y ya tienes un plan de pago de Claude: la app oficial te da avisos y respuestas sin instalar nada más.'
@@ -53,6 +56,7 @@ export const TOOLS = [
     by: l('Block', 'Block'),
     sources: [
       { label: 'github.com/block/buzz', url: 'https://github.com/block/buzz' },
+      { label: 'The New Stack, Buzz (ACP agents, MCP tools)', url: 'https://thenewstack.io/block-buzz-agent-workspace' },
       {
         label: 'TechCrunch, 2026-07-21',
         url: 'https://techcrunch.com/2026/07/21/jack-dorsey-is-taking-on-slack-with-buzz-a-group-chat-platform-for-teams-and-their-ai-agents/'
@@ -67,7 +71,7 @@ export const TOOLS = [
     id: 'hyperagent',
     name: 'Hyperagent',
     by: l('hosted service', 'servicio en la nube'),
-    sources: [{ label: 'hyperagent.com', url: 'https://hyperagent.com' }],
+    sources: [{ label: 'hyperagent.com', url: 'https://hyperagent.com' }, { label: 'Hyperagent 101 (integrations, MCP)', url: 'https://sidsaladi.substack.com/p/hyperagent-101-the-complete-guide' }],
     pick: l(
       'Pick Hyperagent if you want its own agents to take a task in a hosted environment and deliver the result to Slack or your inbox.',
       'Elige Hyperagent si quieres que sus propios agentes tomen una tarea en un entorno en la nube y te entreguen el resultado en Slack o en tu correo.'
@@ -185,12 +189,36 @@ export const ROWS = [
     id: 'brands',
     label: l('Works with several AI agents', 'Funciona con varios agentes de IA'),
     cells: [
-      c('yes', l('Claude Code, Codex, opencode and more', 'Claude Code, Codex, opencode y más')),
+      c('yes', l('Claude Code, Codex, Gemini, opencode, local models and more', 'Claude Code, Codex, Gemini, opencode, modelos locales y más')),
       c('yes'),
       c('text', l('Claude Code only', 'Solo Claude Code')),
       c('yes', l('goose, Codex, Claude Code', 'goose, Codex, Claude Code')),
       c('text', l('Its own agents', 'Sus propios agentes')),
       c('yes')
+    ]
+  },
+  {
+    id: 'team',
+    label: l('Agents hand work to other agents', 'Un agente le pasa trabajo a otros'),
+    cells: [
+      c('yes', l('A lead and workers; you approve', 'Un líder y trabajadores; tú apruebas')),
+      c('partial', l('Through its API', 'Con su API')),
+      c('yes', l('Subagents and agent teams', 'Subagentes y equipos de agentes')),
+      c('yes', l('In shared channels', 'En canales compartidos')),
+      c('unclear'),
+      c('no')
+    ]
+  },
+  {
+    id: 'mcp',
+    label: l('Connect business tools (MCP)', 'Conectar herramientas del negocio (MCP)'),
+    cells: [
+      c('yes', l('Per agent; keys never shown again', 'Por agente; las claves no se vuelven a mostrar')),
+      c('partial', l('Through each agent', 'A través de cada agente')),
+      c('yes'),
+      c('yes', l('Tools through MCP', 'Herramientas por MCP')),
+      c('yes', l('Connected apps and MCP', 'Apps conectadas y MCP')),
+      c('partial', l('Through each agent', 'A través de cada agente'))
     ]
   },
   {
@@ -215,7 +243,7 @@ export const copy = {
     title: 'How ORCA compares',
     lead: 'Many good tools run AI agents. Here is where ORCA fits, checked against each product’s own documentation on November 9, 2026.',
     herdr: 'ORCA runs on herdr. herdr gives you the terminal workspace; ORCA adds the phone, the alerts, the routines and the approvals.',
-    tableCaption: 'ORCA compared with five other tools, checked on 2026-11-09',
+    tableCaption: 'ORCA compared with five other tools, checked on 2026-11-17',
     need: 'What you need',
     states: {
       yes: 'Yes',
@@ -260,7 +288,7 @@ export const copy = {
     title: 'Cómo se compara ORCA',
     lead: 'Hay muchas buenas herramientas para trabajar con agentes de IA. Aquí ves dónde encaja ORCA, revisado contra la documentación de cada producto el 9 de noviembre de 2026.',
     herdr: 'ORCA funciona sobre herdr. herdr te da el espacio de trabajo en la terminal; ORCA le suma el celular, los avisos, las rutinas y las aprobaciones.',
-    tableCaption: 'ORCA comparado con otras cinco herramientas, revisado el 2026-11-09',
+    tableCaption: 'ORCA comparado con otras cinco herramientas, revisado el 2026-11-17',
     need: 'Lo que necesitas',
     states: {
       yes: 'Sí',

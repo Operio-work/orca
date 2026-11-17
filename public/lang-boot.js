@@ -17,9 +17,10 @@
   // The chip opens a list; picking a language saves it, runs `before` (e.g. update phone
   // alerts) and reloads, so the right pack is loaded from the start.
   window.orcaLangMenu = (btn, current, before) => {
-    btn.textContent = current.toUpperCase();
+    // A chip shows the code; a menu row (the ⋯ More menu) keeps its label and shows the code beside it.
+    (btn.querySelector('.mm-code') || btn).textContent = current.toUpperCase();
     btn.setAttribute('aria-haspopup', 'true');
-    btn.setAttribute('aria-label', NAMES[current] || current);
+    if (!btn.querySelector('.mm-code')) btn.setAttribute('aria-label', NAMES[current] || current);
     let menu = null;
     const shut = () => { menu?.remove(); menu = null; btn.setAttribute('aria-expanded', 'false'); };
     btn.addEventListener('click', e => {

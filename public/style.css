@@ -1944,3 +1944,11 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
 .adm-secrets .adm-add { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto; }
 @media (max-width: 520px) { .adm-secrets .adm-add { grid-template-columns: 1fr; } }
 .ag-spawns { flex: none; overflow: visible; max-height: none; }
+/* ⋯ More menu (Admin, alerts, theme, language) — same look as the view menu */
+.morepick { position: relative; }
+.more-menu { min-width: 220px; }
+.more-menu button .ic { width: 16px; height: 16px; flex: none; }
+.more-menu button[hidden] { display: none; }
+.more-menu .mm-code { color: var(--text-muted); }
+.more-menu #bell[aria-pressed="true"] { background: none; box-shadow: none; color: var(--text-primary); }
+.more-menu #bell[aria-pressed="true"]::after { content: '●'; color: var(--color-green); font-size: 10px; }

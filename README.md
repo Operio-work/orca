@@ -3,7 +3,7 @@
 ![ORCA demo: the reservations routine asks how to seat a party of eight, one tap answers it, and it carries on](docs/readme-demo.gif)
 
 A free, self-hosted control panel for the AI coding agents you run on your own computer
-(Claude Code, Codex, opencode and others), plus scheduled **routines** whose drafts wait for
+(Claude Code, Codex, Gemini, opencode, local models and others), plus scheduled **routines** whose drafts wait for
 your approval. By [Operio](https://make.operio.work). MIT licensed.
 
 ORCA stands for **Orchestrate, Reply, Check, Approve**.
@@ -15,6 +15,10 @@ ORCA stands for **Orchestrate, Reply, Check, Approve**.
 - Phone alerts (optional web push) when an agent finishes or needs you.
 - Routines: an agent starts on a schedule with a fixed task and writes a draft or report.
   Nothing is ever sent, posted or emailed for you.
+- Saved agents (instructions, skills, tools), teams with a lead, and workers that do one task,
+  report back and close themselves.
+- MCP tools per agent with write-only secrets, several accounts per agent kind, and the panel in
+  English, Spanish, French, Portuguese or Italian.
 
 ORCA **runs on [herdr](https://github.com/herdrdev/herdr)**, the terminal workspace for AI
 agents by Can Celik and contributors (Apache-2.0). herdr is not ours: the installer downloads
@@ -147,6 +151,27 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
   keys and tokens redacted before they are written. Days older than 7 are compressed, older
   than 90 deleted. Nothing is sent anywhere and no model is called; the review is a summary
   ORCA builds from the entries.
+
+## Saved agents, teams and workers
+
+- **Saved agents** (Admin → Agents & accounts, or the Saved agents button): an agent set up once —
+  instructions, skills, built-in tools (all / no edit tools / read only), MCP tools, which account
+  it runs on. **Start** it any time; **Resume** continues a Claude agent's last conversation. One
+  live copy per saved agent. Files per run live in `~/.config/operio-orca/runs/<name>` (0600).
+- **Teams**: a saved agent can *report to* a lead (two levels at most: a lead reports to no one).
+  When both run, ORCA links them; a member's finished job is offered to the lead as a hand-off.
+  Agents see their team with `orca-send --team`.
+- **Workers**: a setup of type *worker* starts with a task, sends its final reply to its lead (or
+  to you) and closes itself, or stops at its time limit. A lead asks for one with
+  `orca-send --spawn <setup> "task"`; you approve it first. At most six run at once.
+- **Tools (MCP)**: Admin → Tools registers MCP servers (a local command or an HTTPS URL). Put
+  `${NAME}` where a key belongs and set NAME under Secrets: values are kept in a 0600 file and never
+  shown again, and each Claude agent gets only its own servers and their secrets. A server you add
+  runs with your rights on this computer: add only ones you trust.
+- **Accounts**: several logins per agent kind — Claude and Codex in their own config folders, and
+  Google API keys for Gemini and Antigravity.
+- **Local models**: the *Local (Ollama)* agent runs a tool-capable model from Ollama through
+  opencode. It is slow on small GPUs.
 
 ## Settings
 
