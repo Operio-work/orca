@@ -1,6 +1,6 @@
 # ORCA
 
-![Demo de ORCA: la rutina de reservas pregunta dónde sentar a un grupo de ocho, un toque lo responde y sigue trabajando](docs/readme-demo.gif)
+![Demo de ORCA: el menú ⋯ Más, un líder pide un trabajador y tú lo apruebas, el trabajador reporta su resultado y Administración → Herramientas](docs/readme-demo.gif)
 
 Un panel de control gratuito y autoalojado para los agentes de IA que corres en tu propia
 computadora (Claude Code, Codex, Gemini, opencode, modelos locales y otros), con **rutinas** programadas cuyos

@@ -1,6 +1,6 @@
 # ORCA
 
-![ORCA demo: the reservations routine asks how to seat a party of eight, one tap answers it, and it carries on](docs/readme-demo.gif)
+![ORCA demo: the ⋯ More menu, a lead asks for a worker and you approve, the worker reports its result back, and Admin → Tools](docs/readme-demo.gif)
 
 A free, self-hosted control panel for the AI coding agents you run on your own computer
 (Claude Code, Codex, Gemini, opencode, local models and others), plus scheduled **routines** whose drafts wait for
