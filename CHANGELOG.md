@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-18
 
 ### Web browser
 - **`operio-orca browser on | off | reset | status | test URL`:** agents can open web pages, read
