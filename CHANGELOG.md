@@ -3,6 +3,23 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Web browser (read only)
+- **`operio-orca browser on | off | reset | status | test URL`:** agents can open web pages, read
+  them and take screenshots. Off by default. Uses the Chrome, Chromium, Edge or Brave already on the
+  computer (`OPERIO_ORCA_BROWSER_EXECUTABLE` to choose one) in its own profile, always with the
+  browser's sandbox; on Linux without one it prints the install line and stops. The engine
+  (`@playwright/mcp` 0.0.85, Apache-2.0) installs into `~/.config/operio-orca/browser/engine`.
+- **Built-in tool *Web browser*** in Admin → Tools (only `operio-orca browser` can change or remove
+  it). In front of the engine ORCA offers only open/read/screenshot/find/wait/tabs, refuses
+  `file://`, logins in URLs, this computer, private networks and names that resolve to them, keeps
+  file names inside the agent's `runs/<name>/shots` (0600), marks page text as data, and keeps API
+  keys out of the browser's environment.
+- **Journal:** page opened, address refused, tool refused, browser on/off/reset (EN/ES).
+- `operio-orca doctor` reports the browser once it was turned on; `operio-orca backup` leaves out the
+  browser engine and its profile (cookies).
+
 ## [0.4.2] - 2026-11-18
 
 ### Fixed

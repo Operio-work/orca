@@ -21,6 +21,8 @@
 #   operio-orca kb          the business's documents for agents (~/.config/operio-orca/knowledge):
 #                         kb search "question" [-n 5] [--collection NAME] [--json] | add PATH (stdin)
 #                         | remove PATH | list | status | reindex [--full]
+#   operio-orca browser     the agents' web browser, read only (off until you turn it on):
+#                         browser on | off | reset | status | test URL
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -275,6 +277,23 @@ cmd_doctor() {
     no "port $p is taken by another program, not ORCA" "set OPERIO_ORCA_PORT=<a free port> in $ENV_FILE, then: operio-orca restart"
   else no "panel not running (port $p is free)" "operio-orca start"; fi
 
+  # Web browser (operio-orca browser): only reported when it was turned on.
+  local bstate="$CONFIG_DIR/browser/browser.json"
+  if [ -f "$bstate" ]; then
+    local bline; bline="$("$NODE_BIN" -e "
+      const fs=require('fs'),s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
+      if(!s.enabled){console.log('off');process.exit(0)}
+      if(!s.executable||!fs.existsSync(s.executable)){console.log('nobrowser');process.exit(0)}
+      try{const v=require(process.argv[2]+'/node_modules/@playwright/mcp/package.json').version;console.log(v===s.engine?'ok '+s.executable:'engine')}catch{console.log('engine')}
+    " "$bstate" "$CONFIG_DIR/browser/engine" 2>/dev/null || echo bad)"
+    case "$bline" in
+      off) info "web browser off" ;;
+      ok\ *) ok "web browser on, read only (${bline#ok })" ;;
+      nobrowser) no "web browser on, but the Chrome it used is gone" "operio-orca browser on" ;;
+      *) no "web browser engine missing or not the pinned version" "operio-orca browser on" ;;
+    esac
+  fi
+
   case "$SERVICE" in
     systemd)
       if [ "$SERVICE_ENABLED" != 1 ]; then info "service installed but not enabled (--no-service); after a reboot: operio-orca start"
@@ -386,7 +405,7 @@ cmd_backup() {
   case "$file" in "$CONFIG_DIR"/*) die "write the backup outside $CONFIG_DIR" ;; esac
   local parent base; parent="$(dirname "$CONFIG_DIR")"; base="$(basename "$CONFIG_DIR")"
   # Settings, routines, drafts, journal, push keys, state. Not the logs, pid or socket files.
-  ( umask 077; tar -czf "$file" -C "$parent" --exclude="$base/logs" --exclude='*.pid' --exclude='*.sock' "$base" ) || die "could not write $file"
+  ( umask 077; tar -czf "$file" -C "$parent" --exclude="$base/logs" --exclude="$base/browser/engine" --exclude="$base/browser/profile" --exclude='*.pid' --exclude='*.sock' "$base" ) || die "could not write $file"
   chmod 600 "$file"
   say "backup written: $file ($(du -h "$file" | cut -f1 | tr -d ' '), mode 600)"
   say "it holds your settings, routines, drafts, journal and push keys (not the logs)"
@@ -620,6 +639,23 @@ cmd_kb() {
   OPERIO_ORCA_HOSTED="$hosted" OPERIO_ORCA_KB_MODEL="$model" "$NODE_BIN" "$APP_DIR/lib/kb-cli.js" "$sub" "$CONFIG_DIR" "$APP_DIR" "$@"
 }
 
+cmd_browser() {
+  local sub="${1:-}"
+  case "$sub" in
+    on|off|reset|status) [ $# -eq 1 ] || die "browser $sub takes no arguments" ;;
+    test) [ $# -eq 2 ] || die "usage: operio-orca browser test URL" ;;
+    ''|help|-h|--help) printf '%s\n' \
+      'operio-orca browser on          turn on the agents'"'"' web browser (uses the Chrome on this computer)' \
+      'operio-orca browser off         turn it off (agents that have it are told it is off)' \
+      'operio-orca browser reset       wipe its profile: cookies, cache, history' \
+      'operio-orca browser status      on/off, which browser, engine version, profile size' \
+      'operio-orca browser test URL    open URL with the same checks agents get and print what they see'; return 0 ;;
+    *) die "unknown browser command: $sub (on, off, reset, status, test)" ;;
+  esac
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" "$APP_DIR/lib/browser-cli.js" "$sub" "$CONFIG_DIR" "$APP_DIR" "${2:-}"
+}
+
 cmd_uninstall() {
   local u="$APP_DIR/uninstall.sh"
   [ -f "$u" ] || die "uninstall.sh not found next to the app"
@@ -732,10 +768,11 @@ case "${1:-help}" in
   templates) shift; cmd_templates "$@" ;;
   skills) shift; cmd_skills "$@" ;;
   kb) shift; cmd_kb "$@" ;;
+  browser) shift; cmd_browser "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
   version|--version|-V) cmd_version ;;
-  help|-h|--help) sed -n '2,29p' "$self" | sed 's/^# \{0,1\}//' ;;
+  help|-h|--help) sed -n '2,31p' "$self" | sed 's/^# \{0,1\}//' ;;
   *) die "unknown command: $1 (try: operio-orca help)" ;;
 esac

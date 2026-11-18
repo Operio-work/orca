@@ -31,6 +31,16 @@ herdr's binary includes code under other licenses:
 - Rust crates from crates.io, statically linked: listed with their full license texts at the end
   of this file (generated from herdr's `Cargo.lock` at tag v0.9.5 with `cargo about`).
 
+## Web browser engine (downloaded by `operio-orca browser on`, not modified)
+
+- Project: Playwright MCP (`@playwright/mcp`) — https://github.com/microsoft/playwright-mcp, by Microsoft
+  Corporation, with its dependency Playwright (`playwright`, `playwright-core`).
+- Version: 0.0.85, installed from the npm registry into `~/.config/operio-orca/browser/engine` only
+  when the owner turns the browser on. ORCA does not redistribute or modify it.
+- License: Apache License 2.0 (same text as herdr's, below).
+- The browser itself is the Chrome, Chromium, Edge or Brave already on the computer; ORCA does not
+  download or ship one.
+
 ## Shipped with the panel
 
 | Component | Where | License |

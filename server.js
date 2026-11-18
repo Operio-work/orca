@@ -1679,9 +1679,9 @@ async function termScreenFull(pane) {
 // ─── Journal API: timeline, saved output, export, daily review ────────────────
 const GROUPS = {
   lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'agent.model', 'shell.new'],
-  work: ['agent.prompt', 'chat.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
+  work: ['browser.open', 'agent.prompt', 'chat.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
   coordination: ['worker.end', 'spawn.request', 'spawn.approve', 'spawn.deny', 'profile.save', 'profile.delete', 'account.add', 'account.key', 'account.rename', 'account.remove', 'link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
-  security: ['tool.save', 'tool.remove', 'secret.set', 'shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
+  security: ['browser.blocked', 'browser.refused', 'browser.on', 'browser.off', 'browser.reset', 'tool.save', 'tool.remove', 'secret.set', 'shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
   errors: ['error'],
 };
 const groupOf = ev => Object.keys(GROUPS).find(g => GROUPS[g].includes(ev)) || 'other';
@@ -1746,6 +1746,12 @@ function describe(e) {
     case 'shell.lock': return `${who} locked shells again`;
     case 'access.denied': return `${who} was refused (${e.code})${ag ? ` on ${ag}` : ''} ${e.path || ''}`.trim();
     case 'error': return `Error ${e.code} on ${e.path} ×${e.n}`;
+    case 'browser.open': return `${ag || 'An agent'} opened ${e.url} in the web browser`;
+    case 'browser.blocked': return `${ag || 'An agent'} tried to open ${e.url}; ORCA refused (${e.reason})`;
+    case 'browser.refused': return `${ag || 'An agent'} asked the web browser for ${e.tool}; ORCA refused (read only)`;
+    case 'browser.on': return 'The web browser was turned on (read only)';
+    case 'browser.off': return 'The web browser was turned off';
+    case 'browser.reset': return 'The web browser profile was wiped';
     default: return `${who} ${e.event}${ag ? ` ${ag}` : ''}`;
   }
 }

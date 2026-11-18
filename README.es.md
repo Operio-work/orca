@@ -156,6 +156,13 @@ La lista completa, con las rutinas que Operio opera por ti, está en `catalog/ca
   quedan en un archivo 0600 y no se vuelven a mostrar, y cada agente Claude recibe solo sus
   servidores y sus secretos. Un servidor que agregues corre con tus permisos en esta computadora:
   agrega solo los de confianza.
+- **Navegador web** (apagado hasta que lo enciendas): `operio-orca browser on` deja que los agentes
+  abran páginas web, las lean y tomen capturas con el Chrome, Chromium, Edge o Brave de esta
+  computadora, en su propio perfil (nunca tu navegador de todos los días, tus sesiones ni tus
+  contraseñas). Aparece en Administración → Herramientas; dáselo a un agente guardado como
+  cualquier herramienta. Solo lectura: sin clics, escritura ni formularios. Las direcciones de esta
+  computadora o de tu red se rechazan, el texto de la página se marca como datos, no como
+  instrucciones, y cada página abierta queda en el Diario. `browser off | reset | status | test URL`.
 - **Cuentas**: varias cuentas por tipo de agente — Claude y Codex en sus propias carpetas de
   configuración, y claves de API de Google para Gemini y Antigravity.
 - **Modelos locales**: el agente *Local (Ollama)* corre un modelo de Ollama que usa herramientas, a

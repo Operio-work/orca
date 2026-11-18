@@ -168,6 +168,12 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
   `${NAME}` where a key belongs and set NAME under Secrets: values are kept in a 0600 file and never
   shown again, and each Claude agent gets only its own servers and their secrets. A server you add
   runs with your rights on this computer: add only ones you trust.
+- **Web browser** (off until you turn it on): `operio-orca browser on` lets agents open web pages,
+  read them and take screenshots with the Chrome, Chromium, Edge or Brave on this computer, in its
+  own profile (never your everyday browser, logins or passwords). It shows up in Admin → Tools;
+  give it to a saved agent like any tool. Read only: no clicking, typing or forms. Addresses on
+  this computer or your network are refused, page text is marked as data, not instructions, and
+  every page opened goes to the Journal. `browser off | reset | status | test URL`.
 - **Accounts**: several logins per agent kind — Claude and Codex in their own config folders, and
   Google API keys for Gemini and Antigravity.
 - **Local models**: the *Local (Ollama)* agent runs a tool-capable model from Ollama through
