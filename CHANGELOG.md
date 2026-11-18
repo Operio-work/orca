@@ -17,6 +17,12 @@ The installer pins one panel release and one herdr release together; `operio-orc
   file names inside the agent's `runs/<name>/shots` (0600), marks page text as data, and keeps API
   keys out of the browser's environment.
 - **Journal:** page opened, address refused, tool refused, browser on/off/reset (EN/ES).
+- **Panel:** Admin → Tools has a *Web browser* card: on/off (turning on installs the engine), which
+  browser, engine version, which saved agents have it, and *Test a page* with the result. Not shown on
+  hosted panels. The generic Tools list no longer offers to edit or remove it.
+- **Allowed sites per saved agent:** tick *Web browser* and an optional list appears (one site per
+  line; `https://www.example.com/menu` is kept as `example.com`, which covers its subdomains).
+  Empty = any public site. Checked on every address the agent opens.
 - `operio-orca doctor` reports the browser once it was turned on; `operio-orca backup` leaves out the
   browser engine and its profile (cookies).
 

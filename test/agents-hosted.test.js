@@ -90,3 +90,9 @@ test('hosted: Admin overview shows tools only to Operio staff, never People', as
   assert.equal((await req('GET', '/api/admin', { user: STAFF() })).json.sections.tools, true);
   assert.equal((await req('GET', '/api/admin', { user: VIEWER() })).status, 403);
 });
+
+test('hosted: no local web browser (box RAM; hosted clients get a remote read-only browser from ORCA Host)', async () => {
+  const v = await req('GET', '/api/tools', { user: STAFF() });
+  assert.equal(v.json.browser, null);
+  assert.equal((await req('POST', '/api/browser', { user: STAFF(), body: { action: 'on' } })).status, 403);
+});

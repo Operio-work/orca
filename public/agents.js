@@ -202,6 +202,10 @@
       return lab;
     }));
     f('mcpOnly').checked = !!p?.tools?.mcpOnly;
+    f('browserSites').value = (p?.tools?.browserSites || []).join('\n');
+    f('browserSites').placeholder = t('agSitesPh');
+    const sitesSync = () => { $('#ag-sites-row').hidden = !$('#ag-mcp input[value="web-browser"]')?.checked; };
+    $('#ag-mcp').onchange = sitesSync; sitesSync();
     $('#ag-mcp-hint').textContent = (data.mcp || []).length ? t('agMcpHint') : t('agMcpNone');
     // Reports to: only agents that report to no one; none at all when others report to this one.
     const team = isNew ? [] : data.profiles.filter(x => x.reportsTo === p.id).map(x => x.id);
@@ -247,7 +251,7 @@
     const body = {
       id: isNew ? f('id').value.trim() : editing.id, create: isNew, rev: isNew ? undefined : editing.rev,
       label: f('label').value.trim(), kind: f('kind').value, model: f('model').value, account: f('account').value, folder: f('folder').value.trim(),
-      instructions: f('instructions').value, tools: { builtin: f('builtin').value, mcp: [...form.querySelectorAll('input[name=mcp]:checked')].map(x => x.value), mcpOnly: f('mcpOnly').checked },
+      instructions: f('instructions').value, tools: { builtin: f('builtin').value, mcp: [...form.querySelectorAll('input[name=mcp]:checked')].map(x => x.value), mcpOnly: f('mcpOnly').checked, browserSites: f('browserSites').value.split('\n').map(x => x.trim()).filter(Boolean) },
       skills: [...form.querySelectorAll('input[name=skill]:checked')].map(x => x.value),
       type: f('type').value, reportsTo: f('reportsTo').value || null, worker: { maxMinutes: Number(f('minutes').value) || 120 },
       spawn: { profiles: [...form.querySelectorAll('input[name=spawnp]:checked')].map(x => x.value), max: Number(f('spawnMax').value) },

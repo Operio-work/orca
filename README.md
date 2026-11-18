@@ -173,7 +173,8 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
   own profile (never your everyday browser, logins or passwords). It shows up in Admin → Tools;
   give it to a saved agent like any tool. Read only: no clicking, typing or forms. Addresses on
   this computer or your network are refused, page text is marked as data, not instructions, and
-  every page opened goes to the Journal. `browser off | reset | status | test URL`.
+  every page opened goes to the Journal. `browser off | reset | status | test URL`, or the *Web browser*
+  card in Admin → Tools. A saved agent can be limited to a few sites (e.g. `example.com`).
 - **Accounts**: several logins per agent kind — Claude and Codex in their own config folders, and
   Google API keys for Gemini and Antigravity.
 - **Local models**: the *Local (Ollama)* agent runs a tool-capable model from Ollama through

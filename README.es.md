@@ -162,7 +162,9 @@ La lista completa, con las rutinas que Operio opera por ti, está en `catalog/ca
   contraseñas). Aparece en Administración → Herramientas; dáselo a un agente guardado como
   cualquier herramienta. Solo lectura: sin clics, escritura ni formularios. Las direcciones de esta
   computadora o de tu red se rechazan, el texto de la página se marca como datos, no como
-  instrucciones, y cada página abierta queda en el Diario. `browser off | reset | status | test URL`.
+  instrucciones, y cada página abierta queda en el Diario. `browser off | reset | status | test URL`, o la
+  tarjeta *Navegador web* en Administración → Herramientas. Un agente guardado puede limitarse a
+  algunos sitios (p. ej. `example.com`).
 - **Cuentas**: varias cuentas por tipo de agente — Claude y Codex en sus propias carpetas de
   configuración, y claves de API de Google para Gemini y Antigravity.
 - **Modelos locales**: el agente *Local (Ollama)* corre un modelo de Ollama que usa herramientas, a

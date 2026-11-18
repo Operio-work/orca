@@ -36,6 +36,7 @@ const transcript = require('./lib/transcript');
 const { createProfiles, ProfileError, reportsError, BUILTIN: PROFILE_TOOLS } = require('./lib/profiles');
 const { createAccounts, AccountError } = require('./lib/accounts');
 const { createTools, ToolError } = require('./lib/tools');
+const { createBrowser } = require('./lib/browser');
 const { createOllama } = require('./lib/ollama');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
@@ -198,6 +199,15 @@ const profiles = createProfiles({ configDir: STATE_DIR, kinds: KINDS, models: MO
 const accounts = createAccounts({ configDir: STATE_DIR, home: HOME, log });
 // MCP servers for saved agents (tools.js): catalogue + write-only secrets, admins only.
 const tools = createTools({ configDir: STATE_DIR, log });
+const browser = createBrowser({ configDir: STATE_DIR, appDir: __dirname });
+// operio-orca browser on|off|test, run for the panel (admins). Output is plain text for the page.
+function browserCli(args, timeout) {
+  return new Promise(resolve => {
+    execFile(process.execPath, [path.join(__dirname, 'lib', 'browser-cli.js'), args[0], STATE_DIR, __dirname, ...args.slice(1)],
+      { timeout, maxBuffer: 1024 * 1024, env: { ...process.env, OPERIO_ORCA_BROWSER_PANEL: '1' } },
+      (err, stdout, stderr) => resolve({ ok: !err, output: (String(stdout || '') + String(stderr || '')).replace(/\x1b\[[0-9;]*m/g, '').slice(-20000) }));
+  });
+}
 const toolErr = e => { if (e instanceof ToolError) throw new HttpError(e.status, e.code, e.detail); throw e; };
 const accountErr = e => { if (e instanceof AccountError) throw new HttpError(e.status, e.code); throw e; };
 // Local models through Ollama on this computer (ollama.js), refreshed every 5 minutes.
@@ -681,7 +691,7 @@ async function startProfile(req, p, { task = null, leadTerminal = null, resume =
   const leadAgent = leadTerminal ? agents.find(a => a.terminal === leadTerminal) : null;
   let mcp = null;
   if (p.kind === 'claude' && p.tools.mcp.length) {
-    try { mcp = tools.writeRun(path.join(profiles.RUNS, name), p.tools.mcp); } catch (e) { profiles.cleanRun(name); toolErr(e); }
+    try { mcp = tools.writeRun(path.join(profiles.RUNS, name), p.tools.mcp, { browserSites: p.tools.browserSites || [] }); } catch (e) { profiles.cleanRun(name); toolErr(e); }
   }
   const run = profiles.buildRun(p, {
     mcpFile: mcp?.mcpFile,
@@ -2176,7 +2186,7 @@ async function api(req, res, url) {
   // Tools (admins): MCP servers saved agents can use, and which secrets they still need.
   if (req.method === 'GET' && pathname === '/api/tools') {
     if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
-    return send(res, 200, { tools: tools.view(), secrets: tools.secretNames(), usedBy: Object.fromEntries(tools.list().map(t => [t.id, profiles.list().filter(p => p.tools.mcp.includes(t.id)).map(p => p.id)])) });
+    return send(res, 200, { browser: CFG.HOSTED ? null : browser.status(), tools: tools.view(), secrets: tools.secretNames(), usedBy: Object.fromEntries(tools.list().map(t => [t.id, profiles.list().filter(p => p.tools.mcp.includes(t.id)).map(p => p.id)])) });
   }
 
   // Accounts (admins): several logins per agent kind, with the command that signs each one in.
@@ -2650,6 +2660,24 @@ async function api(req, res, url) {
   if (pathname === '/api/agents/new') {
     const r = await startAgent(req, body);
     return send(res, 200, { pane: r.pane, blocked: r.blocked, shell: r.shell });
+  }
+
+  // ── Web browser (admins, not on hosted panels): turn on / off, or open a test page
+  if (pathname === '/api/browser') {
+    if (CFG.HOSTED || !canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
+    const action = String(body.action || '');
+    if (action === 'on' || action === 'off') {
+      const r = await browserCli([action], 5 * 60e3);
+      if (r.ok) jr(req, 'browser.' + action, null, action === 'on' ? { level: 'read' } : {});
+      return send(res, 200, { ok: r.ok, output: r.output, browser: browser.status() });
+    }
+    if (action === 'test') {
+      const url = String(body.url || '').trim().slice(0, 500);
+      if (!/^https?:\/\/\S+$/i.test(url)) throw new HttpError(400, 'bad_url');
+      const r = await browserCli(['test', url], 3 * 60e3);
+      return send(res, 200, { ok: r.ok, output: r.output });
+    }
+    throw new HttpError(400, 'bad_action');
   }
 
   // ── Tools (admins): save / remove an MCP server, set or clear a secret (value never comes back)

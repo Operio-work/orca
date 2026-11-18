@@ -144,8 +144,8 @@ test('workers: instructions say temporary + report goes to the lead; agents may 
 test('mcp: ids validated; claude gets --mcp-config, strict only when "only these"', () => {
   const s = store(tmp());
   assert.throws(() => s.put({ ...base, tools: { mcp: ['Bad Id'] } }, 'sam'), e => e.detail === 'tools');
-  const p = s.put({ ...base, tools: { builtin: 'default', mcp: ['github'], mcpOnly: true } }, 'sam');
-  assert.deepStrictEqual(p.tools, { builtin: 'default', mcp: ['github'], mcpOnly: true });
+  const p = s.put({ ...base, tools: { builtin: 'default', mcp: ['github'], mcpOnly: true, browserSites: [] } }, 'sam');
+  assert.deepStrictEqual(p.tools, { builtin: 'default', mcp: ['github'], mcpOnly: true, browserSites: [] });
   const r = s.buildRun(p, { mcpFile: '/x/mcp.json' });
   assert.deepStrictEqual(r.args.slice(2), ['--mcp-config', '/x/mcp.json', '--strict-mcp-config']);
   assert.ok(!s.buildRun({ ...p, tools: { ...p.tools, mcpOnly: false } }, { mcpFile: '/x/mcp.json' }).args.includes('--strict-mcp-config'));

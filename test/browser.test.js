@@ -200,3 +200,42 @@ test('CLI: browser help, status on a fresh config, test needs a URL', () => {
   const off = cli('off');
   assert.match(off.stdout, /already off/);
 });
+
+test('allowed sites: a site covers its subdomains, nothing else; profiles keep host names only', async () => {
+  const { siteAllowed } = require('../lib/browser');
+  assert.ok(siteAllowed('www.example.com', ['example.com']));
+  assert.ok(siteAllowed('example.com', ['example.com']));
+  assert.ok(!siteAllowed('badexample.com', ['example.com']));
+  assert.ok(!siteAllowed('example.com.evil.net', ['example.com']));
+  const lookup = async () => [{ address: '93.184.215.14', family: 4 }];
+  await assert.rejects(checkUrl('https://other.com/', { lookup, sites: ['example.com'] }), { code: 'blocked_url' });
+  assert.ok(await checkUrl('https://maps.example.com/x', { lookup, sites: ['example.com'] }));
+
+  const { createProfiles } = require('../lib/profiles');
+  const dir = tmp();
+  const profiles = createProfiles({ configDir: dir, kinds: ['claude'], models: { claude: ['sonnet'] } });
+  const base = { id: 'checker', create: true, kind: 'claude', folder: '~', instructions: 'x', tools: { mcp: ['web-browser'] } };
+  const saved = profiles.put({ ...base, tools: { ...base.tools, browserSites: ['https://www.Example.com/menu', 'example.com', ' maps.google.com '] } });
+  assert.deepEqual(saved.tools.browserSites, ['example.com', 'maps.google.com']);
+  assert.throws(() => profiles.put({ ...base, id: 'c2', tools: { ...base.tools, browserSites: ['not a host'] } }), { code: 'bad_profile' });
+  assert.throws(() => profiles.put({ ...base, id: 'c3', tools: { ...base.tools, browserSites: ['localhost'] } }), { code: 'bad_profile' });
+});
+
+test('proxy: --sites limits what this agent opens', async () => {
+  const { dir, argsFile } = setup();
+  const s = session(dir, ['--sites', 'example.com'], { FAKE_ARGS_FILE: argsFile });
+  await s.rpc('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 't', version: '0' } });
+  const r = await s.call('browser_navigate', { url: 'http://93.184.215.14/' });
+  assert.equal(r.result.isError, true);
+  assert.match(textOf(r), /only open example\.com/);
+  await s.close();
+});
+
+test('run files: allowed sites reach the browser tool as --sites', () => {
+  const dir = tmp();
+  const tools = createTools({ configDir: dir });
+  tools.put(createBrowser({ configDir: dir, appDir: APP }).toolEntry(), { builtin: true });
+  const r = tools.writeRun(path.join(dir, 'runs', 'a'), [TOOL_ID], { browserSites: ['example.com', 'google.com'] });
+  const args = JSON.parse(fs.readFileSync(r.mcpFile, 'utf8')).mcpServers[TOOL_ID].args;
+  assert.deepEqual(args.slice(-2), ['--sites', 'example.com,google.com']);
+});

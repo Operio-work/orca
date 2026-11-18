@@ -114,8 +114,10 @@
     try { tdata = await call('/api/tools'); } catch (err) { toast(errText(err), true); return [p('hint', errText(err))]; }
     const out = [p('hint', t('admToolsIntro'))];
     if (data.edition === 'free') out.push(p('hint adm-state warn', t('admToolsFreeWarn')));
+    if (tdata.browser) out.push(browserCard(tdata.browser));
     const ul = el('ul', 'adm-people');
-    for (const x of tdata.tools) {
+    const own = tdata.tools.filter(x => x.id !== 'web-browser');
+    for (const x of own) {
       const li = el('li', 'adm-person');
       const top = el('div', 'adm-ptop');
       top.append(el('span', 'tpl-name', `${x.name} · ${x.type === 'http' ? 'HTTP' : t('admToolLocal')}`),
@@ -129,7 +131,7 @@
       li.append(top, el('div', 'adm-login', `${x.id} · ${x.type === 'http' ? x.url : [x.command, ...x.args].join(' ')}${used.length ? ' · ' + t('admToolUsedBy', used.join(', ')) : ''}`));
       ul.append(li);
     }
-    if (tdata.tools.length) out.push(ul); else out.push(p('hint', t('admToolNone')));
+    if (own.length) out.push(ul); else out.push(p('hint', t('admToolNone')));
     // Add a server
     const fm = el('form', 'adm-toolform');
     const inp = (name, ph, type = 'text') => { const i = el('input'); i.name = name; i.placeholder = ph; i.type = type; i.autocomplete = 'off'; i.spellcheck = false; return i; };
@@ -168,6 +170,48 @@
     sec.append(sf, p('hint', t('admSecretHow')));
     out.push(sec);
     return out;
+  }
+
+  // The built-in Web browser: on/off and a test page. Turning it on installs the engine (can take a minute).
+  function browserCard(b) {
+    const box = el('div', 'adm-browser');
+    const used = tdata.usedBy['web-browser'] || [];
+    const broken = b.enabled && (!b.executableOk || !b.engineOk);
+    const top = el('div', 'adm-ptop');
+    top.append(el('span', 'tpl-name', t('admBrowser')),
+      el('span', 'skl-status ' + (broken ? 'wait' : b.enabled ? 'on' : 'off'), broken ? t('admBrowserBroken') : b.enabled ? t('admBrowserOn') : t('admBrowserOff')));
+    box.append(top, p('hint', t('admBrowserIntro')));
+    if (b.enabled) box.append(el('div', 'adm-login', [b.executable, b.engine ? 'engine ' + b.engine : '', used.length ? t('admToolUsedBy', used.join(', ')) : t('admBrowserNoAgent'), b.inUse ? t('admBrowserInUse') : ''].filter(Boolean).join(' · ')));
+    const outp = el('pre', 'adm-browser-out'); outp.hidden = true;
+    const show2 = (text, ok) => { outp.hidden = false; outp.textContent = text; outp.classList.toggle('bad', !ok); };
+    const act = el('button', 'btn' + (b.enabled ? '' : ' primary'), b.enabled ? t('admBrowserTurnOff') : t('admBrowserTurnOn'));
+    act.type = 'button';
+    act.addEventListener('click', async () => {
+      act.disabled = true; act.textContent = b.enabled ? t('admBrowserTurningOff') : t('admBrowserTurningOn');
+      try {
+        const r = await post('/api/browser', { action: b.enabled ? 'off' : 'on' });
+        if (r.ok) { toast(r.browser?.enabled ? t('admBrowserOn') : t('admBrowserOff')); show('tools'); }
+        else { show2(r.output, false); act.disabled = false; act.textContent = b.enabled ? t('admBrowserTurnOff') : t('admBrowserTurnOn'); }
+      } catch (err) { toast(errText(err), true); act.disabled = false; }
+    });
+    const row2 = el('div', 'adm-browser-row');
+    row2.append(act);
+    if (b.enabled && !broken) {
+      const tf = el('form', 'adm-add');
+      const u = el('input'); u.type = 'url'; u.name = 'url'; u.required = true; u.placeholder = 'https://example.com'; u.autocomplete = 'off'; u.spellcheck = false;
+      const go = el('button', 'btn', t('admBrowserTest'));
+      tf.append(u, go);
+      tf.addEventListener('submit', async e => {
+        e.preventDefault();
+        go.disabled = true; show2(t('admBrowserTesting'), true);
+        try { const r = await post('/api/browser', { action: 'test', url: u.value.trim() }); show2(r.output, r.ok); }
+        catch (err) { show2(errText(err), false); }
+        go.disabled = false;
+      });
+      row2.append(tf);
+    }
+    box.append(row2, outp);
+    return box;
   }
 
   const VIEWS = {

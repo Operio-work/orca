@@ -425,3 +425,19 @@ test('saved agents start with their own arguments: instructions, tool limits, MC
   assert.ok(ag.start_args.includes('--append-system-prompt-file'), JSON.stringify(ag.start_args));
   assert.ok(ag.start_args.includes('--tools'), 'read-only limit reaches Claude');
 });
+
+test('web browser: status in the Tools API, off by default; the panel endpoint checks its input', async () => {
+  const origin = `http://${BASE}`;
+  const v = await req('GET', '/api/tools');
+  assert.equal(v.status, 200);
+  assert.equal(v.json.browser.enabled, false);
+  assert.equal((await req('POST', '/api/browser', { origin, body: { action: 'test', url: 'file:///etc/passwd' } })).status, 400);
+  assert.equal((await req('POST', '/api/browser', { origin, body: { action: 'fly' } })).status, 400);
+  assert.equal((await req('POST', '/api/browser', { body: { action: 'on' } })).status, 403, 'cross-origin write refused');
+  const off = await req('POST', '/api/browser', { origin, body: { action: 'off' } });
+  assert.equal(off.status, 200);
+  assert.match(off.json.output, /already off/);
+  // The built-in tool cannot be written or removed through the generic Tools API.
+  assert.equal((await req('POST', '/api/tools', { origin, body: { id: 'web-browser', type: 'stdio', command: '/bin/sh' } })).status, 409);
+  assert.equal((await req('POST', '/api/tools/delete', { origin, body: { id: 'web-browser' } })).status, 409);
+});

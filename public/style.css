@@ -1952,3 +1952,14 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
 .more-menu .mm-code { color: var(--text-muted); }
 .more-menu #bell[aria-pressed="true"] { background: none; box-shadow: none; color: var(--text-primary); }
 .more-menu #bell[aria-pressed="true"]::after { content: '●'; color: var(--color-green); font-size: 10px; }
+
+/* Admin → Tools: the built-in Web browser card */
+.adm-browser { display: grid; gap: var(--space-2); padding: var(--space-3); margin: 0 0 var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface-2); }
+.adm-browser .hint { margin: 0; }
+.adm-browser-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.adm-browser-row .adm-add { flex: 1 1 260px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin: 0; }
+.adm-browser-out { margin: 0; max-height: 280px; overflow: auto; padding: var(--space-2); border-radius: var(--radius); background: var(--color-surface); color: var(--text-secondary); font: 400 var(--text-xs)/1.45 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.adm-browser-out.bad { color: var(--color-red-ink); }
+/* Saved agent: allowed sites for the Web browser */
+.ag-sites { display: grid; gap: 4px; margin-top: 6px; font-size: var(--text-sm); color: var(--text-secondary); }
+.ag-sites textarea { width: 100%; font: 400 var(--text-xs)/1.4 var(--font-mono); resize: vertical; }
