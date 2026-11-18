@@ -121,59 +121,59 @@ const en = {
     ],
 
     whatsNew: {
-      "title": "What’s new in 0.4.0",
+      "title": "What’s new in 0.5.0",
       "shots": [
         {
-          "id": "agents",
-          "caption": "Saved agents and workers",
-          "alt": "The Saved agents list: a request from the sales lead for a researcher worker with Approve and Decline, a worker setup with one worker on a task and its minutes left, and the sales lead."
+          "id": "browser",
+          "caption": "Admin → Tools → Web browser",
+          "alt": "The Web browser card in Admin → Tools: on with form filling, the Chrome it uses, which saved agent has it, and a box to test a page."
         },
         {
-          "id": "admin",
-          "caption": "Admin → Tools",
-          "alt": "The Admin page on Tools: one connected calendar server marked Ready, a warning that servers you add run with your rights, and the form to add another."
+          "id": "approval",
+          "caption": "Every submit waits for you",
+          "alt": "An approval card: front-of-house wants to click the button Send order on a supplier's weekly order page, with the fields it filled in, a screenshot of the page, and Decline and Approve."
         },
         {
-          "id": "languages",
-          "caption": "Five languages",
-          "alt": "The language menu open in the header: English, Español, Français, Português and Italiano."
+          "id": "routine",
+          "caption": "New free routine",
+          "alt": "The Routines page with Website & Google Profile Check: every Monday at 9:00, report only."
         }
       ],
       "items": [
         {
-          "title": "Saved agents",
-          "body": "Set an agent up once: instructions, skills, tools and which account it uses. Start it any time, or Resume to pick up its last conversation."
+          "title": "A web browser for your agents",
+          "body": "Agents can open web pages, read them and take screenshots, with the Chrome already on your computer, in its own profile: never your everyday browser, logins or passwords. Off until you turn it on."
         },
         {
-          "title": "Teams, two levels",
-          "body": "An agent can report to a lead. When a member finishes a job, its result is offered to the lead, and the two can message each other."
+          "title": "Safe by default",
+          "body": "Pages on your computer or your private network are refused, page text is treated as information and never as instructions, and every page opened goes to the Journal."
         },
         {
-          "title": "Workers for one task",
-          "body": "Start a worker with a task and it reports back to its lead and closes itself. A lead can ask for one; you approve it first."
+          "title": "Form filling, with your approval",
+          "body": "If you allow it, agents can type and click. Every button, Enter and form sent waits for your OK on a card with a screenshot. Payment fields are never filled."
         },
         {
-          "title": "Connect tools (MCP)",
-          "body": "Add an MCP server once in Admin and tick it on an agent. Keys are saved once and never shown again; each agent only gets the keys it uses."
+          "title": "Allowed sites per agent",
+          "body": "Give a saved agent the web browser and, if you like, the only sites it may open, one per line."
         },
         {
-          "title": "More agents and accounts",
-          "body": "Gemini and local models through Ollama join Claude, Codex and the rest. Several logins per agent kind, and Google API keys for Gemini and Antigravity."
+          "title": "Website & Google Profile Check",
+          "body": "A new free routine: every Monday, one page on what your website and Google listing show, where they disagree with your real details, broken links and the three fixes to make first."
         },
         {
-          "title": "One Admin page, five languages",
-          "body": "Agents, accounts, tools, skills, knowledge and activity in one place. The panel now speaks French, Portuguese and Italian too (machine-translated, review in progress)."
+          "title": "Five languages, up to date",
+          "body": "French, Portuguese and Italian cover everything new since 0.4 (machine-translated, review in progress)."
         }
       ],
-      "note": "Also in 0.3.0: agents talking on the map, prompt templates, skills and knowledge for agents.",
+      "note": "Also in 0.4: saved agents, teams that report back, workers for one task, and tools connected in Admin.",
       "changelog": 'Full changelog',
-      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.4, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.4, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.4: saved agents, teams, workers, tools and five languages." }
+      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.5, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.5, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.5: your agents can use the web, and you approve what they send." }
     },
 
     bizTitle: 'Run a business?',
     bizBody:
       'ORCA also runs office routines on a schedule: a morning brief, review replies, a weekly report. They read the files you give them and write a report or a draft. Nothing reaches your customers until you send it.',
-    freeTitle: 'Five routines, free',
+    freeTitle: 'Six routines, free',
     freeOutput: { report: 'Report', draft: 'Draft you send' },
     managedTitle: 'Want it to run on its own?',
     managedBody:
@@ -744,59 +744,59 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      "title": "Novedades de la 0.4.0",
+      "title": "Novedades de la 0.5.0",
       "shots": [
         {
-          "id": "agents",
-          "caption": "Agentes guardados y trabajadores",
-          "alt": "La lista de agentes guardados: una solicitud del líder de ventas para un trabajador investigador con Aprobar y Rechazar, un trabajador en una tarea con los minutos que le quedan, y el líder de ventas."
+          "id": "browser",
+          "caption": "Administración → Herramientas → Navegador web",
+          "alt": "La tarjeta del Navegador web en Administración → Herramientas: activado con llenado de formularios, el Chrome que usa, qué agente guardado lo tiene y un cuadro para probar una página."
         },
         {
-          "id": "admin",
-          "caption": "Administración → Herramientas",
-          "alt": "La página de administración en Herramientas: un servidor de calendario conectado y listo, un aviso de que los servidores que agregas corren con tus permisos, y el formulario para agregar otro."
+          "id": "approval",
+          "caption": "Cada envío te espera",
+          "alt": "Una tarjeta de aprobación: front-of-house quiere hacer clic en el botón Enviar pedido en la página de pedido semanal de un proveedor, con los campos que llenó, una captura de la página, y Rechazar y Aprobar."
         },
         {
-          "id": "languages",
-          "caption": "Cinco idiomas",
-          "alt": "El menú de idioma abierto en el encabezado: English, Español, Français, Português e Italiano."
+          "id": "routine",
+          "caption": "Nueva rutina gratis",
+          "alt": "La página de Rutinas con Revisión de sitio web y perfil de Google: cada lunes a las 9:00, solo reporte."
         }
       ],
       "items": [
         {
-          "title": "Agentes guardados",
-          "body": "Configura un agente una vez: instrucciones, habilidades, herramientas y la cuenta que usa. Arráncalo cuando quieras o usa Retomar para seguir su última conversación."
+          "title": "Un navegador web para tus agentes",
+          "body": "Los agentes pueden abrir páginas web, leerlas y tomar capturas, con el Chrome que ya tienes, en su propio perfil: nunca tu navegador de todos los días, tus sesiones ni tus contraseñas. Apagado hasta que lo actives."
         },
         {
-          "title": "Equipos de dos niveles",
-          "body": "Un agente puede reportar a un líder. Cuando un miembro termina un trabajo, su resultado se le ofrece al líder, y pueden escribirse."
+          "title": "Seguro desde el inicio",
+          "body": "Se rechazan las páginas de tu computadora o de tu red privada, el texto de las páginas se trata como información y nunca como instrucciones, y cada página abierta queda en la Bitácora."
         },
         {
-          "title": "Trabajadores para una tarea",
-          "body": "Inicia un trabajador con una tarea: le reporta a su líder y se cierra solo. Un líder puede pedir uno; tú lo apruebas primero."
+          "title": "Llenado de formularios, con tu aprobación",
+          "body": "Si lo permites, los agentes pueden escribir y hacer clic. Cada botón, Enter y envío espera tu OK en una tarjeta con captura. Los campos de pago nunca se llenan."
         },
         {
-          "title": "Conecta herramientas (MCP)",
-          "body": "Agrega un servidor MCP una vez en Administración y márcalo en un agente. Las claves se guardan una vez y no se vuelven a mostrar; cada agente recibe solo las que usa."
+          "title": "Sitios permitidos por agente",
+          "body": "Dale el navegador web a un agente guardado y, si quieres, los únicos sitios que puede abrir, uno por línea."
         },
         {
-          "title": "Más agentes y cuentas",
-          "body": "Gemini y modelos locales con Ollama se suman a Claude, Codex y los demás. Varias cuentas por tipo de agente, y claves de API de Google para Gemini y Antigravity."
+          "title": "Revisión de sitio web y perfil de Google",
+          "body": "Una nueva rutina gratis: cada lunes, una página con lo que muestran tu sitio y tu ficha de Google, en qué no coinciden con tus datos reales, enlaces rotos y las tres correcciones más importantes."
         },
         {
-          "title": "Una página de administración, cinco idiomas",
-          "body": "Agentes, cuentas, herramientas, habilidades, conocimiento y actividad en un solo lugar. El panel ahora también habla francés, portugués e italiano (traducción automática, en revisión)."
+          "title": "Cinco idiomas, al día",
+          "body": "Francés, portugués e italiano cubren todo lo nuevo desde la 0.4 (traducción automática, en revisión)."
         }
       ],
-      "note": "También en la 0.3.0: agentes conversando en el mapa, plantillas, habilidades y conocimiento para los agentes.",
+      "note": "También en la 0.4: agentes guardados, equipos que te reportan, trabajadores para una tarea y herramientas conectadas en Administración.",
       "changelog": 'Registro de cambios completo',
-      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.4, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.4, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.4: agentes guardados, equipos, trabajadores, herramientas y cinco idiomas." }
+      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.5, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.5, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.5: tus agentes ya usan la web y tú apruebas lo que envían." }
     },
 
     bizTitle: '¿Tienes un negocio?',
     bizBody:
       'ORCA también corre rutinas de oficina a la hora que elijas: un resumen matutino, respuestas a reseñas, un reporte semanal. Leen los archivos que les das y escriben un reporte o un borrador. Nada les llega a tus clientes hasta que tú lo envías.',
-    freeTitle: 'Cinco rutinas, gratis',
+    freeTitle: 'Seis rutinas, gratis',
     freeOutput: { report: 'Reporte', draft: 'Borrador que tú envías' },
     managedTitle: '¿Quieres que corra sola?',
     managedBody:
