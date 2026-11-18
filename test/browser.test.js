@@ -357,3 +357,14 @@ test('browser test: an engine that cannot start fails at once with the fix, not 
   assert.match(r.stdout, /web browser stopped .*operio-orca browser on/);
   assert.ok(Date.now() - t0 < 15000);
 });
+
+test('browser test: its Journal line names the test, not "?"', () => {
+  const { dir, argsFile } = setup();
+  const r = spawnSync(process.execPath, [path.join(APP, 'lib', 'browser-cli.js'), 'test', dir, APP, 'https://example.com'], {
+    encoding: 'utf8', timeout: 20000, env: { ...process.env, OPERIO_ORCA_CONFIG_DIR: dir, FAKE_ARGS_FILE: argsFile },
+  });
+  assert.equal(r.status, 0, r.stdout + r.stderr);
+  const opened = journalOf(dir).filter(e => e.event === 'browser.open');
+  assert.equal(opened.length, 1);
+  assert.equal(opened[0].agent?.name, 'operio-orca browser test');
+});

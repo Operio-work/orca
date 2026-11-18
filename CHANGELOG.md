@@ -3,6 +3,12 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Fixed
+- **Journal:** a page opened with *Test a page* (or `operio-orca browser test`) showed as "? opened …";
+  it now reads "operio-orca browser test opened …".
+
 ## [0.5.0] - 2026-11-18
 
 ### Web browser
