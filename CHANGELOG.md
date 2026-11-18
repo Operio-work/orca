@@ -49,6 +49,8 @@ The installer pins one panel release and one herdr release together; `operio-orc
 
 ### Fixed
 - **Journal:** turning the web browser back on said "read only" even when form filling was kept.
+- **`operio-orca browser test`** waited 150 s when the browser engine could not start; it now stops at
+  once and says to run `operio-orca browser on`.
 
 ### Site
 - **Free pack pages** say when a pack reads one file (`~/orca-desk/business.txt`) rather than a folder,

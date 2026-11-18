@@ -345,3 +345,15 @@ test('read level: form tools are refused even if an agent calls them by name', a
   assert.match(textOf(r), /owner can allow form filling/);
   await s.close();
 });
+
+test('browser test: an engine that cannot start fails at once with the fix, not after a long wait', () => {
+  const { dir } = setup();
+  // No FAKE_ARGS_FILE: the fake engine throws on its first line, like a broken install.
+  const t0 = Date.now();
+  const r = spawnSync(process.execPath, [path.join(APP, 'lib', 'browser-cli.js'), 'test', dir, APP, 'https://example.com'], {
+    encoding: 'utf8', timeout: 20000, env: { ...process.env, OPERIO_ORCA_CONFIG_DIR: dir, FAKE_ARGS_FILE: '' },
+  });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /web browser stopped .*operio-orca browser on/);
+  assert.ok(Date.now() - t0 < 15000);
+});
