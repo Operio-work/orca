@@ -694,7 +694,7 @@ async function startProfile(req, p, { task = null, leadTerminal = null, resume =
     try { mcp = tools.writeRun(path.join(profiles.RUNS, name), p.tools.mcp, { browserSites: p.tools.browserSites || [] }); } catch (e) { profiles.cleanRun(name); toolErr(e); }
   }
   const run = profiles.buildRun(p, {
-    mcpFile: mcp?.mcpFile,
+    mcpFile: mcp?.mcpFile, allow: mcp?.allow,
     name, skills: skills.list(), kb: kb.list().length > 0, resume: sessionId,
     lead: leadAgent ? nameOf(leadAgent) : p.type === 'worker' ? null : p.reportsTo,
     members: p.type === 'agent' ? all.filter(x => x.reportsTo === p.id).map(x => x.id) : [],
@@ -3231,7 +3231,14 @@ async function fireRoutine(r, trigger) {
   runLog({ run, routine: r.id, trigger, state: 'started', input: { agent: r.agent, cwd: r.cwd, schedule: r.schedule, approval: r.approval, prompt }, output: out });
   try {
     const name = await uniqueAgentName(r.id);
-    const started = await newAgent({ name, kind: r.agent, folder: r.cwd });
+    // Tools the pack asks for (Claude only), written like a saved agent's run files.
+    let mcp = null;
+    if (r.agent === 'claude' && r.tools?.length) {
+      try { mcp = tools.writeRun(path.join(profiles.RUNS, name), r.tools); } catch (e) { toolErr(e); }
+    }
+    const started = await newAgent({ name, kind: r.agent, folder: r.cwd },
+      mcp ? { args: ['--mcp-config', mcp.mcpFile, ...(mcp.allow.length ? ['--allowedTools', mcp.allow.join(',')] : [])], envFiles: mcp.envFile ? [mcp.envFile] : [] } : {});
+    if (mcp) runLog({ run, routine: r.id, state: 'tools', tools: mcp.ids });
     const pg = await herdrJson(['pane', 'get', started.pane]);
     const terminal = pg.result?.pane?.terminal_id;
     if (!terminal) throw new HttpError(502, 'start_failed', 'no terminal id');

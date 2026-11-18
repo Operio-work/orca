@@ -101,13 +101,17 @@ Un paquete de rutina es una carpeta con un `routine.json` en `~/.config/operio-o
   borrador espera en la pestaña **Rutinas** hasta que lo apruebes o rechaces. Aprobar solo lo
   marca como aprobado. Las de `"none"` escriben un reporte en `~/.config/operio-orca/reports/<id>/`.
 - `agent` es `claude`, `codex` u `opencode` (instalado y con sesión iniciada por ti).
+- `tools` (opcional, solo Claude) lista ids de Administración → Herramientas que recibe la ejecución,
+  p. ej. `["web-browser"]`. Una herramienta que no está configurada se omite, así que el prompt dice
+  qué escribir sin ella.
 - Cada ejecución abre un panel de agente en herdr, así que puedes verlo, responder sus
   preguntas (por ejemplo, permiso para escribir el archivo) o detenerlo como a cualquier agente.
 - Cada ejecución queda registrada como líneas JSON (entrada, ruta de salida, estado) en
   `~/.config/operio-orca/logs/routines.jsonl`.
 
-Se incluyen cinco paquetes apagados. Leen los archivos que dejes en `~/orca-desk/` y nunca
-le envían nada a tus clientes: hacen un reporte, o preparan un borrador y tú lo envías.
+Se incluyen seis paquetes apagados. Leen los archivos que dejes en `~/orca-desk/` (uno lee tu sitio
+web y tu ficha de Google con el navegador web) y nunca le envían nada a tus clientes: hacen un
+reporte, o preparan un borrador y tú lo envías.
 
 | Paquete | Se ejecuta | Resultado |
 |---|---|---|
@@ -116,6 +120,7 @@ le envían nada a tus clientes: hacen un reporte, o preparan un borrador y tú l
 | Reporte semanal para el dueño | lunes 08:00 | reporte |
 | Paquete para día de visitas (inmobiliarias) | bajo pedido | reporte: ruta, fichas de propiedades, lista |
 | Agradecimiento después de la visita + reseña | todos los días 18:00 | borradores con un enlace de WhatsApp que tocas para enviar |
+| Revisión de sitio web y perfil de Google | lunes 09:00 | reporte: diferencias, enlaces rotos, 3 correcciones (necesita el navegador web) |
 
 La lista completa, con las rutinas que Operio opera por ti, está en `catalog/catalog.json`.
 

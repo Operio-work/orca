@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updated": "2026-11-09",
+  "updated": "2026-11-18",
   "cta": {
     "en": "Talk to Operio",
     "es": "Habla con Operio"
@@ -260,6 +260,53 @@
         "es": "ORCA Gestionado por Operio: las visitas se toman de tu sistema de reservas o punto de venta y los agradecimientos salen solos, con plantillas que apruebas una vez."
       },
       "pack": "post-visit-thank-you"
+    },
+    {
+      "id": "website-profile-check",
+      "tier": "free",
+      "verticals": [
+        "any"
+      ],
+      "name": {
+        "en": "Website & Google Profile Check",
+        "es": "Revisión de sitio web y perfil de Google"
+      },
+      "problem": {
+        "en": "Your website and Google listing drift apart, and customers find the wrong hours, phone or broken pages.",
+        "es": "Tu sitio web y tu ficha de Google se van desfasando, y los clientes encuentran horarios, teléfonos o páginas rotas."
+      },
+      "outcome": {
+        "en": "Every Monday, one page that says what your website and Google listing show, where they disagree with your real details, which links are broken and the three fixes to make first.",
+        "es": "Cada lunes, una página que dice qué muestran tu sitio web y tu ficha de Google, en qué no coinciden con tus datos reales, qué enlaces están rotos y las tres correcciones que conviene hacer primero."
+      },
+      "how": {
+        "en": [
+          "Write your real name, phone, address, hours, website and Google Maps link in one short file.",
+          "Every Monday at 9:00 the web browser opens your site and your listing and reads them, without clicking or typing anything.",
+          "Read the differences and fix the top three on your site or in your Google profile."
+        ],
+        "es": [
+          "Escribe en un archivo corto tu nombre, teléfono, dirección, horario, sitio web y enlace de Google Maps reales.",
+          "Cada lunes a las 9:00 el navegador web abre tu sitio y tu ficha y los lee, sin hacer clic ni escribir nada.",
+          "Lee las diferencias y corrige las tres primeras en tu sitio o en tu perfil de Google."
+        ]
+      },
+      "trigger": {
+        "kind": "cron",
+        "summary": {
+          "en": "Every Monday at 9:00 am",
+          "es": "Cada lunes a las 9:00 am"
+        }
+      },
+      "approval": {
+        "en": "None: it is a read-only report for you; it never changes your site or listing.",
+        "es": "Ninguna: es un reporte de solo lectura para ti; nunca cambia tu sitio ni tu ficha."
+      },
+      "tools": [
+        "Web browser",
+        "Google Maps"
+      ],
+      "pack": "website-profile-check"
     },
     {
       "id": "whatsapp-after-hours-responder",

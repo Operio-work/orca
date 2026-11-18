@@ -32,6 +32,13 @@ The installer pins one panel release and one herdr release together; `operio-orc
 - **Allowed sites per saved agent:** tick *Web browser* and an optional list appears (one site per
   line; `https://www.example.com/menu` is kept as `example.com`, which covers its subdomains).
   Empty = any public site. Checked on every address the agent opens.
+- **New free pack *Website & Google Profile Check* (Monday 09:00, report, off until you turn it on):**
+  reads `~/orca-desk/business.txt` (name, city, website, Google Maps link, phone, address, hours),
+  opens the site (up to 10 internal links) and the Google listing, and writes the differences,
+  broken links, out-of-date items and the top 3 fixes. Read only: it never clicks or types.
+- **Routines can ask for tools:** optional `"tools": ["web-browser"]` in `routine.json` (Claude only)
+  gives the run those Admin → Tools servers. The browser's own tools are pre-allowed for saved agents
+  and routines (no per-tool question; ORCA's approval card still guards every submit).
 - `operio-orca doctor` reports the browser once it was turned on; `operio-orca backup` leaves out the
   browser engine and its profile (cookies).
 

@@ -357,7 +357,7 @@ const en = {
       'Downloads the panel and herdr 0.9.5, the open-source terminal workspace it runs on, and checks the download against a fixed checksum.',
       'Installs to ~/.local/share/operio-orca and puts the operio-orca command in ~/.local/bin.',
       'Starts it with your computer: a systemd user service on Linux, a launchd agent on macOS. Add --no-service to skip that.',
-      'Adds the five free routines, turned off until you switch them on.'
+      'Adds the six free routines, turned off until you switch them on.'
     ],
     sourceTitle: 'Prefer to read it first?',
     sourceBody: 'Download the script, read it, then run it. Or clone the repository and run it from there.',
@@ -976,7 +976,7 @@ vsTitle: 'Cómo se compara ORCA',
       'Descarga el panel y herdr 0.9.5, el espacio de trabajo de terminal de código abierto sobre el que corre, y revisa la descarga contra una suma de verificación fija.',
       'Instala en ~/.local/share/operio-orca y deja el comando operio-orca en ~/.local/bin.',
       'Lo arranca con tu computadora: un servicio de usuario de systemd en Linux, un agente de launchd en macOS. Agrega --no-service para omitirlo.',
-      'Agrega las cinco rutinas gratis, apagadas hasta que las actives.'
+      'Agrega las seis rutinas gratis, apagadas hasta que las actives.'
     ],
     sourceTitle: '¿Prefieres leerlo antes?',
     sourceBody: 'Descarga el script, léelo y luego córrelo. O clona el repositorio y córrelo desde ahí.',

@@ -117,12 +117,15 @@ A routine pack is a folder with a `routine.json` in `~/.config/operio-orca/routi
   in the **Routines** tab until you approve or reject it. Approving only marks it approved.
   `"none"` routines write a report to `~/.config/operio-orca/reports/<id>/`.
 - `agent` is `claude`, `codex` or `opencode` (installed and signed in by you).
+- `tools` (optional, Claude only) lists Admin → Tools ids the run gets, e.g. `["web-browser"]`. A tool
+  that is not set up is left out, so the prompt says what to write without it.
 - Each run starts an agent pane in herdr, so you can watch it, answer its questions (for
   example, permission to write the file) or stop it like any other agent.
 - Every run is logged as JSON lines (input, output path, state) in `~/.config/operio-orca/logs/routines.jsonl`.
 
-Five packs ship turned off. They read files you drop in `~/orca-desk/` and never send
-anything to your customers: they report, or they draft and you send.
+Six packs ship turned off. They read files you drop in `~/orca-desk/` (one reads your website and
+Google listing with the web browser) and never send anything to your customers: they report, or
+they draft and you send.
 
 | Pack | Runs | Output |
 |---|---|---|
@@ -131,6 +134,7 @@ anything to your customers: they report, or they draft and you send.
 | Weekly Owner Report | Monday 08:00 | report |
 | Showing Day Pack (real estate) | on demand | report: route, property sheets, checklist |
 | Post-Visit Thank-You + Review Ask | every day 18:00 | draft messages with a WhatsApp link you tap to send |
+| Website & Google Profile Check | Monday 09:00 | report: differences, broken links, top 3 fixes (needs the web browser) |
 
 The full list, including the routines Operio runs for you, is in `catalog/catalog.json`.
 

@@ -72,7 +72,7 @@ test('loadAll returns good packs and explains the bad ones', () => {
 test('the shipped example packs are valid and bilingual', () => {
   const { routines, invalid } = R.loadAll(path.join(__dirname, '..', 'routines'));
   assert.deepEqual(invalid, []);
-  assert.deepEqual(routines.map(r => r.id).sort(), ['morning-front-desk-brief', 'post-visit-thank-you', 'review-reply-desk', 'showing-day-pack', 'weekly-owner-report']);
+  assert.deepEqual(routines.map(r => r.id).sort(), ['morning-front-desk-brief', 'post-visit-thank-you', 'review-reply-desk', 'showing-day-pack', 'website-profile-check', 'weekly-owner-report']);
   assert.ok(routines.some(r => r.approval === 'draft'), 'at least one draft-approval example');
   // Free packs never reach customers: drafting ones say so in their own words too.
   const thanks = routines.find(r => r.id === 'post-visit-thank-you');
@@ -133,4 +133,13 @@ test('a pack without a schedule is on demand: valid, never scheduled, overrides 
   const s = new Scheduler({ list: () => [e], fire: async r => { fired.push(r.id); } });
   assert.equal(s.nextFor(e), null);
   return s.tick().then(() => assert.deepEqual(fired, []));
+});
+
+test('tools: optional list of tool ids, Claude only', () => {
+  const base = { id: 'web-check', name: { en: 'A', es: 'B' }, problem: { en: 'A.', es: 'B.' }, prompt: 'x', schedule: null, approval: 'none', agent: 'claude' };
+  assert.deepEqual(R.validate(base).routine.tools, []);
+  assert.deepEqual(R.validate({ ...base, tools: ['web-browser', 'web-browser'] }).routine.tools, ['web-browser']);
+  assert.match(R.validate({ ...base, tools: 'web-browser' }).errors.join(), /tools/);
+  assert.match(R.validate({ ...base, tools: ['../x'] }).errors.join(), /tools/);
+  assert.match(R.validate({ ...base, agent: 'codex', tools: ['web-browser'] }).errors.join(), /claude/);
 });

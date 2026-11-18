@@ -35,9 +35,9 @@ test('catalog.json is valid against schema.json', () => {
   assert.deepEqual(validate(schema, catalog), []);
 });
 
-test('23 entries: 5 free, 18 managed, unique ids', () => {
-  assert.equal(entries.length, 23);
-  assert.equal(free.length, 5);
+test('24 entries: 6 free, 18 managed, unique ids', () => {
+  assert.equal(entries.length, 24);
+  assert.equal(free.length, 6);
   assert.equal(entries.filter(e => e.tier === 'managed').length, 18);
   assert.equal(new Set(entries.map(e => e.id)).size, entries.length);
 });

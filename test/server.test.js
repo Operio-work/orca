@@ -496,3 +496,20 @@ test('web browser approvals: an agent asks over its socket, the panel shows it, 
   await post('/api/browser', { action: 'forms', on: false });
   fs.rmSync(path.join(CFG, 'browser'), { recursive: true, force: true });
 });
+
+test('a routine that asks for the web browser starts Claude with it, its read and form tools pre-allowed', async () => {
+  fs.cpSync(path.join(ROOT, 'routines', 'website-profile-check'), path.join(CFG, 'routines', 'website-profile-check'), { recursive: true });
+  const { createTools } = require('../lib/tools');
+  const { createBrowser } = require('../lib/browser');
+  createTools({ configDir: CFG }).put(createBrowser({ configDir: CFG, appDir: ROOT }).toolEntry(), { builtin: true });
+  const r = await post('/api/routines/website-profile-check/run', {});
+  assert.equal(r.status, 200, r.text);
+  const pane = r.json.pane;
+  await until(async () => JSON.parse(fs.readFileSync(path.join(FAKE, 'state.json'), 'utf8')).agents.some(a => a.pane_id === pane && a.start_args));
+  const args = JSON.parse(fs.readFileSync(path.join(FAKE, 'state.json'), 'utf8')).agents.find(a => a.pane_id === pane).start_args;
+  const mcp = args[args.indexOf('--mcp-config') + 1];
+  assert.ok(mcp && JSON.parse(fs.readFileSync(mcp, 'utf8')).mcpServers['web-browser'], JSON.stringify(args));
+  const allow = args[args.indexOf('--allowedTools') + 1].split(',');
+  assert.ok(allow.includes('mcp__web-browser__browser_navigate') && allow.includes('mcp__web-browser__browser_click'));
+  assert.ok(!allow.some(x => /evaluate|run_code|file_upload/.test(x)));
+});
