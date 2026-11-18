@@ -42,6 +42,18 @@ The installer pins one panel release and one herdr release together; `operio-orc
 - `operio-orca doctor` reports the browser once it was turned on; `operio-orca backup` leaves out the
   browser engine and its profile (cookies).
 
+### Languages
+- **French, Portuguese (Brazil) and Italian packs updated** for everything added since 0.4.0: the
+  web browser card and approval cards, allowed sites, worker requests, accounts, tools and secrets in
+  the Journal, and the Admin notes. Machine-translated; review pending.
+
+### Fixed
+- **Journal:** turning the web browser back on said "read only" even when form filling was kept.
+
+### Site
+- **Free pack pages** say when a pack reads one file (`~/orca-desk/business.txt`) rather than a folder,
+  and add the `operio-orca browser on` step for packs that use the web browser.
+
 ## [0.4.2] - 2026-11-18
 
 ### Fixed

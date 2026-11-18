@@ -44,9 +44,38 @@ export function deskFolders(pack) {
   const key = Object.keys(packs).find((k) => k.endsWith(`/routines/${pack}/routine.json`));
   if (!key) return [];
   const prompt = String(/** @type {any} */ (packs[key]).prompt || '');
-  const found = [...prompt.matchAll(/~\/orca-desk\/[a-z0-9-]+/g)].map((m) => m[0] + '/');
+  // A name followed by "." is a file (business.txt), not a folder.
+  const found = [...prompt.matchAll(/~\/orca-desk\/[a-z0-9-]+(?![a-z0-9-]|\.[a-z])/g)].map((m) => m[0] + '/');
   // Keep top-level inputs only (skip "…/replied", "…/thanked" archives).
   return [...new Set(found)].filter((f) => f.split('/').length === 4);
+}
+
+/**
+ * Files directly under ~/orca-desk/ that a free pack reads (e.g. ~/orca-desk/business.txt).
+ * @param {string | undefined} pack
+ * @returns {string[]}
+ */
+export function deskFiles(pack) {
+  const r = packRoutine(pack);
+  if (!r) return [];
+  const prompt = String(r.prompt || '');
+  return [...new Set([...prompt.matchAll(/~\/orca-desk\/[a-z0-9-]+\.[a-z]+/g)].map((m) => m[0]))];
+}
+
+/**
+ * True when a free pack asks for the agents' web browser (routine.json "tools").
+ * @param {string | undefined} pack
+ */
+export function usesBrowser(pack) {
+  const r = packRoutine(pack);
+  return Array.isArray(r?.tools) && r.tools.includes('web-browser');
+}
+
+/** @param {string | undefined} pack */
+function packRoutine(pack) {
+  if (!pack) return null;
+  const key = Object.keys(packs).find((k) => k.endsWith(`/routines/${pack}/routine.json`));
+  return key ? /** @type {any} */ (packs[key]) : null;
 }
 
 /**

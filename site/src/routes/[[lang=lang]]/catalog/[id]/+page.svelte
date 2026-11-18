@@ -3,7 +3,7 @@
   import Icon from '#lib/components/Icon.svelte';
   import OperioLogo from '#lib/components/OperioLogo.svelte';
   import CopyCommand from '#lib/components/CopyCommand.svelte';
-  import { cta, deskFolders, related } from '#lib/catalog.js';
+  import { cta, deskFiles, deskFolders, related, usesBrowser } from '#lib/catalog.js';
   import { href, INSTALL_CMD, TALK_URL } from '#lib/site.js';
 
   let { data } = $props();
@@ -14,6 +14,8 @@
   const L = (/** @type {{en:string, es:string}} */ o) => o[lang === 'es' ? 'es' : 'en'];
   const free = $derived(e.tier === 'free');
   const folders = $derived(deskFolders(e.pack));
+  const files = $derived(deskFiles(e.pack));
+  const browser = $derived(usesBrowser(e.pack));
   const more = $derived(related(e, 3));
 </script>
 
@@ -63,8 +65,8 @@
           <dd>{L(e.approval)}</dd>
         </div>
         <div>
-          <dt class="label">{free ? r.toolsFree : r.toolsManaged}</dt>
-          <dd class="tools">{#each e.tools as tool}<span>{tool}</span>{/each}</dd>
+          <dt class="label">{free ? (browser ? r.toolsLive : r.toolsFree) : r.toolsManaged}</dt>
+          <dd class="tools">{#each e.tools as tool}<span>{r.toolNames[tool] || tool}</span>{/each}</dd>
         </div>
         <div>
           <dt class="label">{r.verticals}</dt>
@@ -92,7 +94,22 @@
                 <CopyCommand cmd={INSTALL_CMD} strings={t.copy} />
               </div>
             </li>
+            {#if browser}
+              <li>
+                <div class="step-body">
+                  <span>{r.installStepBrowser}</span>
+                  <CopyCommand cmd="operio-orca browser on" strings={t.copy} />
+                </div>
+              </li>
+            {/if}
             <li><span>{r.installSteps[1]} <strong>{L(e.name)}</strong>.</span></li>
+            {#if files.length}
+              <li>
+                <span>{r.installStepFile}
+                  {#each files as f, i}<code>{f}</code>{i < files.length - 1 ? ', ' : ''}{/each}.
+                </span>
+              </li>
+            {/if}
             {#if folders.length}
               <li>
                 <span>{r.installSteps[2]}
@@ -100,7 +117,7 @@
                   {e.trigger.kind === 'on-demand' ? r.installStepNoFolder : ''}
                 </span>
               </li>
-            {:else}
+            {:else if !files.length}
               <li><span>{r.installStepNoFolder}</span></li>
             {/if}
           </ol>

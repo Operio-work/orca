@@ -1810,7 +1810,7 @@ function describe(e) {
     case 'browser.decline': return `${who} declined ${ag}'s ${e.tool} on ${e.url}`;
     case 'browser.expired': return `${ag}'s ${e.tool} on ${e.url} was not answered in time; nothing was sent`;
     case 'browser.level': return `${who} set the web browser to ${e.level === 'forms' ? 'form filling (each submit needs approval)' : 'read only'}`;
-    case 'browser.on': return 'The web browser was turned on (read only)';
+    case 'browser.on': return `The web browser was turned on (${e.level === 'forms' ? 'form filling' : 'read only'})`;
     case 'browser.off': return 'The web browser was turned off';
     case 'browser.reset': return 'The web browser profile was wiped';
     default: return `${who} ${e.event}${ag ? ` ${ag}` : ''}`;
@@ -2740,7 +2740,7 @@ async function api(req, res, url) {
     const action = String(body.action || '');
     if (action === 'on' || action === 'off') {
       const r = await browserCli([action], 5 * 60e3);
-      if (r.ok) jr(req, 'browser.' + action, null, action === 'on' ? { level: 'read' } : {});
+      if (r.ok) jr(req, 'browser.' + action, null, action === 'on' ? { level: browser.read().level === 'forms' ? 'forms' : 'read' } : {});
       return send(res, 200, { ok: r.ok, output: r.output, browser: browser.status() });
     }
     if (action === 'forms') {
