@@ -782,6 +782,7 @@ async function newAgent({ name, kind, folder, tab, model, account }, { prepare, 
   }
   // Secrets the agent's MCP servers use (its own run file, read from disk: never typed).
   for (const f of envFiles) { await herdr(['pane', 'send-text', pane, ` set -a; . ${shq1(f)}; set +a\r`]); await new Promise(r => setTimeout(r, 200)); }
+  let startKind = kind, extra = [];
   if (kind === 'ollama') {
     let id;
     try { id = await ollama.prepare(model); } catch (e) { throw new HttpError(e.code === 'bad_model' ? 400 : 503, e.code === 'bad_model' ? 'bad_request' : 'ollama_off', e.message); }
@@ -797,10 +798,14 @@ async function newAgent({ name, kind, folder, tab, model, account }, { prepare, 
     layoutCache.at = 0;
     return { pane, shell: true, name, kind, cwd: shortHome(cwd) };
   }
-  const extra = model && kind === 'claude' ? ['--', '--model', model] : []; // starting model, if picked
+  // Claude: a saved agent's own arguments (instructions, tools, MCP servers, model), else the picked model.
+  if (kind === 'claude') {
+    const a = args || (model ? ['--model', model] : []);
+    if (a.length) extra = ['--', ...a];
+  }
   let blocked = false;
   try {
-    await herdr(['agent', 'start', name, '--kind', kind, '--pane', pane, '--timeout', '60000', ...extra], 70000);
+    await herdr(['agent', 'start', name, '--kind', startKind, '--pane', pane, '--timeout', '60000', ...extra], 70000);
   } catch (e) {
     // Started but asking something first (e.g. Claude's "trust this folder?"): not a failure.
     if (e.code !== 'blocked' && !/blocked/i.test(e.detail || '')) throw e;

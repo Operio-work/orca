@@ -3,6 +3,14 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Fixed
+- **Saved agents started without their setup:** since 0.4.0 a Claude saved agent or worker started
+  without its instructions, its built-in tool limit (read only / no edit), its MCP tools and its
+  model; it ran as a plain Claude. They now reach Claude again.
+- **Local models (Ollama) failed to start** with an error in the panel.
+
 ## [0.4.1] - 2026-11-17
 
 ### Panel

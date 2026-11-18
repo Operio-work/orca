@@ -32,7 +32,8 @@ else if (cmd === 'tab create' && st.noWorkspace) {
   save(); out({ result: { root_pane: { pane_id: pane } } });
 } else if (cmd === 'agent start') {
   const pane = flag('--pane'); const ag = st.agents.find(x => x.pane_id === pane);
-  ag.agent = flag('--kind'); ag.name = b && rest[0]; ag.agent_status = 'idle'; save(); out({ result: {} });
+  const dd = rest.indexOf('--');
+  ag.agent = flag('--kind'); ag.name = b && rest[0]; ag.agent_status = 'idle'; ag.start_args = dd >= 0 ? rest.slice(dd + 1) : []; save(); out({ result: {} });
 } else if (cmd === 'pane get') {
   const ag = st.agents.find(x => x.pane_id === rest[0]);
   out({ result: { pane: ag ? { pane_id: ag.pane_id, terminal_id: ag.terminal_id } : null } });

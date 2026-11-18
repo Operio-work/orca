@@ -414,3 +414,14 @@ test('knowledge access: admins limit a collection to tags or names; the test sea
   assert.deepEqual(acc.map(e => [e.collection, e.agents, e.tags]), [['team', 0, 1], ['team', 1, 0], ['team', 0, 0]]);
   assert.ok(!JSON.stringify(acc).includes('otto'), 'counts only, not the names');
 });
+
+test('saved agents start with their own arguments: instructions, tool limits, MCP servers', async () => {
+  const id = 'arg-check';
+  assert.equal((await post('/api/profiles', { id, create: true, kind: 'claude', folder: '~', instructions: 'Check the args.', tools: { builtin: 'readonly' } })).status, 200);
+  const r = await post('/api/profiles/start', { id });
+  assert.equal(r.status, 200, r.text);
+  await until(async () => JSON.parse(fs.readFileSync(path.join(FAKE, 'state.json'), 'utf8')).agents.some(a => a.pane_id === r.json.pane && a.start_args));
+  const ag = JSON.parse(fs.readFileSync(path.join(FAKE, 'state.json'), 'utf8')).agents.find(a => a.pane_id === r.json.pane);
+  assert.ok(ag.start_args.includes('--append-system-prompt-file'), JSON.stringify(ag.start_args));
+  assert.ok(ag.start_args.includes('--tools'), 'read-only limit reaches Claude');
+});
