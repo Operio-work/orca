@@ -22,7 +22,7 @@
 #                         kb search "question" [-n 5] [--collection NAME] [--json] | add PATH (stdin)
 #                         | remove PATH | list | status | reindex [--full]
 #   operio-orca browser     the agents' web browser, read only (off until you turn it on):
-#                         browser on | off | reset | status | test URL
+#                         browser on | off | forms on|off | reset | status | test URL
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -284,11 +284,11 @@ cmd_doctor() {
       const fs=require('fs'),s=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));
       if(!s.enabled){console.log('off');process.exit(0)}
       if(!s.executable||!fs.existsSync(s.executable)){console.log('nobrowser');process.exit(0)}
-      try{const v=require(process.argv[2]+'/node_modules/@playwright/mcp/package.json').version;console.log(v===s.engine?'ok '+s.executable:'engine')}catch{console.log('engine')}
+      try{const v=require(process.argv[2]+'/node_modules/@playwright/mcp/package.json').version;console.log(v===s.engine?'ok '+(s.level==='forms'?'form filling, each submit approved':'read only')+' ('+s.executable+')':'engine')}catch{console.log('engine')}
     " "$bstate" "$CONFIG_DIR/browser/engine" 2>/dev/null || echo bad)"
     case "$bline" in
       off) info "web browser off" ;;
-      ok\ *) ok "web browser on, read only (${bline#ok })" ;;
+      ok\ *) ok "web browser on, ${bline#ok }" ;;
       nobrowser) no "web browser on, but the Chrome it used is gone" "operio-orca browser on" ;;
       *) no "web browser engine missing or not the pinned version" "operio-orca browser on" ;;
     esac
@@ -644,13 +644,15 @@ cmd_browser() {
   case "$sub" in
     on|off|reset|status) [ $# -eq 1 ] || die "browser $sub takes no arguments" ;;
     test) [ $# -eq 2 ] || die "usage: operio-orca browser test URL" ;;
+    forms) [ $# -eq 2 ] && { [ "$2" = on ] || [ "$2" = off ]; } || die "usage: operio-orca browser forms on|off" ;;
     ''|help|-h|--help) printf '%s\n' \
       'operio-orca browser on          turn on the agents'"'"' web browser (uses the Chrome on this computer)' \
       'operio-orca browser off         turn it off (agents that have it are told it is off)' \
+      'operio-orca browser forms on|off let agents type and click; each click or submit waits for your approval' \
       'operio-orca browser reset       wipe its profile: cookies, cache, history' \
       'operio-orca browser status      on/off, which browser, engine version, profile size' \
       'operio-orca browser test URL    open URL with the same checks agents get and print what they see'; return 0 ;;
-    *) die "unknown browser command: $sub (on, off, reset, status, test)" ;;
+    *) die "unknown browser command: $sub (on, off, forms, reset, status, test)" ;;
   esac
   [ -n "$NODE_BIN" ] || die "node not found"
   "$NODE_BIN" "$APP_DIR/lib/browser-cli.js" "$sub" "$CONFIG_DIR" "$APP_DIR" "${2:-}"

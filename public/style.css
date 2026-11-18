@@ -1963,3 +1963,21 @@ body.dnd-on .tabblock.vacant .panes { height: 48px; }
 /* Saved agent: allowed sites for the Web browser */
 .ag-sites { display: grid; gap: 4px; margin-top: 6px; font-size: var(--text-sm); color: var(--text-secondary); }
 .ag-sites textarea { width: 100%; font: 400 var(--text-xs)/1.4 var(--font-mono); resize: vertical; }
+
+/* Web browser approvals: pinned cards above the agents */
+.bra-stack { position: fixed; z-index: 40; right: var(--space-3); bottom: var(--space-3); width: min(420px, calc(100vw - 32px)); max-height: calc(100vh - 96px); overflow: auto; display: grid; gap: var(--space-2); }
+.bra-card { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-orange); border-radius: var(--radius); background: var(--color-surface); color: var(--text-primary); box-shadow: 0 8px 28px rgb(0 0 0 / .22); font-size: var(--text-sm); }
+.bra-head strong { font-weight: 600; }
+.bra-url { display: grid; gap: 2px; margin: 0; }
+.bra-url code { font: 400 var(--text-xs)/1.4 var(--font-mono); color: var(--text-secondary); overflow-wrap: anywhere; }
+.bra-title { color: var(--text-secondary); }
+.bra-diff { margin: 0; color: var(--color-orange-ink); }
+.bra-sub { margin: 0; font: 600 var(--text-xs) var(--font-mono); text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); }
+.bra-fields { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 2px var(--space-2); margin: 0; font-size: var(--text-xs); }
+.bra-fields dt { color: var(--text-secondary); overflow-wrap: anywhere; }
+.bra-fields dd { margin: 0; font-family: var(--font-mono); overflow-wrap: anywhere; }
+.bra-fields dd.bra-hidden { color: var(--text-muted); }
+.bra-shot img { display: block; width: 100%; max-height: 220px; object-fit: cover; object-position: top; border: 1px solid var(--color-border); border-radius: var(--radius); }
+.bra-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
+.adm-browser-forms { align-items: flex-start; }
+@media (max-width: 520px) { .bra-stack { right: 16px; left: 16px; width: auto; bottom: 16px; } }

@@ -171,9 +171,11 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
 - **Web browser** (off until you turn it on): `operio-orca browser on` lets agents open web pages,
   read them and take screenshots with the Chrome, Chromium, Edge or Brave on this computer, in its
   own profile (never your everyday browser, logins or passwords). It shows up in Admin → Tools;
-  give it to a saved agent like any tool. Read only: no clicking, typing or forms. Addresses on
+  give it to a saved agent like any tool. Read only until you allow form filling (`browser forms on`):
+  then agents can type and click, and every click on a button or link, or any submit, waits for your
+  approval on a card in the panel (page, fields, screenshot). Payment details are never typed. Addresses on
   this computer or your network are refused, page text is marked as data, not instructions, and
-  every page opened goes to the Journal. `browser off | reset | status | test URL`, or the *Web browser*
+  every page opened goes to the Journal. `browser off | forms on|off | reset | status | test URL`, or the *Web browser*
   card in Admin → Tools. A saved agent can be limited to a few sites (e.g. `example.com`).
 - **Accounts**: several logins per agent kind — Claude and Codex in their own config folders, and
   Google API keys for Gemini and Antigravity.

@@ -5,7 +5,7 @@ The installer pins one panel release and one herdr release together; `operio-orc
 
 ## [Unreleased]
 
-### Web browser (read only)
+### Web browser
 - **`operio-orca browser on | off | reset | status | test URL`:** agents can open web pages, read
   them and take screenshots. Off by default. Uses the Chrome, Chromium, Edge or Brave already on the
   computer (`OPERIO_ORCA_BROWSER_EXECUTABLE` to choose one) in its own profile, always with the
@@ -16,10 +16,19 @@ The installer pins one panel release and one herdr release together; `operio-orc
   `file://`, logins in URLs, this computer, private networks and names that resolve to them, keeps
   file names inside the agent's `runs/<name>/shots` (0600), marks page text as data, and keeps API
   keys out of the browser's environment.
-- **Journal:** page opened, address refused, tool refused, browser on/off/reset (EN/ES).
+- **Journal:** page opened, address refused, tool refused, asked / approved / declined / expired,
+  level changed, browser on/off/reset (EN/ES).
 - **Panel:** Admin → Tools has a *Web browser* card: on/off (turning on installs the engine), which
   browser, engine version, which saved agents have it, and *Test a page* with the result. Not shown on
   hosted panels. The generic Tools list no longer offers to edit or remove it.
+- **Form filling, each submit approved (`operio-orca browser forms on|off`, or the switch on the card):**
+  agents may also type, choose and click. Typing and clicks on form fields go through; every click on
+  a button or link, Enter, typing with submit and accepting a page dialog waits for a person. The
+  approval card (bottom right, phone alert too) shows the agent, the page, the element *as the page
+  names it* next to the agent's description, the fields filled so far (passwords hidden) and a
+  screenshot. Answered by the person holding the agent, else an admin; unanswered after 15 minutes =
+  nothing sent. Payment fields (card, CVV, expiry, IBAN, CLABE, account numbers) are never typed.
+  At most 3 open requests per agent; requests live in memory (a restart answers "gone").
 - **Allowed sites per saved agent:** tick *Web browser* and an optional list appears (one site per
   line; `https://www.example.com/menu` is kept as `example.com`, which covers its subdomains).
   Empty = any public site. Checked on every address the agent opens.

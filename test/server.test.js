@@ -441,3 +441,58 @@ test('web browser: status in the Tools API, off by default; the panel endpoint c
   assert.equal((await req('POST', '/api/tools', { origin, body: { id: 'web-browser', type: 'stdio', command: '/bin/sh' } })).status, 409);
   assert.equal((await req('POST', '/api/tools/delete', { origin, body: { id: 'web-browser' } })).status, 409);
 });
+
+test('web browser approvals: an agent asks over its socket, the panel shows it, a person answers', async () => {
+  // Runs after the knowledge test: sable's pane shell is this test process.
+  const sock = require('../lib/config').load({ ...process.env, HOME, OPERIO_ORCA_CONFIG_DIR: CFG }).AGENT_SOCK;
+  const sockReq = (method, p, body) => new Promise((resolve, reject) => {
+    const data = body ? JSON.stringify(body) : null;
+    const r = http.request({ socketPath: sock, method, path: p, headers: data ? { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) } : {} }, res => {
+      let buf = ''; res.on('data', c => { buf += c; }); res.on('end', () => resolve({ status: res.statusCode, json: JSON.parse(buf || '{}') }));
+    });
+    r.on('error', reject); if (data) r.write(data); r.end();
+  });
+  const ask = { pid: process.pid, tool: 'browser_click', element: 'Submit', real: 'button "Send"', url: 'https://shop.example.com/contact', title: 'Contact',
+    fields: [{ label: 'Name', value: 'Ana' }, { label: 'Password', value: 'leaked?', hidden: true }] };
+  // Read-only level: agents cannot ask at all.
+  const bfile = path.join(CFG, 'browser', 'browser.json');
+  fs.mkdirSync(path.dirname(bfile), { recursive: true });
+  fs.writeFileSync(bfile, JSON.stringify({ enabled: true, level: 'read', executable: process.execPath, engine: '0' }));
+  assert.equal((await sockReq('POST', '/browser/ask', ask)).status, 403);
+  assert.equal((await post('/api/browser', { action: 'forms', on: true })).status, 200);
+  assert.equal(JSON.parse(fs.readFileSync(bfile, 'utf8')).level, 'forms');
+
+  const shot = path.join(CFG, 'runs', 'sable', 'shots', 'approval-1.png');
+  fs.mkdirSync(path.dirname(shot), { recursive: true });
+  fs.writeFileSync(shot, Buffer.from('89504e470d0a1a0a', 'hex'));
+  const made = await sockReq('POST', '/browser/ask', { ...ask, shot });
+  assert.equal(made.status, 200);
+  const outside = await sockReq('POST', '/browser/ask', { ...ask, shot: '/etc/hostname' });
+  const third = await sockReq('POST', '/browser/ask', ask);
+  assert.equal(third.status, 200);
+  assert.equal((await sockReq('POST', '/browser/ask', ask)).status, 429, 'three pending at most');
+  assert.equal((await sockReq('POST', '/browser/ask', { ...ask, pid: 1 })).status, 403, 'only agents ask');
+
+  const list = (await req('GET', '/api/agents')).json.browserAsks;
+  const card = list.find(x => x.id === made.json.id);
+  assert.equal(card.name, 'sable');
+  assert.equal(card.tool, 'click');
+  assert.equal(card.hasShot, true);
+  assert.equal(card.shot, undefined, 'the file path never reaches the page');
+  assert.equal(card.fields[1].value, '••••••');
+  assert.equal(list.find(x => x.id === outside.json.id).hasShot, false, 'a screenshot outside ORCA is ignored');
+  const img = await req('GET', '/api/browser/shot?id=' + made.json.id);
+  assert.equal(img.status, 200);
+
+  assert.equal((await sockReq('GET', `/browser/ask?id=${made.json.id}&pid=${process.pid}`)).json.state, 'pending');
+  assert.equal((await req('POST', '/api/browser/approve', { body: { id: made.json.id } })).status, 403, 'writes need the Origin');
+  assert.equal((await post('/api/browser/approve', { id: made.json.id })).status, 200);
+  assert.equal((await sockReq('GET', `/browser/ask?id=${made.json.id}&pid=${process.pid}`)).json.state, 'approved');
+  assert.equal((await post('/api/browser/approve', { id: made.json.id })).status, 404, 'answered once');
+  assert.equal((await post('/api/browser/decline', { id: outside.json.id })).status, 200);
+  assert.equal((await sockReq('GET', `/browser/ask?id=${outside.json.id}&pid=${process.pid}`)).json.state, 'declined');
+  assert.ok(!(await req('GET', '/api/agents')).json.browserAsks.some(x => x.id === made.json.id || x.id === outside.json.id));
+  await post('/api/browser/decline', { id: third.json.id });
+  await post('/api/browser', { action: 'forms', on: false });
+  fs.rmSync(path.join(CFG, 'browser'), { recursive: true, force: true });
+});

@@ -179,7 +179,7 @@
     const broken = b.enabled && (!b.executableOk || !b.engineOk);
     const top = el('div', 'adm-ptop');
     top.append(el('span', 'tpl-name', t('admBrowser')),
-      el('span', 'skl-status ' + (broken ? 'wait' : b.enabled ? 'on' : 'off'), broken ? t('admBrowserBroken') : b.enabled ? t('admBrowserOn') : t('admBrowserOff')));
+      el('span', 'skl-status ' + (broken ? 'wait' : b.enabled ? 'on' : 'off'), broken ? t('admBrowserBroken') : b.enabled ? (b.level === 'forms' ? t('admBrowserOnForms') : t('admBrowserOn')) : t('admBrowserOff')));
     box.append(top, p('hint', t('admBrowserIntro')));
     if (b.enabled) box.append(el('div', 'adm-login', [b.executable, b.engine ? 'engine ' + b.engine : '', used.length ? t('admToolUsedBy', used.join(', ')) : t('admBrowserNoAgent'), b.inUse ? t('admBrowserInUse') : ''].filter(Boolean).join(' · ')));
     const outp = el('pre', 'adm-browser-out'); outp.hidden = true;
@@ -209,6 +209,17 @@
         go.disabled = false;
       });
       row2.append(tf);
+    }
+    if (b.enabled && !broken) {
+      const lab = el('label', 'ag-skill adm-browser-forms');
+      const cb = el('input'); cb.type = 'checkbox'; cb.checked = b.level === 'forms';
+      cb.addEventListener('change', async () => {
+        cb.disabled = true;
+        try { await post('/api/browser', { action: 'forms', on: cb.checked }); show('tools'); }
+        catch (err) { toast(errText(err), true); cb.checked = !cb.checked; cb.disabled = false; }
+      });
+      lab.append(cb, el('span', null, t('admBrowserForms')));
+      box.append(lab);
     }
     box.append(row2, outp);
     return box;

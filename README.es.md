@@ -160,9 +160,11 @@ La lista completa, con las rutinas que Operio opera por ti, está en `catalog/ca
   abran páginas web, las lean y tomen capturas con el Chrome, Chromium, Edge o Brave de esta
   computadora, en su propio perfil (nunca tu navegador de todos los días, tus sesiones ni tus
   contraseñas). Aparece en Administración → Herramientas; dáselo a un agente guardado como
-  cualquier herramienta. Solo lectura: sin clics, escritura ni formularios. Las direcciones de esta
+  cualquier herramienta. Solo lectura hasta que permitas formularios (`browser forms on`): entonces los
+  agentes pueden escribir y hacer clic, y cada clic en un botón o enlace, o cualquier envío, espera tu
+  aprobación en una tarjeta del panel (página, datos, captura). Nunca escriben datos de pago. Las direcciones de esta
   computadora o de tu red se rechazan, el texto de la página se marca como datos, no como
-  instrucciones, y cada página abierta queda en el Diario. `browser off | reset | status | test URL`, o la
+  instrucciones, y cada página abierta queda en el Diario. `browser off | forms on|off | reset | status | test URL`, o la
   tarjeta *Navegador web* en Administración → Herramientas. Un agente guardado puede limitarse a
   algunos sitios (p. ej. `example.com`).
 - **Cuentas**: varias cuentas por tipo de agente — Claude y Codex en sus propias carpetas de

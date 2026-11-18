@@ -1474,6 +1474,22 @@ function expireSpawns() {
 function queueMsgSafe(to, text) { try { queueMsg({ from: to, to, text, via: 'intro' }); } catch { /* best effort */ } }
 // Who may approve a worker a lead asked for: the person holding the lead, else any admin.
 const canApproveSpawn = (login, r) => { const h = holderLogin(r.lead); return h ? h === login : isAdmin(login); };
+// Web browser approvals (forms level): an agent's click / Enter / submit waits here for a person.
+// In memory only: after a restart the agent's proxy hears "gone" and sends nothing.
+const BROWSER_ASK_TTL = 15 * 60e3;
+const browserAsks = new Map(); // id -> { id, terminal, pane, name, tool, element, real, key, url, title, fields, shot, at, state }
+function browserAsksFor(login, agents) {
+  const live = new Set(agents.map(a => a.terminal));
+  const out = [];
+  for (const r of browserAsks.values()) {
+    if (r.state === 'pending' && Date.now() - r.at > BROWSER_ASK_TTL) r.state = 'expired';
+    if (r.state !== 'pending' && Date.now() - r.at > BROWSER_ASK_TTL + 10 * 60e3) { browserAsks.delete(r.id); continue; }
+    if (r.state !== 'pending' || !live.has(r.terminal) || !canApproveSpawn(login, { lead: r.terminal })) continue;
+    const { shot, terminal, ...view } = r;
+    out.push({ ...view, hasShot: !!shot });
+  }
+  return out.sort((x, y) => x.at - y.at);
+}
 
 function introText(me, other, relation) {
   const rel = {
@@ -1611,6 +1627,36 @@ const agentServer = http.createServer(async (req, res) => {
       jr(null, 'spawn.request', me, { profile: want, task: task.slice(0, 300) });
       return reply(200, { ok: true, pending: true });
     }
+    // Web browser (forms level): ask a person before a submit; the proxy polls for the answer.
+    if (req.method === 'POST' && url.pathname === '/browser/ask') {
+      if (CFG.HOSTED || browser.read().level !== 'forms') throw new HttpError(403, 'forms_off');
+      if ([...browserAsks.values()].filter(r => r.terminal === me.terminal && r.state === 'pending').length >= 3) throw new HttpError(429, 'too_many');
+      const str = (v, n) => String(v ?? '').replace(/[\u0000-\u001F]/g, ' ').slice(0, n);
+      let shot = body.shot ? path.resolve(String(body.shot)) : null;
+      if (shot && (!shot.startsWith(path.join(STATE_DIR) + path.sep) || !/\.png$/.test(shot) || !fs.existsSync(shot))) shot = null;
+      const r = {
+        id: newId(), terminal: me.terminal, pane: me.pane, name: nameOf(me), at: Date.now(), state: 'pending',
+        tool: str(body.tool, 40).replace(/^browser_/, ''), element: str(body.element, 200), real: body.real ? str(body.real, 200) : null,
+        key: body.key ? str(body.key, 30) : null, url: str(body.url, 500), title: str(body.title, 200), shot,
+        fields: (Array.isArray(body.fields) ? body.fields : []).slice(0, 30).map(f => ({ label: str(f.label, 120), value: f.hidden ? '••••••' : str(f.value, 500), hidden: !!f.hidden })),
+      };
+      browserAsks.set(r.id, r);
+      const holder = holderLogin(me.terminal);
+      pushAll({ name: nameOf(me), body: `wants to ${r.tool === 'click' ? `click ${r.real || r.element || 'a button'}` : 'send a form'} on ${r.url.replace(/^https?:\/\//, '').slice(0, 80)}`, tag: 'browser-' + r.id, url: '/#browser', kind: 'blocked' }, holder).catch(() => {});
+      jr(null, 'browser.ask', me, { tool: r.tool, url: r.url, element: r.real || r.element, fields: r.fields.length });
+      return reply(200, { id: r.id });
+    }
+    if (req.method === 'GET' && url.pathname === '/browser/ask') {
+      const r = browserAsks.get(String(url.searchParams.get('id') || ''));
+      if (!r || r.terminal !== me.terminal) throw new HttpError(404, 'gone');
+      if (r.state === 'pending' && Date.now() - r.at > BROWSER_ASK_TTL) r.state = 'expired';
+      return reply(200, { state: r.state });
+    }
+    if (req.method === 'POST' && url.pathname === '/browser/ask-expire') {
+      const r = browserAsks.get(String(body.id || ''));
+      if (r && r.terminal === me.terminal && r.state === 'pending') { r.state = 'expired'; jr(null, 'browser.expired', me, { tool: r.tool, url: r.url }); }
+      return reply(200, { ok: true });
+    }
     if (req.method === 'POST' && url.pathname === '/send') {
       const other = findAgent(agents, body.to);
       if (!other) throw new HttpError(404, 'no_such_agent');
@@ -1691,7 +1737,7 @@ const GROUPS = {
   lifecycle: ['agent.new', 'agent.end', 'agent.gone', 'agent.stop', 'agent.move', 'agent.rename', 'agent.claim', 'agent.tags', 'agent.model', 'shell.new'],
   work: ['browser.open', 'agent.prompt', 'chat.prompt', 'agent.answer', 'agent.keys', 'agent.job', 'agent.blocked'],
   coordination: ['worker.end', 'spawn.request', 'spawn.approve', 'spawn.deny', 'profile.save', 'profile.delete', 'account.add', 'account.key', 'account.rename', 'account.remove', 'link.add', 'link.delete', 'handoff.send', 'handoff.dismiss', 'msg.agent', 'msg.rate_limited'],
-  security: ['browser.blocked', 'browser.refused', 'browser.on', 'browser.off', 'browser.reset', 'tool.save', 'tool.remove', 'secret.set', 'shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
+  security: ['browser.ask', 'browser.approve', 'browser.decline', 'browser.expired', 'browser.level', 'browser.blocked', 'browser.refused', 'browser.on', 'browser.off', 'browser.reset', 'tool.save', 'tool.remove', 'secret.set', 'shell.open', 'shell.close', 'shell.unlock', 'shell.lock', 'access.denied'],
   errors: ['error'],
 };
 const groupOf = ev => Object.keys(GROUPS).find(g => GROUPS[g].includes(ev)) || 'other';
@@ -1759,6 +1805,11 @@ function describe(e) {
     case 'browser.open': return `${ag || 'An agent'} opened ${e.url} in the web browser`;
     case 'browser.blocked': return `${ag || 'An agent'} tried to open ${e.url}; ORCA refused (${e.reason})`;
     case 'browser.refused': return `${ag || 'An agent'} asked the web browser for ${e.tool}; ORCA refused (read only)`;
+    case 'browser.ask': return `${ag || 'An agent'} asked to ${e.tool} ${e.element || ''} on ${e.url}`;
+    case 'browser.approve': return `${who} approved ${ag}'s ${e.tool} on ${e.url}`;
+    case 'browser.decline': return `${who} declined ${ag}'s ${e.tool} on ${e.url}`;
+    case 'browser.expired': return `${ag}'s ${e.tool} on ${e.url} was not answered in time; nothing was sent`;
+    case 'browser.level': return `${who} set the web browser to ${e.level === 'forms' ? 'form filling (each submit needs approval)' : 'read only'}`;
     case 'browser.on': return 'The web browser was turned on (read only)';
     case 'browser.off': return 'The web browser was turned off';
     case 'browser.reset': return 'The web browser profile was wiped';
@@ -2183,6 +2234,16 @@ async function api(req, res, url) {
     });
   }
 
+  // The screenshot on a browser approval card (only to people who may answer it).
+  if (req.method === 'GET' && pathname === '/api/browser/shot') {
+    const r = browserAsks.get(String(url.searchParams.get('id') || ''));
+    if (!r || !r.shot || !canApproveSpawn(loginOf(req), { lead: r.terminal })) throw new HttpError(404, 'not_found');
+    let png;
+    try { png = fs.readFileSync(r.shot); } catch { throw new HttpError(404, 'not_found'); }
+    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
+    return res.end(png);
+  }
+
   // Tools (admins): MCP servers saved agents can use, and which secrets they still need.
   if (req.method === 'GET' && pathname === '/api/tools') {
     if (!canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
@@ -2258,7 +2319,7 @@ async function api(req, res, url) {
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
+    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), browserAsks: browserAsksFor(loginOf(req), agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -2662,6 +2723,17 @@ async function api(req, res, url) {
     return send(res, 200, { pane: r.pane, blocked: r.blocked, shell: r.shell });
   }
 
+  // ── Web browser approvals: the person holding the agent (else an admin) approves or declines
+  if (pathname === '/api/browser/approve' || pathname === '/api/browser/decline') {
+    const r = browserAsks.get(String(body.id || ''));
+    if (!r || r.state !== 'pending' || Date.now() - r.at > BROWSER_ASK_TTL) throw new HttpError(404, 'gone');
+    if (!canApproveSpawn(loginOf(req), { lead: r.terminal })) throw new HttpError(403, 'forbidden');
+    const ok = pathname.endsWith('/approve');
+    r.state = ok ? 'approved' : 'declined';
+    jr(req, ok ? 'browser.approve' : 'browser.decline', r.pane, { tool: r.tool, url: r.url, element: r.real || r.element });
+    return send(res, 200, { ok: true });
+  }
+
   // ── Web browser (admins, not on hosted panels): turn on / off, or open a test page
   if (pathname === '/api/browser') {
     if (CFG.HOSTED || !canManageLogins(loginOf(req))) throw new HttpError(403, 'forbidden');
@@ -2670,6 +2742,14 @@ async function api(req, res, url) {
       const r = await browserCli([action], 5 * 60e3);
       if (r.ok) jr(req, 'browser.' + action, null, action === 'on' ? { level: 'read' } : {});
       return send(res, 200, { ok: r.ok, output: r.output, browser: browser.status() });
+    }
+    if (action === 'forms') {
+      const st = browser.read();
+      if (!st.enabled) throw new HttpError(409, 'browser_off');
+      const level = body.on ? 'forms' : 'read';
+      browser.save({ ...st, level });
+      jr(req, 'browser.level', null, { level });
+      return send(res, 200, { ok: true, browser: browser.status() });
     }
     if (action === 'test') {
       const url = String(body.url || '').trim().slice(0, 500);
