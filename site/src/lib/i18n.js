@@ -594,7 +594,7 @@ const en = {
       { q: 'When can I use it?', a: 'Operio clients get it first, in the beta. Join the list and we will contact you when your spot opens.' },
       { q: 'Does it act without asking me?', a: 'No. It prepares everything, then waits for your OK before it sends, posts or pays.' },
       { q: 'What does it work with?', a: 'Gmail, Google Calendar, Slack, WhatsApp, and most websites you can use in a browser.' },
-      { q: 'How much will it cost?', a: 'The price is announced at launch. Beta clients hear it first.' },
+      { q: 'How much does it cost?', a: 'One price, all included: $349 USD a month. Beta clients pay $249 a month, locked for 12 months, with setup free.' },
       { q: 'Do I need ORCA?', a: 'No. Buddy works on its own, and it works best next to ORCA.' }
     ],
 
@@ -1213,7 +1213,7 @@ vsTitle: 'Cómo se compara ORCA',
       { q: '¿Cuándo lo puedo usar?', a: 'Los clientes de Operio lo reciben primero, en la beta. Únete a la lista y te contactamos cuando se abra tu lugar.' },
       { q: '¿Actúa sin preguntarme?', a: 'No. Prepara todo y espera tu visto bueno antes de enviar, publicar o pagar.' },
       { q: '¿Con qué funciona?', a: 'Gmail, Google Calendar, Slack, WhatsApp y la mayoría de los sitios que usas en un navegador.' },
-      { q: '¿Cuánto va a costar?', a: 'El precio se anuncia en el lanzamiento. Los clientes de la beta lo conocen primero.' },
+      { q: '¿Cuánto cuesta?', a: 'Un solo precio, todo incluido: $5,900 MXN al mes (IVA incluido). Los clientes beta pagan $4,500 MXN al mes, garantizados 12 meses, con la configuración gratis.' },
       { q: '¿Necesito ORCA?', a: 'No. Buddy funciona solo, y funciona mejor junto a ORCA.' }
     ],
 
