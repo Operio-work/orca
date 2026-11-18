@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.4.2] - 2026-11-18
 
 ### Fixed
 - **Saved agents started without their setup:** since 0.4.0 a Claude saved agent or worker started
