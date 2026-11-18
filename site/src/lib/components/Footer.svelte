@@ -26,6 +26,7 @@
         <a href={href(lang, '/install')}>{t.nav.install}</a>
         <a href={href(lang, '/compare')}>{t.nav.compare}</a>
         <a href={href(lang, '/managed')}>{t.nav.managed}</a>
+        <a href={href(lang, '/buddy')}>{t.nav.buddy} <span class="soon">{t.footer.soon}</span></a>
         <a href={GITHUB_URL}>{t.footer.github}</a>
       </div>
       <div class="col">
@@ -64,6 +65,10 @@
     padding: 4px 0; transition: color var(--dur-fast) ease;
   }
   .col a:hover { color: var(--color-orange-ink); }
+  .soon {
+    margin-left: 4px; padding: 1px 6px; border-radius: 999px;
+    font-size: var(--text-xs); font-weight: 600; color: var(--color-orange-ink); background: var(--tint-orange);
+  }
   .lower {
     display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     padding: 20px 0 28px;

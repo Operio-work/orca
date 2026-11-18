@@ -5,7 +5,7 @@ const en = {
   htmlLang: 'en',
   ogLocale: 'en_US',
   skip: 'Skip to content',
-  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', managed: 'Managed', github: 'ORCA on GitHub', home: 'ORCA home', menu: 'Menu', closeMenu: 'Close the menu' },
+  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', managed: 'Managed', buddy: 'ORCA Buddy', github: 'ORCA on GitHub', home: 'ORCA home', menu: 'Menu', closeMenu: 'Close the menu' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   by: 'by',
@@ -541,6 +541,67 @@ const en = {
     finalBody: 'Tell us about your agents and your team. Operio sets up the rest.'
   },
 
+  buddyPage: {
+    metaTitle: 'ORCA Buddy: the web errands that eat your afternoon, done for you (coming soon)',
+    description:
+      'ORCA Buddy is a coming Operio service: an assistant with its own computer and browser that chases invoices, drafts review replies, follows up leads and watches prices, and asks before it acts. Join the beta.',
+    badge: 'Coming soon · Beta',
+    title: 'The errands that eat your afternoon, done',
+    lead:
+      'ORCA Buddy has its own computer and browser. It logs in, reads, fills in the forms and writes the drafts, then asks you before it sends, posts or pays anything.',
+    cta: 'Join the beta',
+    ctaSecondary: 'See ORCA Managed',
+
+    errandsTitle: 'Hand it the jobs nobody wants',
+    errands: [
+      { title: 'Chase an unpaid invoice', body: 'Finds what is overdue, drafts a polite reminder with the payment link, and follows up until it is paid.' },
+      { title: 'Answer your Google reviews', body: 'Reads every new review and writes a reply in your voice, ready for you to approve.' },
+      { title: 'Follow up new leads', body: 'Writes the WhatsApp or email follow-up you keep meaning to send, so no lead goes cold.' },
+      { title: 'Prepare your day', body: 'Each morning, a one-page brief: today’s calls, open quotes and what is overdue.' },
+      { title: 'Watch a page for you', body: 'Checks a supplier or competitor page on your schedule and tells you only when something changes.' },
+      { title: 'Cancel what you don’t use', body: 'Finds forgotten trials and subscriptions and walks through the cancel steps, with your OK.' }
+    ],
+
+    howTitle: 'How it works',
+    how: [
+      { title: 'Ask', body: 'Write to it like a colleague, in the app, on WhatsApp or on Telegram.' },
+      { title: 'It does the legwork', body: 'On its own computer it opens the sites, signs in, reads and fills in what is needed.' },
+      { title: 'You say yes', body: 'Before it sends, posts or pays, it shows you exactly what it will do and waits for your OK.' }
+    ],
+
+    trustTitle: 'On your word, never behind your back',
+    trust: [
+      { title: 'Asks before it acts', body: 'Nothing goes out in your name and nothing is paid without your approval.' },
+      { title: 'Spending limit', body: 'You set a monthly limit. It stops there.' },
+      { title: 'Logins stay locked', body: 'Passwords live in a locked vault, never in the chat.' },
+      { title: 'Every step on record', body: 'See what it did, when, and what each task cost.' }
+    ],
+
+    orcaTitle: 'Better with ORCA',
+    orcaBody:
+      'ORCA is the control room, Buddy is the one who goes out and does things. Your ORCA routines can hand Buddy an errand, and Buddy’s approval requests land in the same ORCA list on your phone.',
+
+    betaTitle: 'The beta',
+    betaLead: 'We are opening ORCA Buddy to a small group of Operio clients first.',
+    beta: [
+      'Set up and run by Operio, on a private computer just for your business',
+      'Errands built around your own tools and processes',
+      'A direct line to the Operio team while we shape it'
+    ],
+
+    faqTitle: 'Questions',
+    faq: [
+      { q: 'When can I use it?', a: 'Operio clients get it first, in the beta. Join the list and we will contact you when your spot opens.' },
+      { q: 'Does it act without asking me?', a: 'No. It prepares everything, then waits for your OK before it sends, posts or pays.' },
+      { q: 'What does it work with?', a: 'Gmail, Google Calendar, Slack, WhatsApp, and most websites you can use in a browser.' },
+      { q: 'How much will it cost?', a: 'The price is announced at launch. Beta clients hear it first.' },
+      { q: 'Do I need ORCA?', a: 'No. Buddy works on its own, and it works best next to ORCA.' }
+    ],
+
+    finalTitle: 'Get your afternoons back',
+    finalBody: 'Tell us which errands eat your week. We will tell you when Buddy is ready for them.'
+  },
+
   footer: {
     tagline: 'One board for all your AI agents, on your own computer. Free and open source.',
     madeBy: 'ORCA is made by Operio',
@@ -552,7 +613,8 @@ const en = {
     license: 'MIT license',
     runsOn: 'Runs on',
     runsOnLicense: '(Apache-2.0)',
-    github: 'Source on GitHub'
+    github: 'Source on GitHub',
+    soon: 'soon'
   },
   notFound: { title: 'Page not found', body: 'That page does not exist. Try the catalog or the home page.' }
 };
@@ -562,7 +624,7 @@ const es = {
   htmlLang: 'es-MX',
   ogLocale: 'es_MX',
   skip: 'Ir al contenido',
-  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', managed: 'Gestionado', github: 'ORCA en GitHub', home: 'Inicio de ORCA', menu: 'Menú', closeMenu: 'Cerrar el menú' },
+  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', managed: 'Gestionado', buddy: 'ORCA Buddy', github: 'ORCA en GitHub', home: 'Inicio de ORCA', menu: 'Menú', closeMenu: 'Cerrar el menú' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
   by: 'por',
@@ -1098,6 +1160,67 @@ vsTitle: 'Cómo se compara ORCA',
     finalBody: 'Cuéntanos de tus agentes y de tu equipo. Operio configura el resto.'
   },
 
+  buddyPage: {
+    metaTitle: 'ORCA Buddy: los mandados en internet que te quitan la tarde, hechos por ti (próximamente)',
+    description:
+      'ORCA Buddy es un próximo servicio de Operio: un asistente con su propia computadora y navegador que cobra facturas, redacta respuestas a reseñas, da seguimiento a prospectos y vigila precios, y te pregunta antes de actuar. Únete a la beta.',
+    badge: 'Próximamente · Beta',
+    title: 'Los mandados que te quitan la tarde, hechos',
+    lead:
+      'ORCA Buddy tiene su propia computadora y navegador. Entra a tus cuentas, lee, llena los formularios y escribe los borradores, y te pregunta antes de enviar, publicar o pagar algo.',
+    cta: 'Únete a la beta',
+    ctaSecondary: 'Ver ORCA Gestionado',
+
+    errandsTitle: 'Dale los pendientes que nadie quiere',
+    errands: [
+      { title: 'Cobrar una factura vencida', body: 'Encuentra lo vencido, redacta un recordatorio amable con el link de pago y da seguimiento hasta que te paguen.' },
+      { title: 'Responder tus reseñas de Google', body: 'Lee cada reseña nueva y escribe una respuesta con tu estilo, lista para que la apruebes.' },
+      { title: 'Dar seguimiento a prospectos', body: 'Escribe el WhatsApp o correo de seguimiento que siempre dejas para después, para que ningún cliente se enfríe.' },
+      { title: 'Preparar tu día', body: 'Cada mañana, un resumen de una página: llamadas de hoy, cotizaciones abiertas y lo vencido.' },
+      { title: 'Vigilar una página por ti', body: 'Revisa la página de un proveedor o de la competencia cuando tú digas y te avisa solo si algo cambia.' },
+      { title: 'Cancelar lo que no usas', body: 'Encuentra pruebas gratis y suscripciones olvidadas y hace los pasos para cancelarlas, con tu visto bueno.' }
+    ],
+
+    howTitle: 'Cómo funciona',
+    how: [
+      { title: 'Pídeselo', body: 'Escríbele como a un compañero, en la app, por WhatsApp o por Telegram.' },
+      { title: 'Hace el trabajo pesado', body: 'En su propia computadora abre los sitios, entra, lee y llena lo que haga falta.' },
+      { title: 'Tú dices que sí', body: 'Antes de enviar, publicar o pagar, te muestra exactamente qué va a hacer y espera tu visto bueno.' }
+    ],
+
+    trustTitle: 'Con tu permiso, nunca a tus espaldas',
+    trust: [
+      { title: 'Pregunta antes de actuar', body: 'Nada sale a tu nombre y nada se paga sin tu aprobación.' },
+      { title: 'Límite de gasto', body: 'Tú pones un límite mensual. Ahí se detiene.' },
+      { title: 'Tus accesos, bajo llave', body: 'Las contraseñas viven en una bóveda cerrada, nunca en el chat.' },
+      { title: 'Cada paso queda registrado', body: 'Ve qué hizo, cuándo y cuánto costó cada tarea.' }
+    ],
+
+    orcaTitle: 'Mejor con ORCA',
+    orcaBody:
+      'ORCA es el centro de control y Buddy es quien sale a hacer las cosas. Tus rutinas de ORCA pueden pasarle un mandado a Buddy, y las solicitudes de aprobación de Buddy llegan a la misma lista de ORCA en tu teléfono.',
+
+    betaTitle: 'La beta',
+    betaLead: 'Abrimos ORCA Buddy primero a un grupo pequeño de clientes de Operio.',
+    beta: [
+      'Configurado y operado por Operio, en una computadora privada solo para tu negocio',
+      'Mandados hechos a la medida de tus herramientas y procesos',
+      'Línea directa con el equipo de Operio mientras le damos forma'
+    ],
+
+    faqTitle: 'Preguntas',
+    faq: [
+      { q: '¿Cuándo lo puedo usar?', a: 'Los clientes de Operio lo reciben primero, en la beta. Únete a la lista y te contactamos cuando se abra tu lugar.' },
+      { q: '¿Actúa sin preguntarme?', a: 'No. Prepara todo y espera tu visto bueno antes de enviar, publicar o pagar.' },
+      { q: '¿Con qué funciona?', a: 'Gmail, Google Calendar, Slack, WhatsApp y la mayoría de los sitios que usas en un navegador.' },
+      { q: '¿Cuánto va a costar?', a: 'El precio se anuncia en el lanzamiento. Los clientes de la beta lo conocen primero.' },
+      { q: '¿Necesito ORCA?', a: 'No. Buddy funciona solo, y funciona mejor junto a ORCA.' }
+    ],
+
+    finalTitle: 'Recupera tus tardes',
+    finalBody: 'Cuéntanos qué mandados te quitan la semana. Te avisamos cuando Buddy esté listo para ellos.'
+  },
+
   footer: {
     tagline: 'Un tablero para todos tus agentes de IA, en tu propia computadora. Gratis y de código abierto.',
     madeBy: 'ORCA es de Operio',
@@ -1109,7 +1232,8 @@ vsTitle: 'Cómo se compara ORCA',
     license: 'Licencia MIT',
     runsOn: 'Corre sobre',
     runsOnLicense: '(Apache-2.0)',
-    github: 'Código en GitHub'
+    github: 'Código en GitHub',
+    soon: 'pronto'
   },
   notFound: { title: 'Página no encontrada', body: 'Esa página no existe. Prueba el catálogo o la página de inicio.' }
 };
