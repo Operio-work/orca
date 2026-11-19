@@ -3,6 +3,22 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.5.2] - 2026-11-19
+
+### Fixed
+- **Reader (Claude agents) shows the whole session:** it read only the last 4 MB of the transcript,
+  so a long session lost most of its messages and steps. The transcript is now read once and then
+  only what was added. Messages typed while the agent was busy show; after a compaction a short
+  marker shows instead of the summary as your message; failed or refused steps are marked; folds
+  you opened stay open. The panel asks only for new blocks while an agent works.
+
+### Changed
+- **No "Explain step N" reply chips** (they were not useful enough). Yes/No, Go, Done, Merged and
+  Wrap up stay.
+- **Faster, lighter panel:** requests at the same moment share one agent list (any change resets
+  it), a pane's shell is looked up once instead of on every agent request, and tab layouts are read
+  again only when their panes change (or every 15 s).
+
 ## [0.5.1] - 2026-11-18
 
 ### Fixed

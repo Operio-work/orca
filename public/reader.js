@@ -348,22 +348,26 @@
       } else if (b.t === 'say') {
         const d = doc.createElement('div'); d.className = 'rsay'; md(doc, d, b.text); frag.appendChild(d);
       } else if (b.t === 'tools') {
-        const key = 't' + n + ':' + (b.items[0]?.name || '');
+        const key = 't' + (b.n ?? n) + ':' + (b.items[0]?.name || '');
         const det = doc.createElement('details'); det.className = 'rtool'; det.dataset.key = key;
         if (open?.has(key)) det.open = true;
         const names = new Map();
         for (const it of b.items) names.set(it.name, (names.get(it.name) || 0) + 1);
         const sum = doc.createElement('summary');
-        sum.textContent = [...names].map(([nm, c]) => c > 1 ? `${nm} ×${c}` : nm).join(' · ');
+        const fails = b.items.filter(it => it.err).length;
+        sum.textContent = [...names].map(([nm, c]) => c > 1 ? `${nm} ×${c}` : nm).join(' · ') + (fails ? ' · ' + t('rdFailed', fails) : '');
         const ul = doc.createElement('ol'); ul.className = 'rsteps';
         for (const it of b.items) {
           const li = doc.createElement('li');
+          if (it.err) li.className = 'rerr';
           const nm = doc.createElement('b'); nm.textContent = it.name;
           li.appendChild(nm);
           if (it.what) li.appendChild(doc.createTextNode(' ' + it.what));
           ul.appendChild(li);
         }
         det.append(sum, ul); frag.appendChild(det);
+      } else if (b.t === 'note') {
+        const d = doc.createElement('div'); d.className = 'rnote'; d.textContent = t('rdCompacted'); frag.appendChild(d);
       } else if (b.t === 'ask') {
         const d = doc.createElement('div'); d.className = 'rask';
         for (const q of b.questions || []) {

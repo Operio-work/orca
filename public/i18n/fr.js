@@ -720,6 +720,8 @@
     "ltUnlock": "Déverrouiller avec le code PIN",
     "rdYou": "Vous",
     "rdSteps": "{0} étapes",
+    "rdFailed": "{0} en échec",
+    "rdCompacted": "Conversation précédente compactée",
     "rdCopied": "{0} copié",
     "freshTag": "Nouveau",
     "freshAria": "vient de terminer",

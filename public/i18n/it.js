@@ -720,6 +720,8 @@
     "ltUnlock": "Sblocca con PIN",
     "rdYou": "Tu",
     "rdSteps": "{0} passaggi",
+    "rdFailed": "{0} non riuscite",
+    "rdCompacted": "Conversazione precedente compattata",
     "rdCopied": "{0} copiato",
     "freshTag": "Nuovo",
     "freshAria": "appena finito",

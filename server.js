@@ -102,7 +102,19 @@ function log(event, data = {}) {
 class HttpError extends Error { constructor(status, code, detail) { super(code); this.status = status; this.code = code; this.detail = detail; } }
 const HERDR_CODES = { agent_blocked: 'blocked', agent_not_found: 'gone', pane_not_found: 'gone', tab_not_found: 'tab_gone', workspace_not_found: 'ws_gone', agent_prompt_stalled: 'stalled', timeout: 'timeout' };
 
+// herdr commands that only read. Anything else may change the agent list, so it drops the
+// short listAgents cache below.
+const HERDR_READS = new Set(['list', 'read', 'process-info', 'layout', 'get']);
+// listAgents' shared result; gen goes up on every change so a read in flight is not kept.
+const agentsList = { at: 0, list: null, flight: null, flightGen: -1, gen: 0 };
+// Commands that leave the tabs' split layout as it is (typing, prompts, focus).
+const HERDR_SAME_LAYOUT = new Set(['send-keys', 'send-text', 'prompt', 'focus']);
+let layoutGen = 0;
 function herdr(args, timeout = 5000) {
+  if (!HERDR_READS.has(args[1])) {
+    agentsList.at = 0; agentsList.gen++;
+    if (!HERDR_SAME_LAYOUT.has(args[1])) layoutGen++;
+  }
   return new Promise((resolve, reject) => {
     execFile(HERDR, args, { timeout, maxBuffer: 4 * 1024 * 1024 }, (err, stdout, stderr) => {
       // herdr reports failures as JSON {error:{code,message}}: map the code, log the message.
@@ -424,21 +436,39 @@ function shapeAgent(a) {
 
 // Workspace geometry for the map: every tab with its panes' real rectangles (agent or not).
 let layoutCache = { at: 0, tabs: [], workspaces: [] };
+let layoutFlight = null;
+// tab id -> { key (its panes), gen, at, area, rects }: a tab's split layout is read again only
+// when its panes change, after an ORCA change to the layout (layoutGen), or every LAYOUT_MAX_AGE
+// (a resize done in the herdr window itself).
+const tabLayouts = new Map();
+const LAYOUT_MAX_AGE = 15e3;
 const shapeWorkspace = w => ({ id: w.workspace_id, number: w.number, label: w.label || null });
-async function workspaceLayout() {
-  if (Date.now() - layoutCache.at < 5000) return layoutCache;
+function workspaceLayout() {
+  if (Date.now() - layoutCache.at < 5000 && layoutCache.gen === layoutGen) return Promise.resolve(layoutCache);
+  if (!layoutFlight) layoutFlight = readLayout().finally(() => { layoutFlight = null; });
+  return layoutFlight;
+}
+async function readLayout() {
+  const gen = layoutGen;
   const [wsOut, tabsOut, panesOut] = await Promise.all([herdrJson(['workspace', 'list']), herdrJson(['tab', 'list']), herdrJson(['pane', 'list'])]);
   const panes = panesOut.result?.panes || [];
-  const tabs = await Promise.all((tabsOut.result?.tabs || []).map(async t => {
-    const first = panes.find(p => p.tab_id === t.tab_id);
-    let area = null, rects = [];
-    if (first) {
+  const now = Date.now();
+  const tabList = tabsOut.result?.tabs || [];
+  for (const id of tabLayouts.keys()) if (!tabList.some(t => t.tab_id === id)) tabLayouts.delete(id);
+  const tabs = await Promise.all(tabList.map(async t => {
+    const mine = panes.filter(p => p.tab_id === t.tab_id);
+    const key = mine.map(p => p.pane_id).sort().join(',');
+    let c = tabLayouts.get(t.tab_id);
+    if (mine.length && (!c || c.key !== key || c.gen !== gen || now - c.at > LAYOUT_MAX_AGE)) {
+      c = { key, gen, at: now, area: null, rects: [] };
       try {
-        const l = (await herdrJson(['pane', 'layout', '--pane', first.pane_id])).result?.layout;
-        area = l?.area || null;
-        rects = (l?.panes || []).map(p => ({ pane: p.pane_id, ...p.rect }));
+        const l = (await herdrJson(['pane', 'layout', '--pane', mine[0].pane_id])).result?.layout;
+        c.area = l?.area || null;
+        c.rects = (l?.panes || []).map(p => ({ pane: p.pane_id, ...p.rect }));
+        tabLayouts.set(t.tab_id, c);
       } catch { /* tab closed mid-read */ }
     }
+    const area = mine.length ? c?.area || null : null, rects = mine.length ? c?.rects || [] : [];
     return {
       id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null, area,
       panes: rects.map(r => {
@@ -447,17 +477,31 @@ async function workspaceLayout() {
       }),
     };
   }));
-  layoutCache = { at: Date.now(), tabs, workspaces: (wsOut.result?.workspaces || []).map(shapeWorkspace) };
+  layoutCache = { at: Date.now(), gen, tabs, workspaces: (wsOut.result?.workspaces || []).map(shapeWorkspace) };
   return layoutCache;
 }
 
+// The board (every device, every 3 s), the 4 s poll, the agent socket and the memory meter all
+// ask for the agent list. Each herdr call is a process start, which costs the main thread a
+// few ms at this app's size; so callers within LIST_TTL share one call (in flight or just done).
+// Any herdr command that is not a read resets it (see herdr()). Each caller gets its own copies.
+const LIST_TTL = 1000;
 async function listAgents() {
-  const out = await herdrJson(['agent', 'list']);
-  const list = (out.result?.agents || []).map(shapeAgent)
-    .sort((a, b) => a.tab.localeCompare(b.tab, 'en', { numeric: true }) || a.pane.localeCompare(b.pane));
-  agentCache.clear();
-  for (const a of list) agentCache.set(a.pane, a);
-  return list;
+  if (agentsList.list && Date.now() - agentsList.at < LIST_TTL) return agentsList.list.map(a => ({ ...a }));
+  if (!agentsList.flight || agentsList.flightGen !== agentsList.gen) {
+    const gen = agentsList.flightGen = agentsList.gen;
+    const flight = agentsList.flight = (async () => {
+      const out = await herdrJson(['agent', 'list']);
+      const list = (out.result?.agents || []).map(shapeAgent)
+        .sort((a, b) => a.tab.localeCompare(b.tab, 'en', { numeric: true }) || a.pane.localeCompare(b.pane));
+      agentCache.clear();
+      for (const a of list) agentCache.set(a.pane, a);
+      // A change made while this read was in flight: the result is returned but not kept.
+      if (agentsList.gen === gen) { agentsList.list = list; agentsList.at = Date.now(); }
+      return list;
+    })().finally(() => { if (agentsList.flight === flight) agentsList.flight = null; });
+  }
+  return (await agentsList.flight).map(a => ({ ...a }));
 }
 
 // ─── Job log: every finished turn, per terminal ─────────────────────────────
@@ -1555,14 +1599,21 @@ async function agentOfPid(pid) {
   if (!chain.size) return null;
   const hit = agents.find(a => a.session && chain.has(bySession.get(a.session)));
   if (hit) return { me: hit, agents };
+  // Not a Claude session we know: match the pane's shell. A pane keeps its shell for life, so
+  // it is asked once per pane (one process start each), not once per pane per call.
+  for (const [pane, sp] of shellPids) if (!procs.has(sp) || !agents.some(a => a.pane === pane)) shellPids.delete(pane);
+  for (const a of agents) { const sp = shellPids.get(a.pane); if (sp && chain.has(sp)) return { me: a, agents }; }
   for (const a of agents) {
+    if (shellPids.has(a.pane)) continue;
     try {
       const sp = (await herdrJson(['pane', 'process-info', '--pane', a.pane])).result?.process_info?.shell_pid;
+      if (sp) shellPids.set(a.pane, sp);
       if (sp && chain.has(sp)) return { me: a, agents };
     } catch { /* pane closed mid-read */ }
   }
   return null;
 }
+const shellPids = new Map(); // pane -> its shell's pid
 function findAgent(agents, who) {
   const s = String(who || '').trim();
   if (PANE_RE.test(s)) return agents.find(a => a.pane === s) || null;
@@ -2372,6 +2423,14 @@ async function api(req, res, url) {
     try { const st = fs.statSync(f); rev = `${a.session}:${st.size}:${Math.round(st.mtimeMs)}`; } catch { return send(res, 200, { blocks: null }); }
     if (url.searchParams.get('rev') === rev) return send(res, 200, { same: true, rev });
     try { blocks = transcript.readBlocks(f); } catch { return send(res, 200, { blocks: null }); }
+    // since=N (same session): only blocks numbered N and up (the last one the panel has may have
+    // grown). Falls back to everything when N is older than what is kept.
+    const since = Number(url.searchParams.get('since'));
+    const sameSession = String(url.searchParams.get('rev') || '').startsWith(a.session + ':');
+    const first = blocks.find(b => b.n != null);
+    if (sameSession && Number.isInteger(since) && since >= 0 && first && since >= first.n) {
+      return send(res, 200, { since, blocks: blocks.filter(b => b.n == null || b.n >= since), rev });
+    }
     return send(res, 200, { blocks, rev });
   }
 
@@ -3179,6 +3238,8 @@ async function demoApi(req, res, pathname) {
     st.client = body.client;
     demoTl.saveState(dir, st);
     useDemoClient(body.client);
+    // The demo's agents changed without a herdr command: drop the shared list and layout.
+    agentsList.at = 0; agentsList.gen++; layoutGen++;
     log('demo.client', { client: body.client });
     return send(res, 200, { ok: true, active: body.client });
   }
