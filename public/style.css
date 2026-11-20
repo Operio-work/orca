@@ -1027,7 +1027,7 @@ body.sheet-open { overflow: hidden; } /* phone: the agent page owns the screen *
 @media (min-width: 960px) {
   .map { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
   .tabblock.wide { grid-column: span 2; }
-  /* Desktop: the agent opens as a centred window over the blurred workspace. */
+  /* Desktop: the agent opens as a full-screen modal over the blurred workspace. */
   .scrim {
     position: fixed; inset: 0; z-index: 4; display: block;
     background: color-mix(in srgb, var(--color-bg) 45%, transparent);
@@ -1037,9 +1037,11 @@ body.sheet-open { overflow: hidden; } /* phone: the agent page owns the screen *
   .scrim.in { opacity: 1; transition: opacity 0.24s var(--ease); }
   .sheet {
     inset: 0; margin: auto; padding: 0;
-    width: min(1040px, calc(100vw - 64px)); height: min(900px, calc(100dvh - 64px));
-    overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-xl);
-    box-shadow: 0 24px 80px rgb(0 0 0 / 0.45), var(--shadow-lg);
+    /* Full-screen modal: the agent gets the whole window (output, recap and dock side by side room). */
+    width: 100vw; height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow: hidden; border: 0; border-radius: 0;
+    box-shadow: none;
     transform: translateY(8px) scale(0.98); opacity: 0;
     transition: transform 0.16s var(--ease-out), opacity 0.14s var(--ease);
   }

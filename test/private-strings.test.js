@@ -42,8 +42,8 @@ test('no private strings anywhere in the repository', () => {
 });
 
 // The panel links only to make.operio.work. The website (site/) may also send visitors to
-// Operio's public contact form and the public operio.work home and partner pages.
-const SITE_LINKS = /^https:\/\/(talk\.operio\.work|operio\.work(\/es)?(\/partners)?)\/?$/i;
+// Operio's public contact form and the public operio.work home, partner, pricing, terms and privacy pages.
+const SITE_LINKS = /^https:\/\/(talk\.operio\.work|operio\.work(\/es)?(\/(partners|pricing|terms|privacy))?)\/?$/i;
 
 test('the only Operio links are public pages', () => {
   const hits = [];

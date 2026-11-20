@@ -3,6 +3,12 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.6.1] - 2026-11-20
+
+### Changed
+- **An agent opens full screen on a computer.** Its window now fills the screen (output, recap and
+  reply box get all the room) instead of a centred box. Phones are unchanged.
+
 ## [0.6.0] - 2026-11-19
 
 ### Changed
