@@ -12,7 +12,7 @@
   const listEl = $('#skl-list');
   const emptyEl = $('#skl-empty');
   const introEl = $('#skl-intro');
-  if (!dialog || !btn) return;
+  if (!dialog) return;
 
   let data = { mode: 'local', canRequest: false, items: [] };
   let busy = null; // key with a request in flight
@@ -95,15 +95,16 @@
 
   async function open() {
     dialog.showModal();
-    btn.setAttribute('aria-expanded', 'true');
+    btn?.setAttribute('aria-expanded', 'true');
     await load();
     render();
   }
   function close() { if (dialog.open) dialog.close(); }
 
-  dialog.addEventListener('close', () => btn.setAttribute('aria-expanded', 'false'));
+  dialog.addEventListener('close', () => btn?.setAttribute('aria-expanded', 'false'));
   dialog.addEventListener('click', e => { if (e.target === dialog) close(); }); // backdrop
-  btn.addEventListener('click', open);
+  btn?.addEventListener('click', open);
   $('#skl-close').addEventListener('click', close);
-  window.OrcaSkills = { open };
+  const embed = orcaEmbeddable(dialog, dialog.querySelector('.tpl-wrap'), async () => { await load(); render(); });
+  window.OrcaSkills = { open, mount: h => embed.mount(h), unmount: () => embed.unmount() };
 })();

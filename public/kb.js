@@ -11,7 +11,7 @@
 (() => {
   const dialog = $('#kb-dialog');
   const btn = $('#kb-btn');
-  if (!dialog || !btn) return;
+  if (!dialog) return;
   const filesEl = $('#kb-files'), emptyEl = $('#kb-empty'), statusEl = $('#kb-status'), introEl = $('#kb-intro');
   const upEl = $('#kb-up'), dropEl = $('#kb-drop'), fileIn = $('#kb-file'), collIn = $('#kb-coll'), collList = $('#kb-colls');
   const tryForm = $('#kb-try'), qIn = $('#kb-q'), hitsEl = $('#kb-hits'), hitNote = $('#kb-hitnote');
@@ -277,7 +277,7 @@
 
   async function open() {
     dialog.showModal();
-    btn.setAttribute('aria-expanded', 'true');
+    btn?.setAttribute('aria-expanded', 'true');
     await load();
     render();
   }
@@ -288,9 +288,10 @@
   for (const ev of ['dragleave', 'drop']) dropEl.addEventListener(ev, () => dropEl.classList.remove('over'));
   dropEl.addEventListener('drop', e => { e.preventDefault(); upload([...(e.dataTransfer?.files || [])]); });
   tryForm.addEventListener('submit', trySearch);
-  dialog.addEventListener('close', () => { btn.setAttribute('aria-expanded', 'false'); sure = null; editing = null; draft = null; });
+  dialog.addEventListener('close', () => { btn?.setAttribute('aria-expanded', 'false'); sure = null; editing = null; draft = null; });
   dialog.addEventListener('click', e => { if (e.target === dialog) close(); }); // backdrop
-  btn.addEventListener('click', open);
+  btn?.addEventListener('click', open);
   $('#kb-close').addEventListener('click', close);
-  window.OrcaKnowledge = { open };
+  const embed = orcaEmbeddable(dialog, dialog.querySelector('.tpl-wrap'), async () => { sure = null; editing = null; draft = null; await load(); render(); });
+  window.OrcaKnowledge = { open, mount: h => embed.mount(h), unmount: () => embed.unmount() };
 })();

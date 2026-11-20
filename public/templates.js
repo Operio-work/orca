@@ -61,7 +61,8 @@
     use.append(el('span', 'tpl-name', x.title), el('span', 'tpl-body', x.body));
     if (searchEl.value.trim() && x.scope !== tab) use.append(el('span', 'tpl-scope', t('tpl_' + x.scope)));
     if (x.scope === 'operio') use.title = t('tplReadOnly');
-    use.addEventListener('click', () => fill(x.body));
+    // Inside Admin the list is for managing: a click edits instead of filling a message box.
+    use.addEventListener('click', () => { if (embed.on) { if (x.canEdit) openForm(x); } else fill(x.body); });
     li.append(use);
     if (x.canEdit) {
       const acts = el('div', 'tpl-acts');
@@ -178,5 +179,9 @@
   searchEl.addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); listEl.querySelector('.tpl-use')?.click(); }
   });
-  window.OrcaTemplates = { open: () => { if (btn.offsetParent !== null) open(); } };
+  const embed = orcaEmbeddable(dialog, dialog.querySelector('.tpl-wrap'), async () => {
+    searchEl.value = ''; confirmDel = null; editing = null; form.hidden = true; listEl.hidden = searchEl.hidden = false;
+    await load(); render();
+  });
+  window.OrcaTemplates = { open: () => { if (btn.offsetParent !== null) open(); }, mount: h => embed.mount(h), unmount: () => embed.unmount() };
 })();

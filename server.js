@@ -2279,9 +2279,9 @@ async function api(req, res, url) {
     // and logins/MCP tools are Operio's to set up.
     return send(res, 200, {
       edition: CFG.HOSTED ? 'hosted' : 'free', me: login || null,
-      sections: { people: false, agents: true, tools: canManageLogins(login), skills: true, knowledge: true, templates: true, activity: true, security: true },
+      sections: { people: false, agents: true, accounts: canManageLogins(login), tools: canManageLogins(login), skills: true, knowledge: true, templates: true, routines: true, keys: canManageLogins(login), activity: true, security: true },
       security: { pushDevices: state.subs.length, hosted: CFG.HOSTED },
-      counts: { tools: tools.list().length, profiles: profiles.list().length, accounts: accounts.list().filter(x => x.id !== 'default').length, skills: skills.list().length, docs: kb.list().length },
+      counts: { tools: tools.list().length, profiles: profiles.list().length, accounts: accounts.list().filter(x => x.id !== 'default').length, skills: skills.list().length, docs: kb.list().length, routines: (() => { try { return loadRoutines().routines.length; } catch { return null; } })() },
     });
   }
 

@@ -10,28 +10,62 @@
   const btn = $('#admin-btn');
   if (!dialog || !btn) return;
   const nav = $('#adm-nav'), body = $('#adm-body');
-  const SECTIONS = ['people', 'agents', 'tools', 'skills', 'knowledge', 'templates', 'activity', 'security'];
-  let data = null, cur = null, draft = null, dirty = false;
+  // Grouped like the sidebar shows them. Sections a panel doesn't offer are left out (/api/admin).
+  const GROUPS = [
+    ['', ['overview']],
+    ['admG_team', ['people', 'agents', 'accounts']],
+    ['admG_work', ['tools', 'skills', 'knowledge', 'templates', 'routines']],
+    ['admG_setup', ['keys', 'activity', 'security']],
+  ];
+  const ICON = { overview: 'i-map', people: 'i-team', agents: 'i-team', accounts: 'i-link', tools: 'i-gear', skills: 'i-skill', knowledge: 'i-book', templates: 'i-tpl', routines: 'i-clock', keys: 'i-key', activity: 'i-journal', security: 'i-power' };
+  // These sections are the managers themselves (their dialog's content moves in here).
+  const EMBED = {
+    agents: () => window.OrcaAgents, accounts: () => window.OrcaAgents?.acc, skills: () => window.OrcaSkills,
+    knowledge: () => window.OrcaKnowledge, templates: () => window.OrcaTemplates, routines: () => window.OrcaRoutines, keys: () => window.OrcaKeys,
+  };
+  let data = null, cur = null, draft = null, dirty = false, mounted = null;
+  const has = s => s === 'overview' || !!data?.sections[s];
 
   async function load() {
     try { data = await call('/api/admin'); } catch (err) { toast(errText(err), true); data = null; }
   }
 
   function renderNav() {
-    nav.replaceChildren(...SECTIONS.filter(s => data?.sections[s]).map(s => {
-      const b = el('button', 'adm-tab', t('adm_' + s));
-      b.type = 'button';
-      b.setAttribute('aria-current', String(s === cur));
-      b.addEventListener('click', () => show(s));
-      return b;
-    }));
+    const kids = [];
+    for (const [g, list] of GROUPS) {
+      const shown = list.filter(has);
+      if (!shown.length) continue;
+      if (g) kids.push(el('div', 'adm-group', t(g)));
+      for (const s of shown) {
+        const b = el('button', 'adm-tab');
+        b.type = 'button';
+        b.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${ICON[s]}"/></svg>`;
+        b.append(el('span', null, t('adm_' + s)));
+        b.setAttribute('aria-current', String(s === cur));
+        b.addEventListener('click', () => show(s));
+        kids.push(b);
+      }
+    }
+    nav.replaceChildren(...kids);
   }
+  function unmount() { if (mounted) { try { mounted.unmount(); } catch { /* gone */ } mounted = null; } }
   function show(s) {
     if (cur === 'people' && dirty && s !== 'people' && !confirmLeave()) return;
+    unmount();
     cur = s;
     renderNav();
-    body.replaceChildren(el('h3', 'adm-h', t('adm_' + s)), ...(VIEWS[s]?.() || []));
     dialog.classList.toggle('in-section', true);
+    body.scrollTop = 0;
+    const api = EMBED[s]?.();
+    if (api?.mount) {
+      body.replaceChildren(el('h3', 'adm-h', t('adm_' + s)));
+      body.classList.add('adm-embed');
+      mounted = api;
+      Promise.resolve(api.mount(body)).catch(err => toast(errText(err), true));
+      return;
+    }
+    body.classList.remove('adm-embed');
+    body.replaceChildren(el('h3', 'adm-h', t('adm_' + s)), ...(VIEWS[s]?.() || []));
   }
   function confirmLeave() { toast(t('admUnsaved'), true); return false; }
 
@@ -44,7 +78,6 @@
   }
   const row = (...kids) => { const d = el('div', 'adm-actions'); d.append(...kids); return d; };
   const stat = (label, value, ok) => { const d = el('div', 'adm-stat'); d.append(el('span', 'adm-k', label), el('span', 'adm-v ' + (ok === true ? 'ok' : ok === false ? 'warn' : ''), value)); return d; };
-  const openThen = fn => () => { dialog.close(); fn(); };
 
   // ── People & access (edited here)
   function peopleView() {
@@ -228,12 +261,8 @@
   const VIEWS = {
     tools: () => { const ph = [p('hint', '…')]; toolsView().then(v => { if (cur === 'tools') body.replaceChildren(el('h3', 'adm-h', t('adm_tools')), ...v); }); return ph; },
     people: peopleView,
-    agents: () => [p('hint', t('admAgentsIntro', data.counts.profiles, data.counts.accounts)),
-      row(action(t('agOpenBtn'), openThen(() => window.OrcaAgents?.open())), action(t('accOpen'), openThen(() => window.OrcaAgents?.accounts()), 'ghost'))],
-    skills: () => [p('hint', t('admSkillsIntro', data.counts.skills)), row(action(t('skOpen'), openThen(() => window.OrcaSkills?.open())))],
-    knowledge: () => [p('hint', t('admKnowledgeIntro', data.counts.docs)), row(action(t('kbOpen'), openThen(() => window.OrcaKnowledge?.open())))],
-    templates: () => [p('hint', t('admTemplatesIntro'))],
-    activity: () => [p('hint', t('admActivityIntro')), row(link(t('journal'), '/journal.html'), link(t('usage'), '/usage.html', 'ghost'))],
+    overview: overviewView,
+    activity: () => [p('hint', t('admActivityIntro')), row(link(t('journal'), '/journal.html'))],
     // Each ORCA reports what applies to it: SAMIX the access list, sandbox and PIN; the others less.
     security: () => {
       const s = data.security, a = data.access, out = [];
@@ -245,9 +274,28 @@
       return out;
     },
   };
+  // Overview: one card per area with its count; a tap opens the section.
+  function overviewView() {
+    const c = data.counts || {};
+    const cards = [
+      ['agents', c.profiles], ['accounts', c.accounts], ['tools', c.tools], ['skills', c.skills],
+      ['knowledge', c.docs], ['templates', null], ['routines', c.routines], ['people', data.access?.people?.length],
+    ].filter(([s]) => has(s));
+    const grid = el('div', 'adm-cards');
+    for (const [s, n] of cards) {
+      const b = el('button', 'adm-card');
+      b.type = 'button';
+      b.innerHTML = `<svg class="ic" aria-hidden="true"><use href="#${ICON[s]}"/></svg>`;
+      b.append(el('span', 'adm-card-n', n == null ? '' : String(n)), el('span', 'adm-card-t', t('adm_' + s)), el('span', 'adm-card-d', t('admD_' + s)));
+      b.addEventListener('click', () => show(s));
+      grid.append(b);
+    }
+    return [p('hint', t('admOverviewIntro')), grid];
+  }
   function link(label, href, cls = 'primary') { const a = el('a', 'btn ' + cls, label); a.href = href; return a; }
 
-  async function open() {
+  async function open(want) {
+    if (typeof want !== 'string') want = null;
     draft = null; dirty = false; cur = null;
     dialog.showModal();
     btn.setAttribute('aria-expanded', 'true');
@@ -255,19 +303,20 @@
     if (!data) { dialog.close(); return; }
     renderNav();
     // Phones start on the list of sections; wider screens open People & access.
-    if (matchMedia('(min-width: 700px)').matches) show(SECTIONS.find(s => data.sections[s]));
+    if (matchMedia('(min-width: 700px)').matches) show(want && has(want) ? want : 'overview');
     else { dialog.classList.remove('in-section'); body.replaceChildren(); }
   }
   function close() { if (dialog.open) dialog.close(); }
-  dialog.addEventListener('close', () => btn.setAttribute('aria-expanded', 'false'));
+  dialog.addEventListener('close', () => { unmount(); btn.setAttribute('aria-expanded', 'false'); });
   dialog.addEventListener('cancel', e => { if (dirty) { e.preventDefault(); toast(t('admUnsaved'), true); } });
   dialog.addEventListener('click', e => { if (e.target === dialog && !dirty) close(); });
   btn.addEventListener('click', open);
   $('#adm-close').addEventListener('click', () => { if (dirty) { draft = null; dirty = false; } close(); });
-  $('#adm-back').addEventListener('click', () => { if (cur === 'people' && dirty) { toast(t('admUnsaved'), true); return; } cur = null; renderNav(); dialog.classList.remove('in-section'); });
+  $('#adm-back').addEventListener('click', () => { if (cur === 'people' && dirty) { toast(t('admUnsaved'), true); return; } unmount(); cur = null; renderNav(); dialog.classList.remove('in-section'); });
   // Only admins see the gear (the server checks every call anyway).
   const sync = () => { btn.hidden = !access.admin; };
   sync();
   setInterval(sync, 3000);
-  window.OrcaAdmin = { open };
+  // open('accounts') jumps straight to a section (also when Admin is already open).
+  window.OrcaAdmin = { open: want => (dialog.open && data && has(want) ? show(want) : open(want)), close };
 })();

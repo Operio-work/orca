@@ -153,7 +153,7 @@
       if (r.pane) setTimeout(() => select(r.pane), 400);
     } catch (err) { toast(errText(err), true); }
     busy = null;
-    if (dialog.open) { await load(); render(); }
+    if (dialog.open || embed.on) { await load(); render(); }
   }
 
   async function del(p) {
@@ -284,7 +284,8 @@
     await load();
     render();
   }
-  function close() { if (dialog.open) dialog.close(); }
+  // Opening or starting an agent leaves Admin too, so the agent shows.
+  function close() { if (dialog.open) dialog.close(); if (embed.on) window.OrcaAdmin?.close(); }
   dialog.addEventListener('close', () => btn.setAttribute('aria-expanded', 'false'));
   dialog.addEventListener('click', e => { if (e.target === dialog) close(); });
   btn.addEventListener('click', open);
@@ -348,7 +349,7 @@
   }
   function accRender() { accList.replaceChildren(...accData.map(accRow)); }
   async function accOpen() {
-    if (!accDialog.open) accDialog.showModal();
+    if (!accDialog.open && !accEmbed.on) accDialog.showModal();
     await accLoad(); accRender();
     const keep = accForm.elements.kind.value;
     accForm.elements.kind.replaceChildren(...['claude', 'codex', 'gemini'].map(k => new Option(k === 'gemini' ? t('accGoogle') : KIND_LABEL(k), k)));
@@ -370,13 +371,16 @@
   accForm.elements.kind.addEventListener('change', keyField);
   $('#acc-close').addEventListener('click', () => accDialog.close());
   accDialog.addEventListener('click', e => { if (e.target === accDialog) accDialog.close(); });
-  accDialog.addEventListener('close', async () => { if (dialog.open) { await load(); render(); } });
-  $('#ag-accounts').addEventListener('click', accOpen);
+  accDialog.addEventListener('close', async () => { if (dialog.open || embed.on) { await load(); render(); } });
+  $('#ag-accounts').addEventListener('click', () => (embed.on && window.OrcaAdmin ? window.OrcaAdmin.open('accounts') : accOpen()));
 
   // The New dialog links here too (on phones it is the only way in: the header has no room).
   $('#new-saved')?.addEventListener('click', () => { $('#new-dialog')?.close(); open(); });
   // A push about a worker request opens this dialog.
   if (location.hash === '#spawn') { history.replaceState(null, '', location.pathname); setTimeout(open, 600); }
   addEventListener('hashchange', () => { if (location.hash === '#spawn') { history.replaceState(null, '', location.pathname); open(); } });
-  window.OrcaAgents = { open, accounts: accOpen };
+  const embed = orcaEmbeddable(dialog, dialog.querySelector('.tpl-wrap'), async () => { editing = null; sure = null; await load(); render(); });
+  const accEmbed = orcaEmbeddable(accDialog, accDialog.querySelector('.tpl-wrap'), accOpen);
+  window.OrcaAgents = { open, accounts: accOpen, mount: h => embed.mount(h), unmount: () => embed.unmount(),
+    acc: { mount: h => accEmbed.mount(h), unmount: () => accEmbed.unmount() } };
 })();

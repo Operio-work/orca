@@ -3,6 +3,23 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.6.0] - 2026-11-19
+
+### Changed
+- **Admin is one full-screen page.** A sidebar groups every area: Overview, Team (People & access,
+  Saved agents, Accounts), What agents use (Tools and the web browser, Skills, Knowledge,
+  Templates, Routines) and Settings (API keys, Activity, Security). Each area opens in place: no
+  more dialogs on top of dialogs. The Overview shows a card with the count for each area. On a
+  phone the sidebar is the first screen and Back returns to it. The header buttons (Routines,
+  Saved agents, Templates in the message box, API keys) still open the same screens on their own.
+- Opening or starting an agent from Saved agents inside Admin closes Admin so the agent shows.
+- Templates inside Admin are for managing: a tap edits a template instead of pasting it.
+
+### Fixed
+- **Skills and Knowledge could not be opened** from Admin (their buttons did nothing since the
+  header buttons were removed).
+- Admin → Activity linked to a Usage page that the open-source panel does not have.
+
 ## [0.5.2] - 2026-11-19
 
 ### Fixed

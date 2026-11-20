@@ -188,7 +188,7 @@
   }
 
   function render() {
-    if (!data || view.hidden) return;
+    if (!data || (view.hidden && !mounted)) return;
     const out = [mk('p', 'rt-intro', t('rtIntro', data.dir))];
     if (!data.routines.length) out.push(mk('p', 'rt-empty', t('rtNone', data.dir)));
     for (const r of data.routines) out.push(card(r));
@@ -207,13 +207,19 @@
     body.replaceChildren(...out);
   }
 
-  let timer = null;
+  let timer = null, mounted = false;
+  const tick = () => { clearInterval(timer); timer = setInterval(() => { if ((!view.hidden || mounted) && !body.contains(document.activeElement)) load(); }, 10000); };
+  // Admin shows the same list in its Routines section.
+  window.OrcaRoutines = {
+    open: () => open(),
+    mount(host) { host.append(body); mounted = true; load(); tick(); },
+    unmount() { if (!mounted) return; view.append(body); mounted = false; if (view.hidden) { clearInterval(timer); timer = null; } },
+  };
   function open() {
     view.hidden = false;
     labelStatic();
     load();
-    clearInterval(timer);
-    timer = setInterval(() => { if (!view.hidden && !body.contains(document.activeElement)) load(); }, 10000);
+    tick();
     $('#rt-back').focus();
   }
   function close() { view.hidden = true; clearInterval(timer); timer = null; $('#routines-btn').focus(); }
