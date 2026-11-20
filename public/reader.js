@@ -371,7 +371,7 @@
       } else if (b.t === 'ask') {
         const d = doc.createElement('div'); d.className = 'rask';
         for (const q of b.questions || []) {
-          const p = doc.createElement('p'); p.className = 'rask-q'; p.textContent = q.question; d.appendChild(p);
+          const p = doc.createElement('p'); p.className = 'rask-q'; p.textContent = q.permission ? t('rdPermission') : q.question; d.appendChild(p);
           const ol = doc.createElement('ol');
           for (const o of q.options || []) { const li = doc.createElement('li'); const b2 = doc.createElement('b'); b2.textContent = o.label; li.appendChild(b2); if (o.description) li.appendChild(doc.createTextNode(' — ' + o.description)); ol.appendChild(li); }
           d.appendChild(ol);

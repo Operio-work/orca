@@ -3,6 +3,12 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Changed
+- OpenCode and Ollama agents can use the transcript Reader, including exact replies, unanswered
+  questions, permission choices and session token totals. Older Node versions keep the screen Reader.
+
 ## [0.6.1] - 2026-11-20
 
 ### Changed

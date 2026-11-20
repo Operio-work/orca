@@ -38,6 +38,7 @@ const { createAccounts, AccountError } = require('./lib/accounts');
 const { createTools, ToolError } = require('./lib/tools');
 const { createBrowser } = require('./lib/browser');
 const { createOllama } = require('./lib/ollama');
+const opencodeTranscript = require('./lib/opencode-transcript');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
 
@@ -65,6 +66,7 @@ const KEYS  = ['enter', 'esc', 'ctrl+c', 'up', 'down', 'tab', '1', '2', '3'];
 // Local models (ollama kind) are whatever tool-capable models Ollama has right now (lib/ollama.js).
 const MODELS = { claude: ['fable', 'opus', 'sonnet', 'haiku'], get ollama() { return ollama.models(); } };
 const OLLAMA_OPENCODE = path.join(STATE_DIR, 'opencode-ollama.json');
+const OPENCODE_DB = process.env.OPERIO_ORCA_OPENCODE_DB || path.join(process.env.XDG_DATA_HOME || path.join(HOME, '.local', 'share'), 'opencode', 'opencode.db');
 const SHELL_UNLOCK_MS = CFG.SHELL_UNLOCK_MS;
 
 const PUBLIC = path.join(__dirname, 'public');
@@ -308,6 +310,7 @@ function readBody(req, limit = 16 * 1024) {
 // inherits another agent's tags.
 let state = { tags: {}, tagColors: {}, subs: [] };
 try { state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) }; } catch { /* first run */ }
+state.opencodeSessions = state.opencodeSessions || {};
 
 // ─── Crew: the names you reuse ────────────────────────────────────────────────
 // Learned from renames (count + last use), with pins and hides; each name also remembers
@@ -411,7 +414,28 @@ async function pushAll(payload, only = null, strict = false) {
 }
 
 // ─── Agents ───────────────────────────────────────────────────────────────────
+function openCodeSession(a) {
+  if (!['opencode', 'ollama'].includes(a.agent)) return null;
+  const raw = a.agent_session?.value || null;
+  const cwd = a.foreground_cwd || a.cwd;
+  const directory = cwd ? path.resolve(expandHome(cwd)) : null;
+  const saved = state.opencodeSessions[a.terminal];
+  const session = raw || opencodeTranscript.findSession(OPENCODE_DB, {
+    cwd: directory,
+    since: prev.get(a.pane)?.since || state.born?.[a.terminal]?.at || null,
+    kind: a.agent,
+    known: saved?.directory === directory ? saved.session : null,
+  });
+  if (session && directory && (saved?.session !== session || saved?.directory !== directory)) {
+    state.opencodeSessions[a.terminal] = { session, directory, kind: a.agent };
+    saveState();
+  }
+  return session;
+}
+
 function shapeAgent(a) {
+  const openCode = ['opencode', 'ollama'].includes(a.agent) ? openCodeSession(a) : null;
+  const transcriptData = openCode ? opencodeTranscript.read(OPENCODE_DB, openCode) : null;
   return {
     pane: a.pane_id,
     tab: a.tab_id,
@@ -424,7 +448,8 @@ function shapeAgent(a) {
     focused: !!a.focused,
     tags: state.tags[a.terminal_id] || [],
     model: state.models?.[a.terminal_id]?.model || null, // the last model picked from the card (not read from the agent)
-    session: a.agent_session?.value || null,
+    session: openCode || a.agent_session?.value || null,
+    usage: transcriptData?.usage || null,
     profile: state.instances?.[a.terminal_id]?.profile || null, // started from a saved agent
     since: prev.get(a.pane_id)?.since || null, // ms epoch the current status began (poller-tracked)
     jobs: jobStats(a.terminal_id),
@@ -598,6 +623,18 @@ async function recordJob(a, from, end) {
 // (Codex, a permission prompt, an older session) the numbered menu on screen is read.
 const ORCA_DIR = path.join(HOME, '.claude', 'orca');
 const CLAUDE_PROJECTS = path.join(HOME, '.claude', 'projects');
+function agentTranscript(a) {
+  if (!a?.session) return null;
+  if (a.agent === 'claude') {
+    const file = transcript.findTranscript(CLAUDE_PROJECTS, a.session);
+    if (!file) return null;
+    try {
+      const st = fs.statSync(file);
+      return { blocks: transcript.readBlocks(file), rev: `${a.session}:${st.size}:${Math.round(st.mtimeMs)}` };
+    } catch { return null; }
+  }
+  return ['opencode', 'ollama'].includes(a.agent) ? opencodeTranscript.read(OPENCODE_DB, a.session) : null;
+}
 const { chipsFor, lastReply, replyAfter, turnReply } = require('./chips');
 const screenChips = new Map(); // pane -> { key, chips }: worked out once per agent state
 // Named by the Claude session id (survives the pane moving); older mods used the pane id.
@@ -614,6 +651,8 @@ function handoff(a) {
 const RISKY = /don.t ask again|always allow|\bno\b|reject|deny|delete|remove|deploy|force/i;
 // The last numbered menu on screen ("❯ 1. Yes", "  2. No, and tell Claude…").
 function screenMenu(text) {
+  const openCode = opencodeTranscript.permissionMenu(text);
+  if (openCode) return openCode;
   const lines = String(text || '').split('\n').slice(-40);
   let opts = [], at = -1;
   lines.forEach((line, i) => {
@@ -700,7 +739,7 @@ async function poll() {
     jr(null, 'agent.gone', a, { ranFor: b?.at ? now - b.at : null });
   }
   // Births of terminals gone for over a day are forgotten (the journal keeps the history).
-  for (const [t, b] of Object.entries(state.born)) if (!live.has(t) && !lastLive.has(t) && now - (b.seen || b.at || now) > 864e5) { delete state.born[t]; bornChanged = true; }
+  for (const [t, b] of Object.entries(state.born)) if (!live.has(t) && !lastLive.has(t) && now - (b.seen || b.at || now) > 864e5) { delete state.born[t]; delete state.opencodeSessions[t]; bornChanged = true; }
   for (const t of live) if (state.born[t]) state.born[t].seen = now;
   if (bornChanged) saveState();
   polledOnce = true;
@@ -1472,11 +1511,11 @@ function sweepWorkers(agents) {
   }
 }
 
-// The worker's last reply: the transcript for Claude (exact text), else the screen.
+// The worker's last reply: the session transcript (exact text), else the screen.
 async function workerResult(a) {
   try {
-    const file = a.session && transcript.findTranscript(CLAUDE_PROJECTS, a.session);
-    if (file) { const say = transcript.readBlocks(file).filter(b => b.t === 'say').at(-1); if (say?.text) return say.text; }
+    const say = agentTranscript(a)?.blocks?.filter(b => b.t === 'say').at(-1);
+    if (say?.text) return say.text;
   } catch { /* fall back to the screen */ }
   try { return summarizeTurn(await herdr(['agent', 'read', a.pane, '--source', 'recent', '--lines', '300', '--format', 'text'])).said || ''; } catch { return ''; }
 }
@@ -2408,21 +2447,26 @@ async function api(req, res, url) {
     return send(res, 200, { crew: crew(new Set(agents.map(a => a.name).filter(Boolean))) });
   }
 
-  // Reader source for Claude agents: the session transcript (see transcript.js). Others get
-  // { blocks: null } and the panel reads their screen as before.
+  // Claude and OpenCode-family agents have a transcript Reader; others use the pane screen.
   if (req.method === 'GET' && /^\/api\/agents\/[^/]+\/transcript$/.test(pathname)) {
     const pane = decodeURIComponent(pathname.split('/')[3]);
     if (!PANE_RE.test(pane)) throw new HttpError(400, 'bad_request');
     await requireActOn(loginOf(req), pane);
     const a = agentCache.get(pane) || (await listAgents()).find(x => x.pane === pane);
     if (!a) throw new HttpError(404, 'not_found');
-    if (a.agent !== 'claude' || !a.session) return send(res, 200, { blocks: null });
-    const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session);
-    if (!f) return send(res, 200, { blocks: null });
-    let blocks, rev;
-    try { const st = fs.statSync(f); rev = `${a.session}:${st.size}:${Math.round(st.mtimeMs)}`; } catch { return send(res, 200, { blocks: null }); }
+    const data = agentTranscript(a);
+    if (!data) return send(res, 200, { blocks: null });
+    let blocks = data.blocks;
+    let rev = data.rev;
+    if (['opencode', 'ollama'].includes(a.agent) && ['blocked', 'idle'].includes(a.status)) {
+      const menu = screenMenu(await visible(pane));
+      const menuKey = menu?.options.map(o => `${o.n}:${o.label}`).join('|') || '';
+      rev += `:${a.status}:${a.seq}:${crypto.createHash('sha256').update(menuKey).digest('hex').slice(0, 12)}`;
+      if (menu?.options.length && blocks.at(-1)?.t !== 'ask') {
+        blocks = [...blocks, { t: 'ask', questions: [{ permission: true, options: menu.options.map(({ label }) => ({ label })) }] }];
+      }
+    }
     if (url.searchParams.get('rev') === rev) return send(res, 200, { same: true, rev });
-    try { blocks = transcript.readBlocks(f); } catch { return send(res, 200, { blocks: null }); }
     // since=N (same session): only blocks numbered N and up (the last one the panel has may have
     // grown). Falls back to everything when N is older than what is kept.
     const since = Number(url.searchParams.get('since'));
@@ -2457,11 +2501,8 @@ async function api(req, res, url) {
     const h = handoff(a);
     // A session's own file is always current; a pane-named one may be a previous agent's.
     const fresh = at => h?.own || !a.since || (at || 0) >= a.since - 60000;
-    // Claude agents: the transcript knows an unanswered AskUserQuestion and the exact last reply.
-    let tb = null;
-    if (a.agent === 'claude' && a.session) {
-      try { const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session); if (f) tb = transcript.readBlocks(f); } catch { /* unreadable: fall back */ }
-    }
+    // Session transcripts know unanswered questions and the exact last reply.
+    const tb = agentTranscript(a)?.blocks || null;
     const tAsk = tb?.at(-1)?.t === 'ask' ? tb.at(-1).questions : null;
     if (a.status === 'blocked') {
       if (h?.ask?.questions?.length && fresh(h.ask.at)) return send(res, 200, { ask: h.ask });
@@ -3073,14 +3114,15 @@ async function api(req, res, url) {
     if (Number.isInteger(body.screen)) {
       const menu = screenMenu(screen);
       if (!menu?.options.some(o => o.n === body.screen)) throw new HttpError(409, 'question_gone');
-      await press(pane, String(body.screen));
+      if (menu.keyMode === 'opencode-choice') await press(pane, ...Array(Math.max(0, body.screen - 1)).fill('right'), 'enter');
+      else await press(pane, String(body.screen));
       log('agent.answer', { pane, kind: 'screen', n: body.screen });
       jr(req, 'agent.answer', a, { question: menu.question, picked: [menu.options.find(o => o.n === body.screen)?.label || String(body.screen)] });
       return send(res, 200, { ok: true });
     }
     let qs = handoff(a)?.ask?.questions;
-    if (!qs?.length && a.agent === 'claude' && a.session) {
-      try { const f = transcript.findTranscript(CLAUDE_PROJECTS, a.session); const tb = f && transcript.readBlocks(f); if (tb?.at(-1)?.t === 'ask') qs = tb.at(-1).questions; } catch { /* none */ }
+    if (!qs?.length && (a.agent === 'claude' || ['opencode', 'ollama'].includes(a.agent)) && a.session) {
+      try { const tb = agentTranscript(a)?.blocks; if (tb?.at(-1)?.t === 'ask') qs = tb.at(-1).questions; } catch { /* none */ }
     }
     const answers = Array.isArray(body.answers) ? body.answers : [];
     if (!qs?.length) throw new HttpError(409, 'question_gone');
