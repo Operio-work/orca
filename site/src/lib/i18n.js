@@ -121,53 +121,49 @@ const en = {
     ],
 
     whatsNew: {
-      "title": "What’s new in 0.5.0",
+      "title": "What’s new in 0.6",
       "shots": [
         {
-          "id": "browser",
-          "caption": "Admin → Tools → Web browser",
-          "alt": "The Web browser card in Admin → Tools: on with form filling, the Chrome it uses, which saved agent has it, and a box to test a page."
+          "id": "adm-overview",
+          "caption": "Admin → Overview",
+          "alt": "The full-screen Admin page: a sidebar with Team, What agents use and Settings, and Overview cards counting saved agents, accounts, tools, skills, knowledge, templates and routines."
         },
         {
-          "id": "approval",
-          "caption": "Every submit waits for you",
-          "alt": "An approval card: front-of-house wants to click the button Send order on a supplier's weekly order page, with the fields it filled in, a screenshot of the page, and Decline and Approve."
+          "id": "adm-agents",
+          "caption": "Saved agents, right inside Admin",
+          "alt": "Admin with Saved agents open: a worker request to approve, and each saved agent with its model, who it reports to, and Open or Start buttons."
         },
         {
-          "id": "routine",
-          "caption": "New free routine",
-          "alt": "The Routines page with Website & Google Profile Check: every Monday at 9:00, report only."
+          "id": "adm-skills",
+          "caption": "Skills, ready to install",
+          "alt": "Admin with Skills open: Business knowledge, Review reply drafts and Weekly owner summary, each with an Install button."
         }
       ],
       "items": [
         {
-          "title": "A web browser for your agents",
-          "body": "Agents can open web pages, read them and take screenshots, with the Chrome already on your computer, in its own profile: never your everyday browser, logins or passwords. Off until you turn it on."
+          "title": "Admin is one full-screen page",
+          "body": "Everything you set up for your agents now lives in one place, with a sidebar: Team, What agents use, and Settings. No more windows on top of windows."
         },
         {
-          "title": "Safe by default",
-          "body": "Pages on your computer or your private network are refused, page text is treated as information and never as instructions, and every page opened goes to the Journal."
+          "title": "An overview at a glance",
+          "body": "Admin opens on a card for each area with its count: saved agents, accounts, tools, skills, knowledge, templates and routines. Tap a card to go there."
         },
         {
-          "title": "Form filling, with your approval",
-          "body": "If you allow it, agents can type and click. Every button, Enter and form sent waits for your OK on a card with a screenshot. Payment fields are never filled."
+          "title": "Every area opens in place",
+          "body": "Saved agents, accounts, tools and the web browser, skills, knowledge, templates, routines and API keys all open right inside Admin."
         },
         {
-          "title": "Allowed sites per agent",
-          "body": "Give a saved agent the web browser and, if you like, the only sites it may open, one per line."
+          "title": "Made for your phone too",
+          "body": "On a phone you see the list of areas first, and Back takes you back to it."
         },
         {
-          "title": "Website & Google Profile Check",
-          "body": "A new free routine: every Monday, one page on what your website and Google listing show, where they disagree with your real details, broken links and the three fixes to make first."
-        },
-        {
-          "title": "Five languages, up to date",
-          "body": "French, Portuguese and Italian cover everything new since 0.4 (machine-translated, review in progress)."
+          "title": "Skills and Knowledge open again",
+          "body": "A bug kept them from opening on the open-source panel. Fixed."
         }
       ],
-      "note": "Also in 0.4: saved agents, teams that report back, workers for one task, and tools connected in Admin.",
+      "note": "Also in 0.5: a web browser for your agents, form filling that waits for your approval, and the free Website & Google Profile Check routine.",
       "changelog": 'Full changelog',
-      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.5, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.5, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.5: your agents can use the web, and you approve what they send." }
+      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.6, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.6, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.6: Admin is one full page, with every area in one place." }
     },
 
     bizTitle: 'Run a business?',
@@ -744,53 +740,49 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      "title": "Novedades de la 0.5.0",
+      "title": "Novedades de la 0.6",
       "shots": [
         {
-          "id": "browser",
-          "caption": "Administración → Herramientas → Navegador web",
-          "alt": "La tarjeta del Navegador web en Administración → Herramientas: activado con llenado de formularios, el Chrome que usa, qué agente guardado lo tiene y un cuadro para probar una página."
+          "id": "adm-overview",
+          "caption": "Administración → Resumen",
+          "alt": "La página de Administración a pantalla completa: una barra lateral con Equipo, Lo que usan los agentes y Ajustes, y tarjetas de Resumen con el total de agentes guardados, cuentas, herramientas, habilidades, conocimiento, plantillas y rutinas."
         },
         {
-          "id": "approval",
-          "caption": "Cada envío te espera",
-          "alt": "Una tarjeta de aprobación: front-of-house quiere hacer clic en el botón Enviar pedido en la página de pedido semanal de un proveedor, con los campos que llenó, una captura de la página, y Rechazar y Aprobar."
+          "id": "adm-agents",
+          "caption": "Agentes guardados, dentro de Administración",
+          "alt": "Administración con Agentes guardados abierto: una solicitud de trabajador por aprobar y cada agente guardado con su modelo, a quién reporta y los botones Abrir o Iniciar."
         },
         {
-          "id": "routine",
-          "caption": "Nueva rutina gratis",
-          "alt": "La página de Rutinas con Revisión de sitio web y perfil de Google: cada lunes a las 9:00, solo reporte."
+          "id": "adm-skills",
+          "caption": "Habilidades listas para instalar",
+          "alt": "Administración con Habilidades abierto: Conocimiento del negocio, Borradores de respuesta a reseñas y Resumen semanal para el dueño, cada una con un botón Instalar."
         }
       ],
       "items": [
         {
-          "title": "Un navegador web para tus agentes",
-          "body": "Los agentes pueden abrir páginas web, leerlas y tomar capturas, con el Chrome que ya tienes, en su propio perfil: nunca tu navegador de todos los días, tus sesiones ni tus contraseñas. Apagado hasta que lo actives."
+          "title": "La Administración es una sola página",
+          "body": "Todo lo que configuras para tus agentes está ahora en un solo lugar, con una barra lateral: Equipo, Lo que usan los agentes y Ajustes. Se acabaron las ventanas encima de otras ventanas."
         },
         {
-          "title": "Seguro desde el inicio",
-          "body": "Se rechazan las páginas de tu computadora o de tu red privada, el texto de las páginas se trata como información y nunca como instrucciones, y cada página abierta queda en la Bitácora."
+          "title": "Un resumen de un vistazo",
+          "body": "La Administración abre con una tarjeta por área y su total: agentes guardados, cuentas, herramientas, habilidades, conocimiento, plantillas y rutinas. Toca una tarjeta para ir ahí."
         },
         {
-          "title": "Llenado de formularios, con tu aprobación",
-          "body": "Si lo permites, los agentes pueden escribir y hacer clic. Cada botón, Enter y envío espera tu OK en una tarjeta con captura. Los campos de pago nunca se llenan."
+          "title": "Cada área se abre ahí mismo",
+          "body": "Agentes guardados, cuentas, herramientas y el navegador web, habilidades, conocimiento, plantillas, rutinas y claves de API se abren dentro de la Administración."
         },
         {
-          "title": "Sitios permitidos por agente",
-          "body": "Dale el navegador web a un agente guardado y, si quieres, los únicos sitios que puede abrir, uno por línea."
+          "title": "Pensada también para tu teléfono",
+          "body": "En el teléfono primero ves la lista de áreas, y Atrás te regresa a ella."
         },
         {
-          "title": "Revisión de sitio web y perfil de Google",
-          "body": "Una nueva rutina gratis: cada lunes, una página con lo que muestran tu sitio y tu ficha de Google, en qué no coinciden con tus datos reales, enlaces rotos y las tres correcciones más importantes."
-        },
-        {
-          "title": "Cinco idiomas, al día",
-          "body": "Francés, portugués e italiano cubren todo lo nuevo desde la 0.4 (traducción automática, en revisión)."
+          "title": "Habilidades y Conocimiento vuelven a abrirse",
+          "body": "Un error impedía abrirlas en el panel de código abierto. Corregido."
         }
       ],
-      "note": "También en la 0.4: agentes guardados, equipos que te reportan, trabajadores para una tarea y herramientas conectadas en Administración.",
+      "note": "También en la 0.5: un navegador web para tus agentes, llenado de formularios que espera tu aprobación y la rutina gratis Revisión de sitio web y perfil de Google.",
       "changelog": 'Registro de cambios completo',
-      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.5, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.5, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.5: tus agentes ya usan la web y tú apruebas lo que envían." }
+      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.6, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.6, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.6: la Administración es una sola página, con todas las áreas en un solo lugar." }
     },
 
     bizTitle: '¿Tienes un negocio?',

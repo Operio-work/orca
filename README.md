@@ -156,9 +156,25 @@ The full list, including the routines Operio runs for you, is in `catalog/catalo
   than 90 deleted. Nothing is sent anywhere and no model is called; the review is a summary
   ORCA builds from the entries.
 
+## Admin
+
+One full-screen page for everything you set up (⋯ More → Admin; admins only). The sidebar groups it:
+
+| Group | Areas |
+|---|---|
+| Overview | a card per area with its count; tap one to open it |
+| Team | People & access (multi-person panels), Saved agents, Accounts |
+| What agents use | Tools and the web browser, Skills, Knowledge, Templates, Routines |
+| Settings | API keys, Activity (the Journal), Security |
+
+Each area opens in place. The header buttons (Routines, Saved agents, Templates in the message
+box, API keys) still open the same screens on their own. On a phone the list of areas comes first
+and Back returns to it. On ORCA Hosted, logins, tools and API keys are set up by Operio, so those
+areas show only to Operio staff.
+
 ## Saved agents, teams and workers
 
-- **Saved agents** (Admin → Agents & accounts, or the Saved agents button): an agent set up once —
+- **Saved agents** (Admin → Saved agents, or the Saved agents button): an agent set up once —
   instructions, skills, built-in tools (all / no edit tools / read only), MCP tools, which account
   it runs on. **Start** it any time; **Resume** continues a Claude agent's last conversation. One
   live copy per saved agent. Files per run live in `~/.config/operio-orca/runs/<name>` (0600).

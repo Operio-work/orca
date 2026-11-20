@@ -19,7 +19,7 @@
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050], team: [910, 560] };
   // Pixel sizes of the 0.3.0 captures in static/shots (talk, templates, skills, knowledge).
   /** @type {Record<string, [number, number]>} */
-  const SHOT2 = { browser: [910, 560], approval: [910, 560], routine: [910, 560], agents: [910, 560], admin: [910, 560], languages: [910, 560], talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
+  const SHOT2 = { "adm-overview": [910, 560], "adm-agents": [910, 560], "adm-skills": [910, 560], browser: [910, 560], approval: [910, 560], routine: [910, 560], agents: [910, 560], admin: [910, 560], languages: [910, 560], talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
 </script>
 
 <Seo title={h.title} description={h.description} {lang} ogLocale={t.ogLocale} />
@@ -137,7 +137,7 @@
 <section class="section" aria-labelledby="whats-new">
   <div class="container">
     <div class="section-head"><h2 id="whats-new">{h.whatsNew.title}</h2></div>
-    <div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name="operio-orca-0.5" lazy /></div>
+    <div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name="operio-orca-0.6" lazy /></div>
     <div class="shots">
       {#each h.whatsNew.shots as s}
         <figure>
