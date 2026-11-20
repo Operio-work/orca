@@ -87,7 +87,13 @@ test('hosted: Admin overview shows tools only to Operio staff, never People', as
   assert.equal(a.json.edition, 'hosted');
   assert.equal(a.json.sections.people, false);
   assert.equal(a.json.sections.tools, false);
-  assert.equal((await req('GET', '/api/admin', { user: STAFF() })).json.sections.tools, true);
+  // Logins and API keys are Operio's on a hosted panel; routines are the client's.
+  assert.equal(a.json.sections.accounts, false);
+  assert.equal(a.json.sections.keys, false);
+  assert.equal(a.json.sections.routines, true);
+  const staff = (await req('GET', '/api/admin', { user: STAFF() })).json;
+  assert.equal(staff.sections.tools, true);
+  assert.equal(staff.sections.keys, true);
   assert.equal((await req('GET', '/api/admin', { user: VIEWER() })).status, 403);
 });
 
