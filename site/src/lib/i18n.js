@@ -422,6 +422,17 @@ const en = {
   },
 
   managedPage: {
+    pricingTitle: 'Plans and prices',
+    pricingLead: 'ORCA Managed comes with an Operio plan. Every plan with agents includes three core specialists (Research, Writing and Communication); Elite Workflow Agents take on your own processes end to end.',
+    pricingNote: 'Prices in US dollars. Launch price per month, with the standard price struck through, plus a one-time onboarding. Model usage is billed by your model provider. WhatsApp messaging fees charged by Meta are passed through at cost.',
+    perMonth: '/month',
+    onboarding: 'one-time onboarding',
+    popular: 'Popular',
+    planDesc: { light: 'Knowledge base: your business documents, answered from your panel', starter: '1 Elite Workflow Agent + 3 core specialists', pro: '4 Elite Workflow Agents + 3 core specialists', hub: '8 Elite Workflow Agents + 3 core specialists' },
+    extra: 'Extra Elite Workflow Agent on any plan: {0}/month + {1} one-time.',
+    pricingMore: 'Full price list on operio.work',
+    pricingTerms: 'ORCA terms',
+
     metaTitle: 'ORCA Managed by Operio: your own panel, your team, run by Operio',
     description:
       'The same ORCA on a server Operio runs for you: your own panel at orca.operio.work behind a login, your team with roles, a team chat with @agent and EN/ES translation, 23 routines, and updates, monitoring and backups handled by Operio.',
@@ -610,7 +621,7 @@ const en = {
     talk: 'Talk to Operio',
     partners: 'Partner program',
     website: 'operio.work',
-    license: 'MIT license',
+    license: 'MIT license', terms: 'Terms', privacy: 'Privacy',
     runsOn: 'Runs on',
     runsOnLicense: '(Apache-2.0)',
     github: 'Source on GitHub',
@@ -1041,6 +1052,17 @@ vsTitle: 'Cómo se compara ORCA',
   },
 
   managedPage: {
+    pricingTitle: 'Planes y precios',
+    pricingLead: 'ORCA Gestionado viene con un plan de Operio. Cada plan con agentes incluye tres especialistas base (Investigación, Redacción y Comunicación); los Elite Workflow Agents se encargan de tus propios procesos de principio a fin.',
+    pricingNote: 'Precios en pesos mexicanos (MXN), IVA incluido. Precio de lanzamiento al mes, con el precio normal tachado, más un onboarding único. El uso del modelo lo cobra tu proveedor de modelos. Las tarifas de mensajería de WhatsApp que cobra Meta se facturan al costo.',
+    perMonth: '/mes',
+    onboarding: 'onboarding único',
+    popular: 'Popular',
+    planDesc: { light: 'Base de conocimiento: los documentos de tu negocio, respondidos desde tu panel', starter: '1 Elite Workflow Agent + 3 especialistas base', pro: '4 Elite Workflow Agents + 3 especialistas base', hub: '8 Elite Workflow Agents + 3 especialistas base' },
+    extra: 'Elite Workflow Agent adicional en cualquier plan: {0}/mes + {1} único.',
+    pricingMore: 'Lista de precios completa en operio.work',
+    pricingTerms: 'Términos de ORCA',
+
     metaTitle: 'ORCA Gestionado por Operio: tu propio panel, tu equipo, operado por Operio',
     description:
       'El mismo ORCA en un servidor que Operio opera por ti: tu propio panel en orca.operio.work con inicio de sesión, tu equipo con roles, un chat de equipo con @agente y traducción EN/ES, 23 rutinas, y actualizaciones, monitoreo y respaldos a cargo de Operio.',
@@ -1229,7 +1251,7 @@ vsTitle: 'Cómo se compara ORCA',
     talk: 'Habla con Operio',
     partners: 'Programa de socios',
     website: 'operio.work',
-    license: 'Licencia MIT',
+    license: 'Licencia MIT', terms: 'Términos', privacy: 'Privacidad',
     runsOn: 'Corre sobre',
     runsOnLicense: '(Apache-2.0)',
     github: 'Código en GitHub',

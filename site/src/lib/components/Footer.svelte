@@ -38,7 +38,7 @@
     </div>
   </div>
   <div class="container"><div class="lower">
-    <p>© 2026 Operio · <a href={GITHUB_URL + '/blob/main/LICENSE'}>{t.footer.license}</a></p>
+    <p>© 2026 Operio · <a href={GITHUB_URL + '/blob/main/LICENSE'}>{t.footer.license}</a> · <a href={href(lang, '/terms')}>{t.footer.terms}</a> · <a href={href(lang, '/privacy')}>{t.footer.privacy}</a></p>
     <p>{t.footer.runsOn} <a href={HERDR_URL}>herdr</a> {t.footer.runsOnLicense}</p>
   </div></div>
 </footer>

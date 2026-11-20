@@ -2,11 +2,14 @@
   import Seo from '#lib/components/Seo.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import { href, TALK_URL } from '#lib/site.js';
+  import { PLANS, EXTRA_EWA, currencyFor, price } from '#lib/plans.js';
 
   let { data } = $props();
   const lang = $derived(data.lang);
   const t = $derived(data.t);
   const m = $derived(t.managedPage);
+  const cur = $derived(currencyFor(lang));
+  const fill = (/** @type {string} */ str, /** @type {string[]} */ ...v) => str.replace(/\{(\d)\}/g, (_, i) => v[+i]);
 </script>
 
 <Seo title={m.metaTitle} description={m.description} {lang} ogLocale={t.ogLocale} />
@@ -100,6 +103,39 @@
   </div>
 </section>
 
+<section class="section pricing" id="pricing" aria-labelledby="pricing-h">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="pricing-h">{m.pricingTitle}</h2>
+      <p class="pricing-lead">{m.pricingLead}</p>
+    </div>
+    <ul class="plans">
+      {#each PLANS as plan}
+        {@const pr = plan.prices[cur]}
+        <li class="plan" class:popular={plan.popular}>
+          <div class="plan-top">
+            <h3>{plan.name}</h3>
+            {#if plan.popular}<span class="badge">{m.popular}</span>{/if}
+          </div>
+          <p class="plan-desc">{m.planDesc[plan.id]}</p>
+          <p class="plan-price">
+            <span class="amount">{price(pr.monthlyPromo, lang)}</span><span class="per">{m.perMonth}</span>
+            {#if pr.monthlyStd}<s class="std">{price(pr.monthlyStd, lang)}</s>{/if}
+          </p>
+          <p class="plan-onb">+ {price(pr.onboarding, lang)} {m.onboarding}</p>
+        </li>
+      {/each}
+    </ul>
+    <p class="pricing-extra">{fill(m.extra, price(EXTRA_EWA[cur].monthly, lang), price(EXTRA_EWA[cur].onboarding, lang))}</p>
+    <p class="pricing-note">{m.pricingNote}</p>
+    <p class="pricing-links">
+      <a class="btn btn-primary" href={TALK_URL}>{t.home.secondary} <span class="arrow"><Icon name="arrow" size={17} /></span></a>
+      <a class="link" href={lang === 'es' ? 'https://operio.work/es/pricing' : 'https://operio.work/pricing'}>{m.pricingMore}</a>
+      <a class="link" href={href(lang, '/terms')}>{m.pricingTerms}</a>
+    </p>
+  </div>
+</section>
+
 <section class="section" aria-labelledby="how">
   <div class="container">
     <div class="section-head"><h2 id="how">{m.howTitle}</h2></div>
@@ -141,6 +177,27 @@
 </section>
 
 <style>
+  /* ── Plans and prices: Operio's four plans, four across ── */
+  .pricing { background: var(--color-surface); }
+  .pricing-lead { margin-top: 12px; color: var(--text-secondary); max-width: 62ch; }
+  .plans { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .plan { display: flex; flex-direction: column; gap: 10px; padding: 24px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-bg); }
+  .plan.popular { border-color: var(--color-orange); box-shadow: 0 0 0 1px var(--color-orange); }
+  .plan-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .plan h3 { font-size: 1.1rem; font-weight: 650; }
+  .badge { font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tracking-label); padding: 2px 8px; border-radius: 999px; background: var(--tint-orange); color: var(--color-orange-ink); }
+  .plan-desc { color: var(--text-secondary); font-size: var(--text-sm); flex: 1; }
+  .plan-price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
+  .amount { font-family: var(--font-mono); font-size: 1.45rem; font-weight: 700; }
+  .per { color: var(--text-secondary); font-size: var(--text-sm); }
+  .std { color: var(--text-tertiary); font-size: var(--text-sm); }
+  .plan-onb { color: var(--text-secondary); font-size: var(--text-sm); }
+  .pricing-extra { margin-top: 24px; color: var(--text-primary); }
+  .pricing-note { margin-top: 8px; color: var(--text-tertiary); font-size: var(--text-sm); max-width: 80ch; }
+  .pricing-links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 24px; }
+  @media (max-width: 960px) { .plans { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .plans { grid-template-columns: 1fr; } }
+
   /* ── Hero: badge, headline, lead, two CTAs ── */
   .head { padding: 64px 0 56px; border-bottom: 1px solid var(--color-border); }
   .head-inner { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
