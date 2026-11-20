@@ -45,6 +45,14 @@ test.before(() => {
   fs.mkdirSync(FAKE, { recursive: true });
   fs.mkdirSync(PREFIX, { recursive: true });
   fs.mkdirSync(TOOLS, { recursive: true });
+  // Keep the llm tests off the host PATH: Node's install directory may also contain
+  // real agent CLIs (for example, gemini). Expose only Node and the utilities the
+  // CLI test needs through this directory.
+  fs.symlinkSync(process.execPath, path.join(TOOLS, 'node'));
+  for (const name of ['bash', 'cut', 'dirname', 'grep', 'mktemp', 'rm', 'sleep', 'tail', 'timeout']) {
+    const source = ['/usr/bin', '/bin'].map(dir => path.join(dir, name)).find(p => fs.existsSync(p));
+    if (source) fs.symlinkSync(source, path.join(TOOLS, name));
+  }
   fs.writeFileSync(path.join(CONFIG, 'env'), '# test settings\n', { mode: 0o600 });
   fs.mkdirSync(path.join(CONFIG, 'routines', 'demo-pack'), { recursive: true, mode: 0o700 });
   fs.writeFileSync(path.join(CONFIG, 'routines', 'demo-pack', 'routine.json'), '{"id":"demo-pack"}\n', { mode: 0o600 });
@@ -309,8 +317,8 @@ test('llm test: unknown kind, missing CLI, the key reaches the agent, a failure 
   fs.writeFileSync(path.join(TOOLS, 'claude'), '#!/bin/sh\n[ "$1" = -p ] || { echo "bad args: $*" >&2; exit 2; }\n' +
     'if [ -n "${ANTHROPIC_API_KEY:-}" ]; then echo ok; exit 0; fi\necho "Not logged in" >&2; exit 1\n', { mode: 0o755 });
   fs.writeFileSync(path.join(TOOLS, 'codex'), '#!/bin/sh\necho "auth error: invalid key $OPENAI_API_KEY for OPENAI_API_KEY=$OPENAI_API_KEY" >&2; exit 1\n', { mode: 0o755 });
-  // Only the fakes plus what bash and node need: the real claude/gemini on this machine stay out.
-  const PATH = [TOOLS, path.dirname(process.execPath), '/usr/bin', '/bin'].join(':');
+  // Only the fakes and explicitly linked utilities are visible; host agent CLIs stay out.
+  const PATH = TOOLS;
   let r = run(['llm', 'test', 'foo'], { PATH });
   assert.equal(r.code, 1); assert.match(r.out, /unknown kind: foo \(claude, codex, opencode, gemini\)/);
   r = run(['llm', 'test'], { PATH });
