@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.6.2] - 2026-11-20
 
 ### Changed
 - OpenCode and Ollama agents can use the transcript Reader, including exact replies, unanswered
