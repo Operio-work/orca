@@ -610,7 +610,7 @@ function stop() { running = false; cancelAnimationFrame(raf); }
 // ─── HUD ─────────────────────────────────────────────────────────────────────
 function clock() {
   const d = new Date(now());
-  clockEl.textContent = d.toLocaleTimeString(state.window.orcaLocale(lang), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  clockEl.textContent = d.toLocaleTimeString(window.orcaLocale(lang), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 function info() {
   if (failed) return;
