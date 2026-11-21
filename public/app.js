@@ -126,6 +126,9 @@ const T = {
     ws: 'Workspace {0}', move: 'Move', moveTitle: 'Move {0}', moveTo: 'To', moveNewTab: 'New tab',
     moveBeside: 'Beside {0}', moveNewWs: 'New workspace', wsName: 'Workspace name', moving: 'Moving…', moved: '{0} moved to {1}',
     moveHint: 'The agent keeps running — only its place on the desktop changes.',
+    sleep: 'Sleep', sleeping: 'Sleeping', sleepingFor: 'Sleeping {0}', wake: 'Wake', finish: 'Finish', confirmFinish: 'Confirm finish?',
+    sleepNow: 'Sleep now', sleep15: '15m', sleep60: '1h', wakeIn: 'Wakes in {0}', waitingRoom: 'Waiting Room', shoreTitle: 'On the Shore — Waiting for a Boat', sleepEmpty: 'No agents sleeping.',
+    e_already_sleeping: 'This agent is already sleeping.', e_not_sleeping: 'This agent is not sleeping.', e_bad_request: 'Choose a wake time from 1 minute to 24 hours.',
     moveLast: 'This is the last pane in {0}, so {0} closes after the move.',
     e_same_place: 'It’s already there. Pick another place.',
     e_ws_gone: 'That workspace was closed. Pick another place.',
@@ -248,6 +251,9 @@ const T = {
     ws: 'Espacio {0}', move: 'Mover', moveTitle: 'Mover {0}', moveTo: 'A', moveNewTab: 'Pestaña nueva',
     moveBeside: 'Junto a {0}', moveNewWs: 'Espacio de trabajo nuevo', wsName: 'Nombre del espacio', moving: 'Moviendo…', moved: '{0} movido a {1}',
     moveHint: 'El agente sigue trabajando — solo cambia su lugar en el escritorio.',
+    sleep: 'Dormir', sleeping: 'Durmiendo', sleepingFor: 'Durmiendo {0}', wake: 'Despertar', finish: 'Terminar', confirmFinish: '¿Confirmar cierre?',
+    sleepNow: 'Dormir ahora', sleep15: '15 min', sleep60: '1 h', wakeIn: 'Despierta en {0}', waitingRoom: 'Sala de espera', shoreTitle: 'En la orilla — esperando un barco', sleepEmpty: 'No hay agentes durmiendo.',
+    e_already_sleeping: 'Este agente ya está durmiendo.', e_not_sleeping: 'Este agente no está durmiendo.', e_bad_request: 'Elige un tiempo de 1 minuto a 24 horas.',
     moveLast: 'Es el último panel de {0}, así que {0} se cierra al moverlo.',
     e_same_place: 'Ya está ahí. Elige otro lugar.',
     e_ws_gone: 'Ese espacio de trabajo se cerró. Elige otro lugar.',
@@ -275,6 +281,12 @@ const safeSet = (k, v) => { try { localStorage.setItem(k, v); } catch { /* priva
 let lang = safeGet('herdr-lang') || (navigator.language || 'en').slice(0, 2);
 if (!T[lang]) lang = 'en';
 let lastData = null; // first /api/agents answer; null = still loading (skeletons show)
+let sleeping = [];
+const finishArmed = new Map();
+const optimisticSleepUntil = new Map();
+let sleepPopoverPane = null;
+const SLEEP_MOCK = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('sleepMock') === '1';
+let mockSleeping = null;
 let view = ['office', 'island', 'holo'].includes(safeGet('orca-view')) ? safeGet('orca-view') : 'map'; // map | office | island | holo
 let offline = false;
 let highlight = safeGet('orca-highlight') || 'all'; // all | blocked | working | idle | unnamed | tag:<x>
@@ -433,12 +445,13 @@ function tabGeometry(tab) {
 }
 
 function makeTile(pane) {
-  const b = document.createElement('button');
-  b.type = 'button';
+  const b = document.createElement('div');
+  b.setAttribute('role', 'button'); b.tabIndex = 0;
   b.className = 'tile';
   b.dataset.pane = pane;
-  b.innerHTML = '<span class="face"><span class="tdots"></span><span class="tname"></span><span class="ttitle"></span><span class="tstat"><span class="tword"></span><span class="ttime"></span><span class="tjobs"></span><span class="tlinks"></span></span><span class="tbar"></span><span class="tnew"></span><span class="tclaim"></span></span>';
-  b.addEventListener('click', () => pick(pane));
+  b.innerHTML = '<span class="face"><span class="tdots"></span><span class="tname"></span><span class="ttitle"></span><span class="tstat"><span class="tword"></span><span class="ttime"></span><span class="tjobs"></span><span class="tlinks"></span></span><span class="tbar"></span><span class="tnew"></span><span class="tclaim"></span></span><span class="tile-sleeps"></span>';
+  b.addEventListener('click', e => { if (e.target.closest('.tile-sleeps')) return; pick(pane); });
+  b.addEventListener('keydown', e => { if (e.target !== b || (e.key !== 'Enter' && e.key !== ' ')) return; e.preventDefault(); pick(pane); });
   return b;
 }
 
@@ -477,6 +490,91 @@ function fitMap(force) {
 }
 let fitTimer;
 addEventListener('resize', () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => fitMap(true), 120); });
+
+function sleepAge(since) {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(since || Date.now()).getTime()) / 60000));
+  return mins < 60 ? `${mins}m` : `${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`;
+}
+function wakeCountdown(wakeAt) {
+  const sec = Math.max(0, Math.ceil((new Date(wakeAt).getTime() - Date.now()) / 1000));
+  return sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.ceil(sec / 60)}m` : `${Math.floor(sec / 3600)}h ${Math.ceil(sec % 3600 / 60)}m`;
+}
+function makeSleepCard(agent) {
+  const card = document.createElement('article'); card.className = 'sleep-card';
+  const info = document.createElement('div'); info.className = 'sleep-info';
+  const name = document.createElement('strong'); name.textContent = agent.name || agent.paneId;
+  const role = document.createElement('span'); role.className = 'sleep-role'; role.textContent = agent.role || agent.agent || '';
+  const age = document.createElement('span'); age.className = 'sleep-age'; age.textContent = t('sleepingFor', sleepAge(agent.sleepingSince));
+  info.append(name, role, age);
+  const actions = document.createElement('div'); actions.className = 'sleep-card-actions';
+  if (agent.wakeAt) { const badge = document.createElement('span'); badge.className = 'wake-badge'; badge.textContent = t('wakeIn', wakeCountdown(agent.wakeAt)); actions.append(badge); }
+  const wake = document.createElement('button'); wake.type = 'button'; wake.className = 'btn'; wake.textContent = t('wake'); wake.addEventListener('click', () => doWake(agent));
+  const finish = document.createElement('button'); finish.type = 'button'; finish.className = 'btn danger';
+  const armed = (finishArmed.get(agent.paneId) || 0) > Date.now();
+  finish.textContent = armed ? t('confirmFinish') : t('finish');
+  finish.addEventListener('click', () => {
+    if (!armed) { finishArmed.set(agent.paneId, Date.now() + 4000); renderSleepingZones(); setTimeout(() => { if ((finishArmed.get(agent.paneId) || 0) <= Date.now()) { finishArmed.delete(agent.paneId); renderSleepingZones(); } }, 4050); return; }
+    finishArmed.delete(agent.paneId); doFinish(agent);
+  });
+  actions.append(wake, finish); card.append(info, actions);
+  return card;
+}
+function renderSleepZone(host) {
+  host.hidden = sleeping.length === 0 || view !== 'map';
+  if (!sleeping.length) return;
+  const head = document.createElement('header'); head.className = 'sleep-zone-head';
+  const h = document.createElement('h2'); h.textContent = t('sleeping');
+  const count = document.createElement('span'); count.className = 'sleep-count'; count.textContent = sleeping.length;
+  head.append(h, count);
+  const list = document.createElement('div'); list.className = 'sleep-list';
+  list.append(...sleeping.map(agent => makeSleepCard(agent)));
+  host.replaceChildren(head, list);
+}
+function renderSleepPopover(host, viewName) {
+  const item = view === viewName ? sleeping.find(a => a.paneId === sleepPopoverPane) : null;
+  host.hidden = !item;
+  if (!item) return;
+  const head = document.createElement('header'); head.className = 'sleep-popover-head';
+  const title = document.createElement('strong'); title.textContent = viewName === 'office' ? t('waitingRoom') : t('shoreTitle');
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'icon-btn'; close.textContent = '×'; close.setAttribute('aria-label', t('close'));
+  close.addEventListener('click', () => { sleepPopoverPane = null; renderSleepingZones(); });
+  head.append(title, close);
+  host.setAttribute('role', 'dialog'); host.setAttribute('aria-label', item.name || item.paneId);
+  host.replaceChildren(head, makeSleepCard(item));
+}
+function renderSleepingZones() {
+  renderSleepZone($('#map-sleeping'));
+  renderSleepPopover($('#office-sleep-popover'), 'office');
+  renderSleepPopover($('#island-sleep-popover'), 'island');
+}
+async function doSleep(pane, minutes) {
+  const active = agents.find(a => a.pane === pane);
+  if (!active || sleeping.some(a => a.paneId === pane)) return;
+  const before = sleeping;
+  const now = new Date();
+  const item = { id: active.id, name: active.name, role: active.role || active.agent, paneId: pane, pid: active.pid, sleepingSince: now.toISOString(), wakeAt: minutes ? new Date(now.getTime() + minutes * 60000).toISOString() : null };
+  sleeping = [...sleeping, item]; optimisticSleepUntil.set(pane, Date.now() + 5000); if (SLEEP_MOCK) mockSleeping = sleeping; agents = agents.filter(a => a.pane !== pane); byPane.delete(pane);
+  render();
+  try {
+    if (SLEEP_MOCK) return;
+    const result = await post(`/api/agents/${enc(pane)}/sleep`, minutes ? { wakeInMinutes: minutes } : {});
+    sleeping = sleeping.map(a => a.paneId === pane ? result.agent : a); render(); refresh();
+  } catch (err) { optimisticSleepUntil.delete(pane); sleeping = before; agents.push(active); byPane.set(pane, active); render(); toast(errText(err), true); }
+}
+async function doWake(agent) {
+  const before = sleeping;
+  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); sleepPopoverPane = null; if (SLEEP_MOCK) mockSleeping = sleeping;
+  const restored = agents.find(a => a.pane === agent.paneId) || { pane: agent.paneId, id: agent.id, name: agent.name, agent: agent.role, state: 'active', status: 'idle', tags: [] };
+  agents.push(restored); byPane.set(restored.pane, restored); render();
+  try { if (!SLEEP_MOCK) await post(`/api/agents/${enc(agent.paneId)}/wake`); refresh(); }
+  catch (err) { sleeping = before; if (SLEEP_MOCK) mockSleeping = sleeping; agents = agents.filter(a => a.pane !== agent.paneId); byPane.delete(agent.paneId); render(); toast(errText(err), true); }
+}
+async function doFinish(agent) {
+  const before = sleeping;
+  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); sleepPopoverPane = null; if (SLEEP_MOCK) mockSleeping = sleeping; render();
+  try { if (!SLEEP_MOCK) await post(`/api/agents/${enc(agent.paneId)}/finish`); refresh(); }
+  catch (err) { sleeping = before; if (SLEEP_MOCK) mockSleeping = sleeping; render(); toast(errText(err), true); }
+}
 
 function renderMap() {
   if (!lastData) return; // the skeleton in #map stays until the first answer
@@ -524,10 +622,11 @@ function renderMap() {
 
     const kids = [];
     for (const p of tab.panes) {
+      if (sleeping.some(s => s.paneId === p.pane)) continue;
       const a = byPane.get(p.pane);
       let el = tiles.get(p.pane);
       if (a) {
-        if (!el || el.tagName !== 'BUTTON' || el.classList.contains('empty')) { el = makeTile(p.pane); tiles.set(p.pane, el); }
+        if (!el || !el.classList.contains('tile') || el.classList.contains('empty')) { el = makeTile(p.pane); tiles.set(p.pane, el); }
         updateTile(el, a);
       } else {
         // A shell pane: a button that opens its terminal (mirror).
@@ -587,6 +686,7 @@ function updateTile(el, a) {
   }
   lastStatus.set(a.pane, a.status);
   const shown = a.name || suggestName(a.title) || t('unnamed');
+  el.setAttribute('aria-label', `${shown}, ${statusText(a.status)}`);
   setBreakable(el.querySelector('.tname'), shown);
   el.classList.toggle('solid-name', !/[-_.: ]/.test(shown)); // no break point: ellipsis when it can't fit
   if (!a.name) el.dataset.ask = t('nameAsk'); else delete el.dataset.ask;
@@ -618,6 +718,18 @@ function updateTile(el, a) {
   const elapsed = a.since ? (Date.now() + clockSkew - a.since) / 1800000 : 0;
   el.style.setProperty('--elapsed', Math.max(0.12, Math.min(1, elapsed)).toFixed(3));
   el.classList.toggle('timed', !!a.since); // unknown start: no bar (never imply 'just started')
+  const quick = el.querySelector('.tile-sleeps');
+  if (quick && !quick.dataset.ready) {
+    quick.dataset.ready = '1';
+    for (const [minutes, key] of [[0, 'sleepNow'], [15, 'sleep15'], [60, 'sleep60']]) {
+      const b = document.createElement('span'); b.setAttribute('role', 'button'); b.tabIndex = 0; b.dataset.minutes = minutes;
+      b.addEventListener('pointerdown', e => e.stopPropagation());
+      b.addEventListener('click', e => { e.stopPropagation(); doSleep(a.pane, minutes); });
+      b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); doSleep(a.pane, minutes); } });
+      quick.append(b);
+    }
+  }
+  quick?.querySelectorAll('[data-minutes]').forEach(b => { b.textContent = t(Number(b.dataset.minutes) === 0 ? 'sleepNow' : Number(b.dataset.minutes) === 15 ? 'sleep15' : 'sleep60'); b.setAttribute('aria-label', `${t('sleep')} · ${b.textContent}`); });
   const dots = el.querySelector('.tdots');
   const dkey = a.tags.map(x => x + (tagSlots[x] ?? '')).join(',');
   if (dots.dataset.key !== dkey) {
@@ -755,6 +867,9 @@ function renderSheet() {
   renderCrew();
   renderLinks(a);
   $('#sheet-stop').hidden = a.status !== 'working';
+  $('#sheet-sleep-actions').hidden = a.state === 'sleeping';
+  $('#sheet-sleep-actions').setAttribute('aria-label', t('sleep'));
+  $('#sheet-sleep-actions').querySelectorAll('[data-sleep-minutes]').forEach(b => { const n = Number(b.dataset.sleepMinutes); b.textContent = t(n === 0 ? 'sleepNow' : n === 15 ? 'sleep15' : 'sleep60'); });
   if (histFor.terminal !== a.terminal || (a.jobs?.last || 0) !== histFor.last) loadHistory(a);
   if ((a.jobs?.last || 0) !== jobsFor.last || jobsFor.pane !== a.pane || (a.status === 'working') !== !!jobsFor.running) loadJobs();
   else renderJobs();
@@ -788,6 +903,8 @@ async function doClaim(a, mode, to) {
     refresh();
   } catch (err) { toast(errText(err), true); }
 }
+$('#sheet-sleep-actions').addEventListener('click', e => { const b = e.target.closest('[data-sleep-minutes]'); if (b && selected) doSleep(selected, Number(b.dataset.sleepMinutes)); });
+
 $('#sheet-claim').addEventListener('click', e => {
   e.stopPropagation();
   const a = byPane.get(selected);
@@ -2102,8 +2219,9 @@ function renderNotices() {
 function render() {
   renderStatusBar();
   renderQueue();
-  if (scene()) scene().update(null, { selected, lang, offline, matches });
+  if (scene()) scene().update(lastData ? { ...lastData, agents } : null, { selected, lang, offline, matches });
   else renderMap();
+  renderSleepingZones();
   renderSheet();
   queueDrawLinks();
 }
@@ -2144,6 +2262,7 @@ function loadScene(name) {
     s.onload = () => {
       const m = window[global];
       m.onPick(pick);
+      if (m.onSleepingPick) m.onSleepingPick(pane => { sleepPopoverPane = pane; renderSleepingZones(); });
       if (name === 'holo') m.onShow((pane, zoom) => showOnDesktop(pane, zoom));
       // Office tower: hovering a desk opens the same card as the map (rect = the desk on screen).
       if (name === 'office' && m.onHover) m.onHover((pane, rect) => { if (pane && rect) showPeek({ dataset: { pane }, getBoundingClientRect: () => rect, isConnected: true }); else hidePeek(); });
@@ -2172,7 +2291,7 @@ async function setView(v) {
     try { m = await loadScene(v); } catch (err) { toast(errText(err), true); return; }
     if (view !== v) return; // switched again while loading
     m.show(true);
-    m.update(lastData, { selected, lang, offline, matches });
+    m.update(lastData ? { ...lastData, agents } : null, { selected, lang, offline, matches });
   }
   render();
   if (v === 'map') fitMap(true);
@@ -2229,10 +2348,23 @@ async function refresh() {
   polling = true;
   try {
     const r = await call('/api/agents');
+    if (!Array.isArray(r.sleeping)) { try { r.sleeping = await call('/api/agents/sleeping'); } catch { r.sleeping = []; } }
+    if (SLEEP_MOCK) {
+      mockSleeping ??= [{ id: 'sleep-demo', name: 'Resting agent', role: 'Demo', paneId: 'sleep-demo-pane', pid: 0, sleepingSince: new Date(Date.now() - 12 * 60000).toISOString(), wakeAt: new Date(Date.now() + 9 * 60000).toISOString() }];
+      r.sleeping = mockSleeping;
+    }
     lastData = r;
     offline = false;
     for (const a of r.agents) { if (a.pane === selected && a.fresh) { a.fresh = false; post(`/api/agents/${enc(a.pane)}/seen`).catch(() => {}); } a.showFresh = !!a.fresh && a.status !== 'working' && a.status !== 'blocked'; }
-    if (scene()) scene().update(r, { selected, lang, offline, matches });
+    const reportedSleeping = r.sleeping || [];
+    for (const [pane, until] of optimisticSleepUntil) {
+      if (reportedSleeping.some(a => a.paneId === pane)) optimisticSleepUntil.delete(pane);
+      else if (Date.now() > until) optimisticSleepUntil.delete(pane);
+      else { const local = sleeping.find(a => a.paneId === pane); if (local) reportedSleeping.push(local); }
+    }
+    sleeping = reportedSleeping;
+    const activeAgents = r.agents.filter(a => a.state !== 'sleeping' && !sleeping.some(s => s.paneId === a.pane));
+    if (scene()) scene().update({ ...r, agents: activeAgents }, { selected, lang, offline, matches });
     // Sounds for what changed since the last look: a chime when someone needs you, a flourish when one finishes.
     if (lastData) for (const a of r.agents) {
       const was = prevStatus.get(a.pane);
@@ -2243,7 +2375,7 @@ async function refresh() {
     if (r.people) people = r.people;
     noticeTakeovers(r.agents);
     noticeFinished(r.agents);
-    agents = r.agents;
+    agents = activeAgents;
     tabs = r.tabs || [];
     workspaces = r.workspaces || [];
     tagSlots = r.tagColors || {};

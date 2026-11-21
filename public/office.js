@@ -150,11 +150,11 @@ SPRITES.ride = [ // standing still in the lift
 
 // ─── Copy (EN / ES) ──────────────────────────────────────────────────────────
 const T = {
-  en: { title: 'ORCA', floor: 'FLOOR', dark: 'NO AGENTS ON THIS FLOOR', lobby: 'LOBBY',
+  en: { title: 'ORCA', floor: 'FLOOR', waitingRoom: 'WAITING ROOM', dark: 'NO AGENTS ON THIS FLOOR', lobby: 'LOBBY',
         ready: 'READY.', none: 'NO AGENTS YET. PRESS NEW.', offline: '?CONNECTION ERROR',
         need1: '{0} NEEDS YOU', needN: '{0} NEED YOU', counts: '{0} WORKING · {1} IDLE · {2} NEED YOU',
         st: { working: 'WORKING', idle: 'IDLE', blocked: 'NEEDS YOU', done: 'DONE', unknown: 'STARTING' } },
-  es: { title: 'ORCA', floor: 'PISO', dark: 'SIN AGENTES EN ESTE PISO', lobby: 'LOBBY',
+  es: { title: 'ORCA', floor: 'PISO', waitingRoom: 'SALA DE ESPERA', dark: 'SIN AGENTES EN ESTE PISO', lobby: 'LOBBY',
         ready: 'LISTO.', none: 'AUN NO HAY AGENTES. TOCA NUEVO.', offline: '?ERROR DE CONEXION',
         need1: '{0} TE NECESITA', needN: '{0} TE NECESITAN', counts: '{0} TRABAJANDO · {1} LIBRES · {2} TE NECESITAN',
         st: { working: 'TRABAJANDO', idle: 'LIBRE', blocked: 'TE NECESITA', done: 'TERMINO', unknown: 'INICIANDO' } },
@@ -184,7 +184,7 @@ const box = document.getElementById('office');
 const canvas = document.getElementById('world');
 const rosterEl = document.getElementById('roster');
 const ctx = canvas.getContext('2d');
-let data = { agents: [], tabs: [], workspaces: [], tagColors: {}, mapOrder: [] };
+let data = { agents: [], sleeping: [], tabs: [], workspaces: [], tagColors: {}, mapOrder: [] };
 let state = { selected: null, lang: 'en', offline: false, matches: () => true };
 let L = T.en;
 let hits = [];          // desks [{ x, y, w, h, pane }] and the roof flag [{ ..., flag: true }]
@@ -193,6 +193,7 @@ let scale = 2;
 let skew = 0;
 let lay = null;         // last layout
 let onPick = () => {};
+let onSleepingPick = () => {};
 let onHover = () => {};
 const waves = new Map();   // pane -> until: the worker cheers (show on desktop, or a job just finished)
 const popups = [];         // { pane, glyph, col, t0 } — a ✓ or ! rising over a desk
@@ -253,6 +254,7 @@ function layout(w) {
   const g = geo(phone);
   const W = Math.max(110, Math.floor(w / scaleFor(w)));
   const byPane = new Map(data.agents.map(a => [a.pane, a]));
+  const sleepingPanes = new Set((data.sleeping || []).map(a => a.paneId));
   const bx0 = g.M, bx1 = W - g.M;
   const shaftX = bx1 - 2 - g.ELEV_W;
   const roomX0 = bx0 + 2 + g.GUT + 3, roomX1 = shaftX - 3;
@@ -270,7 +272,8 @@ function layout(w) {
     else {
       let cx = roomX0, rowH = 0;
       for (const tab of busy) {
-        const panes = [...tab.panes].sort((a, b) => a.y - b.y || a.x - b.x);
+        const panes = [...tab.panes].filter(p => !sleepingPanes.has(p.pane)).sort((a, b) => a.y - b.y || a.x - b.x);
+        if (!panes.length) continue;
         const cols = Math.min(panes.length, perRow), rows = Math.ceil(panes.length / perRow);
         const rw = cols * g.SLOT_W + 6, rh = ROOM_HEAD + rows * SLOT_H + 3;
         if (cx > roomX0 && cx + rw > roomX1) { cy += rowH + 4; cx = roomX0; rowH = 0; }
@@ -289,6 +292,17 @@ function layout(w) {
     floors.push(f);
     y = f.bottom + 2; // slab
   });
+  const sleepers = data.sleeping || [];
+  if (sleepers.length) {
+    const panes = sleepers.map(a => ({ pane: a.paneId, sleeping: a }));
+    const cols = Math.min(panes.length, perRow), rows = Math.ceil(panes.length / perRow);
+    const roomY = y + 3 + g.LBL, roomW = cols * g.SLOT_W + 6, roomH = ROOM_HEAD + rows * SLOT_H + 3;
+    const tab = { id: 'sleeping-room', label: L.waitingRoom, number: 0, panes };
+    const room = { tab, panes, x: roomX0, y: roomY, w: roomW, h: roomH, sleeping: true };
+    panes.forEach((p, i) => desks.set(p.pane, { x: roomX0 + 3 + (i % perRow) * g.SLOT_W, y: roomY + ROOM_HEAD + Math.floor(i / perRow) * SLOT_H, ws: 'sleeping-room' }));
+    const f = { ws: { id: 'sleeping-room', label: L.waitingRoom }, y, rooms: [room], dark: false, number: 'Z', waiting: true, h: roomY + roomH + 3 - y };
+    f.bottom = y + f.h; floors.push(f); y = f.bottom + 2;
+  }
   const lobbyY = y;
   return { W, H: lobbyY + LOBBY_H + STREET_H, g, phone, bx0, bx1, shaftX, floors, desks, byPane, lobbyY };
 }
@@ -501,12 +515,15 @@ function drawFloors(l, sky) {
       px(r.x, r.y + r.h - 1, r.w, 1, C.dim);
       const label = r.tab.label || '#' + r.tab.number;
       text(label, r.x + 3, r.y + 2, C.t2, Math.floor((r.w - 12) / 4));
-      text(String(ags.length), r.x + r.w - 3 - textW(String(ags.length)), r.y + 2, C.t1);
+      const count = r.sleeping ? r.panes.length : ags.length;
+      text(String(count), r.x + r.w - 3 - textW(String(count)), r.y + 2, C.t1);
       for (const p of r.panes) {
         const d = l.desks.get(p.pane);
         const a = l.byPane.get(p.pane);
-        drawDesk(d.x, d.y, p.pane, a, a && away.has(p.pane));
-        if (a) hits.push({ x: d.x, y: d.y, w: l.g.SLOT_W, h: SLOT_H, pane: p.pane });
+        const sleeper = r.sleeping && p.sleeping;
+        const person = a || (sleeper ? { ...p.sleeping, pane: p.pane, agent: p.sleeping.agent || p.sleeping.role || '_', status: 'idle', tags: [] } : null);
+        drawDesk(d.x, d.y, p.pane, person, a && away.has(p.pane));
+        if (a || sleeper) hits.push({ x: d.x, y: d.y, w: l.g.SLOT_W, h: SLOT_H, pane: p.pane, sleeping: !!sleeper });
       }
     }
     floorHits.push({ y0: f.y, y1: f.bottom, ws: f.ws.id });
@@ -742,14 +759,14 @@ function at(e) {
   const x = (e.clientX - r.left) / scale, y = (e.clientY - r.top) / scale;
   return { x, y, hit: hits.find(z => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h), floor: floorHits.find(f => y >= f.y0 && y < f.y1) };
 }
-canvas.addEventListener('click', e => { const { hit } = at(e); if (hit) onPick(hit.pane); });
+canvas.addEventListener('click', e => { const { hit } = at(e); if (hit) (hit.sleeping ? onSleepingPick : onPick)(hit.pane); });
 canvas.addEventListener('pointermove', e => {
   if (e.pointerType !== 'mouse') return;
   const { hit, floor } = at(e);
   canvas.style.cursor = hit ? 'pointer' : 'default';
   const ws = floor?.ws || null;
   if (ws !== hoverWs) { hoverWs = ws; kick(); }
-  const pane = hit && !hit.flag ? hit.pane : null;
+  const pane = hit && !hit.flag && !hit.sleeping ? hit.pane : null;
   if (pane !== hoverPane) {
     hoverPane = pane;
     draw();
@@ -782,6 +799,7 @@ setInterval(() => { if (!document.hidden && !box.hidden && !running) draw(); }, 
 window.OrcaOffice = {
   font: { GLYPHS, norm }, // shared with the islands view
   onPick(fn) { onPick = fn; },
+  onSleepingPick(fn) { onSleepingPick = fn; },
   onHover(fn) { onHover = fn; },
   // d = latest /api/agents; s = { selected, lang, offline, matches }
   update(d, s) {

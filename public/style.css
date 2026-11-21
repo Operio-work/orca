@@ -2013,3 +2013,34 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .bra-actions { display: flex; justify-content: flex-end; gap: var(--space-2); }
 .adm-browser-forms { align-items: flex-start; }
 @media (max-width: 520px) { .bra-stack { right: 16px; left: 16px; width: auto; bottom: 16px; } }
+
+/* Sleeping agents live beside the active scenes, in a quiet zone. */
+.sleep-zone { width: min(100%, 1120px); margin: var(--space-3) auto var(--space-5); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.sleep-zone[hidden] { display: none; }
+.sleep-zone-head { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.sleep-zone-head h2 { margin: 0; color: var(--text-secondary); font: 600 var(--text-sm) var(--font-mono); }
+.sleep-count, .wake-badge { padding: 2px 7px; border-radius: var(--radius-full, 999px); background: var(--color-blue); color: var(--color-bg); font: 600 var(--text-xs) var(--font-mono); white-space: nowrap; }
+.sleep-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: var(--space-2); }
+.sleep-card { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); min-width: 0; padding: var(--space-2); border: 1px solid var(--color-border-dim); border-radius: var(--radius); background: var(--color-surface-2); }
+.sleep-info { display: grid; min-width: 0; gap: 2px; }
+.sleep-info strong { overflow: hidden; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; font: 600 var(--text-sm) var(--font-mono); }
+.sleep-role, .sleep-age { color: var(--text-muted); font: 400 var(--text-xs) var(--font-mono); }
+.sleep-card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
+.sleep-card-actions .btn { min-height: 30px; padding: 0 9px; font-size: var(--text-xs); }
+.sleep-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.sleep-actions[hidden] { display: none; }
+.tile-sleeps { position: absolute; z-index: 3; right: 5px; top: 5px; display: flex; gap: 2px; opacity: 0; transition: opacity var(--dur-fast) var(--ease); }
+.tile:hover .tile-sleeps, .tile:focus-within .tile-sleeps { opacity: 1; }
+.tile-sleeps [role="button"] { padding: 2px 4px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--text-primary); font: 600 9px/1.1 var(--font-mono); cursor: pointer; }
+.tile-sleeps [role="button"]:focus-visible { outline: 2px solid var(--color-orange); }
+@media (hover: none), (max-width: 599px) { .tile-sleeps { opacity: 1; } .tile-sleeps [role="button"]:not(:first-child) { display: none; } }
+@media (max-width: 520px) { .sleep-card { align-items: flex-start; flex-direction: column; } .sleep-card-actions { justify-content: flex-start; width: 100%; } }
+
+/* Scene canvases keep their own art; this small overlay appears only after tapping a sleeper. */
+.office { position: relative; }
+.scene-sleep-popover { position: absolute; z-index: 5; inset-inline: 8px; bottom: 18px; width: min(560px, calc(100% - 16px)); margin-inline: auto; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.scene-sleep-popover[hidden] { display: none; }
+.sleep-popover-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 6px; color: var(--text-secondary); font: 600 var(--text-xs) var(--font-mono); }
+.sleep-popover-head .icon-btn { min-width: 30px; min-height: 30px; }
+.scene-sleep-popover .sleep-card { padding: 6px; }
+@media (max-width: 520px) { .scene-sleep-popover { inset-inline: 4px; width: calc(100% - 8px); bottom: 10px; } }
