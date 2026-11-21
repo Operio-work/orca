@@ -9,17 +9,28 @@ const http = require('http');
 const { spawn } = require('child_process');
 const sleepState = require('../lib/sleep');
 
-test('sleep state reconciliation drops gone panes and pids and separates due and future wakes', () => {
+test('sleep state reconciliation keeps live sleeps, resumes pids for missing panes, and handles due wakes', () => {
   const now = Date.parse('2026-01-01T00:00:00Z');
   const state = {
     'w1:p1': { pids: [11], wakeAt: '2025-12-31T23:59:00Z' },
     'w1:p2': { pids: [22], wakeAt: '2026-01-01T00:10:00Z' },
     'w1:p3': { pids: [33], wakeAt: null },
-    'w1:p4': { pids: [44], wakeAt: null },
+    'w1:p4': { pids: [44, 33], wakeAt: null },
     'w1:p5': { pids: [], wakeAt: null },
+    'w1:p6': { pids: [66], wakeAt: null },
   };
-  const plan = sleepState.reconcile(state, new Set(['w1:p1', 'w1:p2', 'w1:p3', 'w1:p5']), pid => pid !== 33, now);
-  assert.deepEqual(plan, { drop: ['w1:p3', 'w1:p4', 'w1:p5'], wake: ['w1:p1'], arm: ['w1:p2'] });
+  const plan = sleepState.reconcile(state, new Set(['w1:p1', 'w1:p2', 'w1:p3', 'w1:p5', 'w1:p6']), pid => pid !== 33, now);
+  assert.deepEqual(plan, { drop: ['w1:p3', 'w1:p5'], wake: ['w1:p1'], arm: ['w1:p2'], release: ['w1:p4'] });
+});
+
+test('wake only nudges when an agent that was working or blocked is idle or errored', () => {
+  assert.equal(sleepState.shouldNudge('idle', 'idle'), false);
+  assert.equal(sleepState.shouldNudge('done', 'idle'), false);
+  assert.equal(sleepState.shouldNudge('working', 'working'), false);
+  assert.equal(sleepState.shouldNudge('blocked', 'blocked'), false);
+  assert.equal(sleepState.shouldNudge('working', 'idle'), true);
+  assert.equal(sleepState.shouldNudge('blocked', 'done'), true);
+  assert.equal(sleepState.shouldNudge('working', 'error'), true);
 });
 
 test('wake duration accepts only whole minutes from 1 through 1440', () => {
@@ -104,10 +115,10 @@ test('sleep routes validate pane ids and wake duration over HTTP', async t => {
   assert.equal((await request('GET', '/api/agents')).json.agents[0].state, 'sleeping');
   assert.equal((await request('GET', '/api/agents')).json.sleeping.length, 1);
   const woke = await request('POST', '/api/agents/w1%3Ap1/wake', {});
-  assert.deepEqual(woke.json, { agent: { id: 'w1:p1', name: 'sleep-test', state: 'active' }, nudged: true });
+  assert.deepEqual(woke.json, { agent: { id: 'w1:p1', name: 'sleep-test', state: 'active' }, nudged: false });
   await until(() => procState(childPid) !== 'T');
   assert.equal((await request('POST', '/api/agents/w1%3Ap1/wake', {})).json.error, 'not_sleeping');
-  assert.ok(fs.readFileSync(path.join(fake, 'prompts.jsonl'), 'utf8').includes('continue'));
+  assert.equal(fs.existsSync(path.join(fake, 'prompts.jsonl')), false, 'an agent that was idle before sleep is not nudged');
   assert.equal((await request('POST', '/api/agents/w1%3Ap1/sleep', {})).status, 200);
   await until(() => procState(childPid) === 'T');
   const finished = await request('POST', '/api/agents/w1%3Ap1/finish', {});

@@ -695,6 +695,10 @@ async function poll() {
   const seen = new Set();
   for (const a of agents) {
     seen.add(a.pane);
+    if (state.sleeping[a.pane]) {
+      prev.set(a.pane, { status: a.status, since: now });
+      continue;
+    }
     const p = prev.get(a.pane);
     // First look after a restart: the state's start is unknown, so no age is shown for it.
     if (!p) prev.set(a.pane, { status: a.status, since: polledOnce ? now : null });
@@ -1223,6 +1227,15 @@ function clearSleepTimer(pane) {
   if (timer) clearTimeout(timer);
   sleepTimers.delete(pane);
 }
+function releaseSleep(pane) {
+  const entry = state.sleeping[pane];
+  if (!entry) return false;
+  clearSleepTimer(pane);
+  resumePids(entry.pids);
+  delete state.sleeping[pane];
+  saveState();
+  return true;
+}
 function armSleepTimer(pane, wakeAt) {
   clearSleepTimer(pane);
   if (!wakeAt) return;
@@ -1261,18 +1274,31 @@ async function wakeAgent(pane, { automatic = false } = {}) {
     try { resumePids(entry.pids); }
     catch (e) { throw new HttpError(410, 'gone', e.message); }
     delete state.sleeping[pane]; saveState();
+    await sleep(2000);
     agentsList.at = 0;
     const resumed = (await listAgents()).find(x => x.pane === pane) || a;
-    const idle = resumed.status === 'idle' || resumed.status === 'done';
     const streamErrored = resumed.streamError === true || resumed.stream_error === true || resumed.status === 'error';
-    const nudged = idle || streamErrored;
+    const nudged = sleepState.shouldNudge(entry.statusAtSleep, resumed.status, streamErrored);
     if (nudged) await herdr(['agent', 'prompt', pane, 'continue']).catch(e => log('agent.wake_nudge_failed', { pane, detail: e.detail || e.message }));
     log('agent.wake', { pane, nudged });
     return { agent: { id: pane, name: nameOf(a), state: 'active' }, nudged };
   } finally { wakingPanes.delete(pane); }
 }
 async function reconcileSleeping() {
-  const agents = await listAgents();
+  const hadEntries = Object.keys(state.sleeping).length > 0;
+  let agents;
+  for (let attempt = 0; attempt < (hadEntries ? 3 : 1); attempt++) {
+    try { agents = await listAgents(); }
+    catch (e) {
+      if (attempt === (hadEntries ? 2 : 0)) {
+        log('agent.sleep_reconcile_list_failed', { code: e.code || 'internal' });
+        agents = [];
+      }
+    }
+    if (agents?.length || !hadEntries || attempt === 2) break;
+    await sleep(5000);
+    agentsList.at = 0;
+  }
   const livePanes = new Set(agents.map(a => a.pane));
   const plan = sleepState.reconcile(state.sleeping, livePanes, pid => {
     try { process.kill(Number(pid), 0); return true; }
@@ -1280,6 +1306,10 @@ async function reconcileSleeping() {
   });
   let changed = false;
   for (const pane of plan.drop) { delete state.sleeping[pane]; changed = true; }
+  for (const pane of plan.release) {
+    try { resumePids(state.sleeping[pane].pids); delete state.sleeping[pane]; changed = true; }
+    catch (e) { log('agent.sleep_release_failed', { pane, detail: e.message }); }
+  }
   if (changed) saveState();
   for (const pane of plan.arm) armSleepTimer(pane, state.sleeping[pane].wakeAt);
   for (const pane of plan.wake) await wakeAgent(pane, { automatic: true }).catch(() => {});
@@ -1307,7 +1337,7 @@ async function sleepAgent(a, wakeInMinutes) {
     }
     if (!pids.length) throw new HttpError(410, 'gone');
     const wakeAt = wakeInMinutes == null ? null : new Date(Date.now() + wakeInMinutes * 60e3).toISOString();
-    const entry = { pids, sleepingSince: new Date().toISOString(), wakeAt };
+    const entry = { pids, sleepingSince: new Date().toISOString(), wakeAt, statusAtSleep: a.status };
     state.sleeping[a.pane] = entry;
     saveState();
     if (wakeAt) armSleepTimer(a.pane, wakeAt);
@@ -3133,12 +3163,7 @@ async function api(req, res, url) {
   if (action === 'finish') {
     const a = (await listAgents()).find(x => x.pane === pane);
     if (!a) throw new HttpError(404, 'not_found');
-    const entry = state.sleeping[pane];
-    if (entry) {
-      clearSleepTimer(pane);
-      try { resumePids(entry.pids); } catch (e) { throw new HttpError(410, 'gone', e.message); }
-      delete state.sleeping[pane]; saveState();
-    }
+    if (state.sleeping[pane]) releaseSleep(pane);
     const snap = jAgent(a);
     const r = await endAgent(a);
     jr(req, 'agent.end', snap, { mode: r.mode, closed: r.closed, out: r.out, ranFor: r.ranFor, jobs24: r.jobs24, linksNotified: r.notified, said: r.said, wasStatus: a.status });
@@ -3148,6 +3173,7 @@ async function api(req, res, url) {
   if (action === 'stop' || action === 'end') {
     const a = (await listAgents()).find(x => x.pane === pane);
     if (!a) throw new HttpError(404, 'gone');
+    if (state.sleeping[pane]) releaseSleep(pane);
     if (action === 'stop') {
       const r = await stopAgent(a);
       jr(req, 'agent.stop', a, { how: r.how, wasStatus: a.status, status: r.status });
