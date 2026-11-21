@@ -3,6 +3,12 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.7.1] - 2026-11-21
+
+### Fixed
+- Putting an agent to sleep while it ran a command no longer adds a "Stopped" line to that
+  command's output.
+
 ## [0.7.0] - 2026-11-21
 
 ### Added
