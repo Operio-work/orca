@@ -125,6 +125,7 @@
     <div class="work">
       <svg id="link-lines" class="link-lines" aria-hidden="true"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z"/></marker><marker id="arrow-lead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z"/></marker><marker id="arrow-hand" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z"/></marker></defs><g></g></svg>
       <main id="map" class="map" aria-label="Workspace" aria-busy="true"><div class="tabblock sk-block wide"><span class="sk-head"></span><div class="sk-panes n3"><span class="sk-tile"><i></i><i></i></span><span class="sk-tile"><i></i><i></i></span><span class="sk-tile"><i></i><i></i></span></div></div><div class="tabblock sk-block"><span class="sk-head"></span><div class="sk-panes n1"><span class="sk-tile"><i></i><i></i></span></div></div><div class="tabblock sk-block"><span class="sk-head"></span><div class="sk-panes n2"><span class="sk-tile"><i></i><i></i></span><span class="sk-tile"><i></i><i></i></span></div></div><div class="tabblock sk-block"><span class="sk-head"></span><div class="sk-panes n1"><span class="sk-tile"><i></i><i></i></span></div></div><div class="tabblock sk-block"><span class="sk-head"></span><div class="sk-panes n2"><span class="sk-tile"><i></i><i></i></span><span class="sk-tile"><i></i><i></i></span></div></div><div class="tabblock sk-block"><span class="sk-head"></span><div class="sk-panes n1"><span class="sk-tile"><i></i><i></i></span></div></div></main>
+      <section id="map-sleeping" class="sleep-zone map-sleep-zone" aria-live="polite" hidden></section>
       <section id="holo" class="office holo" aria-labelledby="holo-title" hidden>
         <h2 id="holo-title" class="sr-only" data-i18n="holoView">Holo table</h2>
         <div id="holo-stage" class="holo-stage">
@@ -152,11 +153,13 @@
       <section id="island" class="office island" aria-labelledby="island-title" hidden>
         <h2 id="island-title" class="sr-only" data-i18n="islandView">Islands</h2>
         <canvas id="isle" aria-hidden="true"></canvas>
+        <section id="island-sleeping" class="sleep-zone shore-zone" aria-live="polite" hidden></section>
         <ul id="isle-roster" class="roster"></ul>
       </section>
       <section id="office" class="office" aria-labelledby="office-title" hidden>
         <h2 id="office-title" class="sr-only" data-i18n="officeView">Office view</h2>
         <canvas id="world" aria-hidden="true"></canvas>
+        <section id="office-sleeping" class="sleep-zone pixel-wait-zone" aria-live="polite" hidden></section>
         <ul id="roster" class="roster"></ul>
       </section>
 
@@ -205,6 +208,11 @@
             <small class="model-hint"></small>
           </div>
           <div class="sheet-actions">
+            <div id="sheet-sleep-actions" class="sleep-actions" role="group" aria-label="Sleep" hidden>
+              <button class="btn" type="button" data-sleep-minutes="0">Sleep now</button>
+              <button class="btn" type="button" data-sleep-minutes="15">15m</button>
+              <button class="btn" type="button" data-sleep-minutes="60">1h</button>
+            </div>
             <button id="sheet-suggest" class="btn suggest" type="button" hidden></button>
             <button id="sheet-move" class="btn" type="button"><svg class="ic" aria-hidden="true"><use href="#i-move"/></svg><span data-i18n="move">Move</span></button>
             <button id="sheet-clear" class="btn danger" type="button" data-i18n="clear">Clear name</button>
