@@ -3,6 +3,20 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.7.0] - 2026-11-21
+
+### Added
+- **Put an agent to sleep.** Every agent has Sleep now, 15m and 1h. A sleeping agent is paused:
+  it uses no CPU and no tokens, and its window stays as it was. Sleeping agents show in their own
+  zone: a Sleeping section on the Map, the Waiting Room floor in the Office and the shore on the
+  Island, with how long they have slept and a countdown when a wake time is set.
+- **Wake and Finish.** Wake picks up where the agent stopped (it is nudged only if it was working
+  when it went to sleep and has since stalled). Finish ends the job, with a second tap to confirm.
+  Wake times survive a panel restart.
+
+### Fixed
+- The Island and Holo clocks showed nothing in some languages (an error on every frame).
+
 ## [0.6.2] - 2026-11-20
 
 ### Changed
