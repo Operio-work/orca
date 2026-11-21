@@ -41,6 +41,7 @@ const { createOllama } = require('./lib/ollama');
 const opencodeTranscript = require('./lib/opencode-transcript');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
+const sleepState = require('./lib/sleep');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = require('./lib/config').load();
@@ -311,6 +312,7 @@ function readBody(req, limit = 16 * 1024) {
 let state = { tags: {}, tagColors: {}, subs: [] };
 try { state = { ...state, ...JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) }; } catch { /* first run */ }
 state.opencodeSessions = state.opencodeSessions || {};
+state.sleeping = state.sleeping || {};
 
 // ─── Crew: the names you reuse ────────────────────────────────────────────────
 // Learned from renames (count + last use), with pins and hides; each name also remembers
@@ -1201,6 +1203,117 @@ async function procTable() {
   const children = new Map();
   for (const [pid, p] of procs) { if (!children.has(p.ppid)) children.set(p.ppid, []); children.get(p.ppid).push(pid); }
   return { procs, children };
+}
+
+const sleepTimers = new Map();
+const wakingPanes = new Set();
+const sleepingPanes = new Set();
+function sleepingItem(a, entry) {
+  return {
+    id: a.pane,
+    name: a.name || a.pane,
+    paneId: a.pane,
+    pid: entry.pids.at(-1),
+    sleepingSince: entry.sleepingSince,
+    wakeAt: entry.wakeAt || null,
+  };
+}
+function clearSleepTimer(pane) {
+  const timer = sleepTimers.get(pane);
+  if (timer) clearTimeout(timer);
+  sleepTimers.delete(pane);
+}
+function armSleepTimer(pane, wakeAt) {
+  clearSleepTimer(pane);
+  if (!wakeAt) return;
+  const timer = setTimeout(() => {
+    sleepTimers.delete(pane);
+    wakeAgent(pane, { automatic: true }).catch(e => log('agent.wake_error', { pane, code: e.code || 'internal' }));
+  }, Math.max(0, Date.parse(wakeAt) - Date.now()));
+  timer.unref?.();
+  sleepTimers.set(pane, timer);
+}
+function resumePids(pids) {
+  for (const pid of [...pids].reverse()) {
+    try { process.kill(pid, 'SIGCONT'); }
+    catch (e) { if (e.code !== 'ESRCH') throw e; }
+  }
+}
+async function wakeAgent(pane, { automatic = false } = {}) {
+  if (wakingPanes.has(pane)) {
+    if (!automatic) throw new HttpError(409, 'not_sleeping');
+    return null;
+  }
+  const entry = state.sleeping[pane];
+  if (!entry) {
+    if (!automatic) throw new HttpError(409, 'not_sleeping');
+    return null;
+  }
+  wakingPanes.add(pane);
+  try {
+    clearSleepTimer(pane);
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) {
+      delete state.sleeping[pane]; saveState();
+      if (!automatic) throw new HttpError(410, 'gone');
+      return null;
+    }
+    try { resumePids(entry.pids); }
+    catch (e) { throw new HttpError(410, 'gone', e.message); }
+    delete state.sleeping[pane]; saveState();
+    agentsList.at = 0;
+    const resumed = (await listAgents()).find(x => x.pane === pane) || a;
+    const idle = resumed.status === 'idle' || resumed.status === 'done';
+    const streamErrored = resumed.streamError === true || resumed.stream_error === true || resumed.status === 'error';
+    const nudged = idle || streamErrored;
+    if (nudged) await herdr(['agent', 'prompt', pane, 'continue']).catch(e => log('agent.wake_nudge_failed', { pane, detail: e.detail || e.message }));
+    log('agent.wake', { pane, nudged });
+    return { agent: { id: pane, name: nameOf(a), state: 'active' }, nudged };
+  } finally { wakingPanes.delete(pane); }
+}
+async function reconcileSleeping() {
+  const agents = await listAgents();
+  const livePanes = new Set(agents.map(a => a.pane));
+  const plan = sleepState.reconcile(state.sleeping, livePanes, pid => {
+    try { process.kill(Number(pid), 0); return true; }
+    catch (e) { return e.code === 'EPERM'; }
+  });
+  let changed = false;
+  for (const pane of plan.drop) { delete state.sleeping[pane]; changed = true; }
+  if (changed) saveState();
+  for (const pane of plan.arm) armSleepTimer(pane, state.sleeping[pane].wakeAt);
+  for (const pane of plan.wake) await wakeAgent(pane, { automatic: true }).catch(() => {});
+}
+async function sleepAgent(a, wakeInMinutes) {
+  if (state.sleeping[a.pane] || sleepingPanes.has(a.pane)) throw new HttpError(409, 'already_sleeping');
+  sleepingPanes.add(a.pane);
+  try {
+    const info = await herdrJson(['pane', 'process-info', '--pane', a.pane]).catch(() => null);
+    const root = Number(info?.result?.process_info?.shell_pid);
+    if (!Number.isInteger(root) || root < 1) throw new HttpError(410, 'gone');
+    const { procs, children } = await procTable();
+    if (!procs.has(root)) throw new HttpError(410, 'gone');
+    const tree = [];
+    const visit = (pid, depth) => {
+      for (const child of children.get(pid) || []) visit(child, depth + 1);
+      if (pid !== root) tree.push({ pid, depth });
+    };
+    visit(root, 0);
+    tree.sort((x, y) => y.depth - x.depth);
+    const pids = [];
+    for (const { pid } of tree) {
+      try { process.kill(pid, 'SIGSTOP'); pids.push(pid); }
+      catch (e) { if (e.code !== 'ESRCH') { try { resumePids(pids); } catch {} throw new HttpError(502, 'sleep_failed', e.message); } }
+    }
+    if (!pids.length) throw new HttpError(410, 'gone');
+    const wakeAt = wakeInMinutes == null ? null : new Date(Date.now() + wakeInMinutes * 60e3).toISOString();
+    const entry = { pids, sleepingSince: new Date().toISOString(), wakeAt };
+    state.sleeping[a.pane] = entry;
+    saveState();
+    if (wakeAt) armSleepTimer(a.pane, wakeAt);
+    log('agent.sleep', { pane: a.pane, pidCount: pids.length, wakeAt });
+    return sleepingItem(a, entry);
+  } finally { sleepingPanes.delete(a.pane); }
 }
 
 async function sessionPids() {
@@ -2409,7 +2522,15 @@ async function api(req, res, url) {
 
   if (req.method === 'GET' && pathname === '/api/agents') {
     const [agents, layout] = await Promise.all([listAgents(), workspaceLayout().catch(() => ({ tabs: [], workspaces: [] }))]);
-    return send(res, 200, { agents, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), browserAsks: browserAsksFor(loginOf(req), agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
+    const liveSleeping = agents.filter(a => state.sleeping[a.pane]);
+    const sleeping = liveSleeping.map(a => sleepingItem(a, state.sleeping[a.pane]));
+    const withState = agents.map(a => ({ ...a, state: state.sleeping[a.pane] ? 'sleeping' : 'active' }));
+    return send(res, 200, { agents: withState, sleeping, tabs: layout.tabs, workspaces: layout.workspaces, mapOrder: state.mapOrder || [], tagColors: state.tagColors, tagLib: tagLibrary(agents), me: person(loginOf(req)), people: PEOPLE_LOGINS().map(person), ...linksView(agents), browserAsks: browserAsksFor(loginOf(req), agents), chat: chatView(loginOf(req), agents), access: accessView(loginOf(req)), journal: { toReview }, now: Date.now() });
+  }
+
+  if (req.method === 'GET' && pathname === '/api/agents/sleeping') {
+    const agents = await listAgents();
+    return send(res, 200, agents.filter(a => state.sleeping[a.pane]).map(a => sleepingItem(a, state.sleeping[a.pane])));
   }
 
   // Messages to and from one agent (newest last), for its panel.
@@ -2960,7 +3081,7 @@ async function api(req, res, url) {
 
 
   // ── Per-agent actions
-  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end|model)$/);
+  const m = pathname.match(/^\/api\/agents\/([^/]+)\/(rename|focus|zoom|prompt|keys|tags|move|seen|answer|claim|stop|end|model|sleep|wake|finish)$/);
   if (!m) return send(res, 404, { error: 'not found' });
   const pane = decodeURIComponent(m[1]);
   const action = m[2];
@@ -2991,6 +3112,37 @@ async function api(req, res, url) {
     log('agent.model', { pane, model });
     jr(req, 'agent.model', a, { model });
     return send(res, 200, { ok: true, model });
+  }
+
+  if (action === 'sleep') {
+    const minutes = sleepState.wakeInMinutes(body);
+    if (minutes === undefined) throw new HttpError(400, 'bad_request');
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'not_found');
+    const agent = await sleepAgent(a, minutes);
+    jr(req, 'agent.sleep', a, { wakeAt: agent.wakeAt });
+    return send(res, 200, { agent });
+  }
+
+  if (action === 'wake') {
+    const result = await wakeAgent(pane);
+    jr(req, 'agent.wake', { pane: result.agent.id, name: result.agent.name }, { nudged: result.nudged });
+    return send(res, 200, result);
+  }
+
+  if (action === 'finish') {
+    const a = (await listAgents()).find(x => x.pane === pane);
+    if (!a) throw new HttpError(404, 'not_found');
+    const entry = state.sleeping[pane];
+    if (entry) {
+      clearSleepTimer(pane);
+      try { resumePids(entry.pids); } catch (e) { throw new HttpError(410, 'gone', e.message); }
+      delete state.sleeping[pane]; saveState();
+    }
+    const snap = jAgent(a);
+    const r = await endAgent(a);
+    jr(req, 'agent.end', snap, { mode: r.mode, closed: r.closed, out: r.out, ranFor: r.ranFor, jobs24: r.jobs24, linksNotified: r.notified, said: r.said, wasStatus: a.status });
+    return send(res, 200, { id: pane, state: 'terminated' });
   }
 
   if (action === 'stop' || action === 'end') {
@@ -3485,5 +3637,6 @@ if (!guard.isLoopbackBind(HOST)) {
 
 server.listen(PORT, HOST, () => {
   log('listen', { host: HOST, port: PORT, demo: DEMO || undefined, herdr: HERDR, allowedHosts: [...ALLOWED_HOSTS.names, ...ALLOWED_HOSTS.pinned], pushDevices: state.subs.length });
+  reconcileSleeping().catch(e => log('agent.sleep_reconcile_error', { code: e.code || 'internal' }));
   scheduler.start();
 });
