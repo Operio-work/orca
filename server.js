@@ -1330,7 +1330,7 @@ async function sleepAgent(a, wakeInMinutes) {
     };
     visit(root, 0);
     if (!tree.length) throw new HttpError(410, 'gone');
-    tree.sort((x, y) => y.depth - x.depth);
+    tree.sort((x, y) => x.depth - y.depth); // parents before children: no parent ever sees a child stop
     // The pane's shell is stopped FIRST. A running shell sees its foreground child stop,
     // takes the terminal back and resets it to cooked mode; on resume the agent is then
     // in the background, can't read input and the terminal's replies land in the shell.
