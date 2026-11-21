@@ -67,12 +67,12 @@ function readTokens() {
 const T = {
   en: { title: 'ORCA ISLANDS', island: 'Island', empty: 'empty lot', none: 'No agents yet. Press New.', quiet: 'All quiet.',
         back: '◂ All islands', backAria: 'Back to all islands', open: 'Open island {0}', agents: '{0} agents', agents1: '1 agent', noAgents: 'no agents',
-        working: '{0} working', more: '+{0}',
+        working: '{0} working', more: '+{0}', shoreTitle: window.ORCA_I18N?.app?.shoreTitle || 'On the Shore — Waiting for a Boat',
         needs: '{0} need you!', needs1: '1 needs you!', offline: 'Connection lost — retrying…',
         st: { working: 'working', idle: 'idle', blocked: 'needs you', done: 'done', unknown: 'arriving' } },
   es: { title: 'ISLAS ORCA', island: 'Isla', empty: 'lote vacío', none: 'Aún no hay agentes. Toca Nuevo.', quiet: 'Todo en calma.',
         back: '◂ Todas las islas', backAria: 'Volver a todas las islas', open: 'Abrir la isla {0}', agents: '{0} agentes', agents1: '1 agente', noAgents: 'sin agentes',
-        working: '{0} trabajando', more: '+{0}',
+        working: '{0} trabajando', more: '+{0}', shoreTitle: window.ORCA_I18N?.app?.shoreTitle || 'En la orilla — esperando un barco',
         needs: '¡{0} te necesitan!', needs1: '¡1 te necesita!', offline: 'Sin conexión — reintentando…',
         st: { working: 'trabajando', idle: 'libre', blocked: 'te necesita', done: 'terminó', unknown: 'llegando' } },
 };
@@ -89,13 +89,14 @@ const KINDS = {
 };
 
 // ─── State ───────────────────────────────────────────────────────────────────
-let data = { agents: [], tabs: [], workspaces: [], tagColors: {} };
+let data = { agents: [], sleeping: [], tabs: [], workspaces: [], tagColors: {} };
 let state = { selected: null, lang: 'en', offline: false, matches: () => true };
 let L = T.en;
 let hits = [];
 let scale = 2;
 let skew = 0;
 let onPick = () => {};
+let onSleepingPick = () => {};
 const waves = new Map(); // pane -> until (Show on desktop landed: the character cheers)
 // The island you sailed to (workspace id), or null for the archipelago. Remembered per browser.
 const store = { get() { try { return localStorage.getItem('orca-isle'); } catch { return null; } },
@@ -195,7 +196,15 @@ function layout(W, only) {
     y = isl.y + isl.h + SEA_GAP;
   }
   if (!islands.length) y += 40;
-  return { W, H: y + 6 + FOOT_H, islands, byPane };
+  const sleepers = data.sleeping || [];
+  let shore = null;
+  if (sleepers.length) {
+    const cols = Math.max(1, Math.floor((W - 24) / SLOT));
+    const rows = Math.ceil(sleepers.length / cols);
+    shore = { x: 0, y: y + 2, w: W, h: 45 + rows * 42 + 4, cols };
+    y = shore.y + shore.h;
+  }
+  return { W, H: y + 6 + FOOT_H, islands, byPane, shore };
 }
 
 // ─── Sea ─────────────────────────────────────────────────────────────────────
@@ -445,10 +454,10 @@ function person(a, x, fy, t, i) {
     const bxl = X - 5, byl = top - 12;
     shape(() => { ctx.roundRect(bxl, byl, 10, 9, 3); ctx.moveTo(X - 1, byl + 9); ctx.lineTo(X, byl + 12); ctx.lineTo(X + 1.5, byl + 9); }, C.green, P.ink, 0.9);
     txt('✓', X, byl + 4.8, 7, '#0A0A0A', 'center', 800);
-  } else if (st === 'idle') { // Zz
+  } else if (st === 'idle' || st === 'sleeping') { // Zz
     const p = reduced ? 0.3 : ((t / 2400 + seed) % 1);
     ctx.globalAlpha = 1 - p;
-    txt('z', X + 6 + p * 3, top - p * 8, 4.5 + p * 2, C.greenInk);
+    txt('z', X + 6 + p * 3, top - p * 8, 4.5 + p * 2, st === 'sleeping' ? P.ink : C.greenInk);
     ctx.globalAlpha = 1;
   }
   if (st === 'blocked') { // balloon with a red "!"
@@ -582,6 +591,34 @@ function selection(x, y, w, h, t) { // RTS selection brackets, breathing a littl
   ctx.stroke();
 }
 
+function drawShore(lay, t) {
+  const shore = lay.shore;
+  if (!shore) return;
+  const top = shore.y, bottom = top + shore.h;
+  shape(() => {
+    ctx.moveTo(0, top + 9); ctx.quadraticCurveTo(lay.W * 0.2, top + 1, lay.W * 0.42, top + 8);
+    ctx.quadraticCurveTo(lay.W * 0.7, top + 16, lay.W, top + 5); ctx.lineTo(lay.W, bottom);
+    ctx.lineTo(0, bottom); ctx.closePath();
+  }, P.sand, P.ink, 0.9);
+  shape(() => {
+    ctx.moveTo(0, top + 8); ctx.quadraticCurveTo(lay.W * 0.25, top + 2, lay.W * 0.48, top + 10);
+    ctx.quadraticCurveTo(lay.W * 0.75, top + 17, lay.W, top + 6);
+  }, null, P.foam, 1.5);
+  const title = fit(L.shoreTitle, lay.W - 14, 5.5, 700);
+  txt(title, 7, top + 20, 5.5, P.ink, 'left', 700);
+  const agents = data.sleeping || [];
+  agents.forEach((item, i) => {
+    const row = Math.floor(i / shore.cols), n = Math.min(shore.cols, agents.length - row * shore.cols);
+    const col = i % shore.cols;
+    const x = Math.round(lay.W / 2 + (col - (n - 1) / 2) * SLOT);
+    const fy = top + 52 + row * 42;
+    const sleeper = { ...item, pane: item.paneId, agent: item.agent || item.role || '_', status: 'sleeping', tags: [] };
+    person(sleeper, x, fy, t, i);
+    pill(item.name || item.paneId, x, fy + 7, 4.5, SLOT - 2, P.ink, P.paper);
+    hits.push({ x: x - 15, y: fy - 30, w: 30, h: 42, pane: item.paneId, sleeping: true });
+  });
+}
+
 function boat(W, y, t) {
   if (reduced) return;
   const x = ((t / 70) % (W + 60)) - 30, bob = Math.sin(t / 500) * 1.2;
@@ -663,8 +700,9 @@ function draw() {
       });
     }
   }
-  if (!overview && !lay.islands.length) txt(L.none, lay.W / 2, HUD_H + 24, 7, P.paper);
-  boat(lay.W, lay.H - FOOT_H - 8, t);
+  if (!overview && !lay.islands.length && !(data.sleeping || []).length) txt(L.none, lay.W / 2, HUD_H + 24, 7, P.paper);
+  drawShore(lay, t);
+  boat(lay.W, lay.shore ? lay.shore.y - 3 : lay.H - FOOT_H - 8, t);
 
   // Toolbar: title left, the date right
   bevelBar(0, HUD_H, lay.W);
@@ -753,7 +791,7 @@ canvas.addEventListener('click', e => {
   if (!h) return;
   if (h.back) setFocus(null);
   else if (h.ws) setFocus(h.ws);
-  else onPick(h.pane);
+  else (h.sleeping ? onSleepingPick : onPick)(h.pane);
 });
 
 function demo(d) { // ?demo: every state at once, drawing only
@@ -774,6 +812,7 @@ setInterval(() => { if (!document.hidden && !box.hidden && !reduced) draw(); }, 
 
 window.OrcaIsland = {
   onPick(fn) { onPick = fn; },
+  onSleepingPick(fn) { onSleepingPick = fn; },
   update(d, s) {
     if (d) { data = DEMO ? demo(d) : d; if (d.now) skew = d.now - Date.now(); }
     Object.assign(state, s);

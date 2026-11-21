@@ -956,6 +956,7 @@
   office: {
     "title": "ORCA",
     "floor": "ANDAR",
+    "waitingRoom": "SALA DE ESPERA",
     "dark": "NENHUM AGENTE NESTE ANDAR",
     "lobby": "SAGUÃO",
     "ready": "PRONTO.",

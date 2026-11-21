@@ -283,6 +283,8 @@ if (!T[lang]) lang = 'en';
 let lastData = null; // first /api/agents answer; null = still loading (skeletons show)
 let sleeping = [];
 const finishArmed = new Map();
+const optimisticSleepUntil = new Map();
+let sleepPopoverPane = null;
 const SLEEP_MOCK = ['localhost', '127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('sleepMock') === '1';
 let mockSleeping = null;
 let view = ['office', 'island', 'holo'].includes(safeGet('orca-view')) ? safeGet('orca-view') : 'map'; // map | office | island | holo
@@ -497,44 +499,53 @@ function wakeCountdown(wakeAt) {
   const sec = Math.max(0, Math.ceil((new Date(wakeAt).getTime() - Date.now()) / 1000));
   return sec < 60 ? `${sec}s` : sec < 3600 ? `${Math.ceil(sec / 60)}m` : `${Math.floor(sec / 3600)}h ${Math.ceil(sec % 3600 / 60)}m`;
 }
-function renderSleepZone(host, kind) {
-  const visibleView = kind === 'map-sleep-zone' ? view === 'map' : kind === 'pixel-wait-zone' ? view === 'office' : view === 'island';
-  host.hidden = sleeping.length === 0 || !visibleView;
-  host.className = `sleep-zone ${kind}`;
+function makeSleepCard(agent) {
+  const card = document.createElement('article'); card.className = 'sleep-card';
+  const info = document.createElement('div'); info.className = 'sleep-info';
+  const name = document.createElement('strong'); name.textContent = agent.name || agent.paneId;
+  const role = document.createElement('span'); role.className = 'sleep-role'; role.textContent = agent.role || agent.agent || '';
+  const age = document.createElement('span'); age.className = 'sleep-age'; age.textContent = t('sleepingFor', sleepAge(agent.sleepingSince));
+  info.append(name, role, age);
+  const actions = document.createElement('div'); actions.className = 'sleep-card-actions';
+  if (agent.wakeAt) { const badge = document.createElement('span'); badge.className = 'wake-badge'; badge.textContent = t('wakeIn', wakeCountdown(agent.wakeAt)); actions.append(badge); }
+  const wake = document.createElement('button'); wake.type = 'button'; wake.className = 'btn'; wake.textContent = t('wake'); wake.addEventListener('click', () => doWake(agent));
+  const finish = document.createElement('button'); finish.type = 'button'; finish.className = 'btn danger';
+  const armed = (finishArmed.get(agent.paneId) || 0) > Date.now();
+  finish.textContent = armed ? t('confirmFinish') : t('finish');
+  finish.addEventListener('click', () => {
+    if (!armed) { finishArmed.set(agent.paneId, Date.now() + 4000); renderSleepingZones(); setTimeout(() => { if ((finishArmed.get(agent.paneId) || 0) <= Date.now()) { finishArmed.delete(agent.paneId); renderSleepingZones(); } }, 4050); return; }
+    finishArmed.delete(agent.paneId); doFinish(agent);
+  });
+  actions.append(wake, finish); card.append(info, actions);
+  return card;
+}
+function renderSleepZone(host) {
+  host.hidden = sleeping.length === 0 || view !== 'map';
   if (!sleeping.length) return;
-  const title = kind === 'shore-zone' ? t('shoreTitle') : kind === 'pixel-wait-zone' ? t('waitingRoom') : t('sleeping');
   const head = document.createElement('header'); head.className = 'sleep-zone-head';
-  const h = document.createElement('h2'); h.textContent = title;
+  const h = document.createElement('h2'); h.textContent = t('sleeping');
   const count = document.createElement('span'); count.className = 'sleep-count'; count.textContent = sleeping.length;
   head.append(h, count);
   const list = document.createElement('div'); list.className = 'sleep-list';
-  for (const agent of sleeping) {
-    const card = document.createElement('article'); card.className = 'sleep-card';
-    const sprite = document.createElement('span'); sprite.className = 'sleep-sprite'; sprite.setAttribute('aria-hidden', 'true');
-    const info = document.createElement('div'); info.className = 'sleep-info';
-    const name = document.createElement('strong'); name.textContent = agent.name || agent.paneId;
-    const role = document.createElement('span'); role.className = 'sleep-role'; role.textContent = agent.role || agent.agent || '';
-    const age = document.createElement('span'); age.className = 'sleep-age'; age.textContent = t('sleepingFor', sleepAge(agent.sleepingSince));
-    info.append(name, role, age);
-    const actions = document.createElement('div'); actions.className = 'sleep-card-actions';
-    const badge = document.createElement('span'); badge.className = 'wake-badge';
-    if (agent.wakeAt) { badge.textContent = t('wakeIn', wakeCountdown(agent.wakeAt)); actions.append(badge); }
-    const wake = document.createElement('button'); wake.type = 'button'; wake.className = 'btn'; wake.textContent = t('wake'); wake.addEventListener('click', () => doWake(agent));
-    const finish = document.createElement('button'); finish.type = 'button'; finish.className = 'btn danger';
-    const armed = (finishArmed.get(agent.paneId) || 0) > Date.now();
-    finish.textContent = armed ? t('confirmFinish') : t('finish');
-    finish.addEventListener('click', () => {
-      if (!armed) { finishArmed.set(agent.paneId, Date.now() + 4000); renderSleepingZones(); setTimeout(() => { if ((finishArmed.get(agent.paneId) || 0) <= Date.now()) { finishArmed.delete(agent.paneId); renderSleepingZones(); } }, 4050); return; }
-      finishArmed.delete(agent.paneId); doFinish(agent);
-    });
-    actions.append(wake, finish); card.append(sprite, info, actions); list.append(card);
-  }
+  list.append(...sleeping.map(agent => makeSleepCard(agent)));
   host.replaceChildren(head, list);
 }
+function renderSleepPopover(host, viewName) {
+  const item = view === viewName ? sleeping.find(a => a.paneId === sleepPopoverPane) : null;
+  host.hidden = !item;
+  if (!item) return;
+  const head = document.createElement('header'); head.className = 'sleep-popover-head';
+  const title = document.createElement('strong'); title.textContent = viewName === 'office' ? t('waitingRoom') : t('shoreTitle');
+  const close = document.createElement('button'); close.type = 'button'; close.className = 'icon-btn'; close.textContent = '×'; close.setAttribute('aria-label', t('close'));
+  close.addEventListener('click', () => { sleepPopoverPane = null; renderSleepingZones(); });
+  head.append(title, close);
+  host.setAttribute('role', 'dialog'); host.setAttribute('aria-label', item.name || item.paneId);
+  host.replaceChildren(head, makeSleepCard(item));
+}
 function renderSleepingZones() {
-  renderSleepZone($('#map-sleeping'), 'map-sleep-zone');
-  renderSleepZone($('#office-sleeping'), 'pixel-wait-zone');
-  renderSleepZone($('#island-sleeping'), 'shore-zone');
+  renderSleepZone($('#map-sleeping'));
+  renderSleepPopover($('#office-sleep-popover'), 'office');
+  renderSleepPopover($('#island-sleep-popover'), 'island');
 }
 async function doSleep(pane, minutes) {
   const active = agents.find(a => a.pane === pane);
@@ -542,17 +553,17 @@ async function doSleep(pane, minutes) {
   const before = sleeping;
   const now = new Date();
   const item = { id: active.id, name: active.name, role: active.role || active.agent, paneId: pane, pid: active.pid, sleepingSince: now.toISOString(), wakeAt: minutes ? new Date(now.getTime() + minutes * 60000).toISOString() : null };
-  sleeping = [...sleeping, item]; if (SLEEP_MOCK) mockSleeping = sleeping; agents = agents.filter(a => a.pane !== pane); byPane.delete(pane);
+  sleeping = [...sleeping, item]; optimisticSleepUntil.set(pane, Date.now() + 5000); if (SLEEP_MOCK) mockSleeping = sleeping; agents = agents.filter(a => a.pane !== pane); byPane.delete(pane);
   render();
   try {
     if (SLEEP_MOCK) return;
     const result = await post(`/api/agents/${enc(pane)}/sleep`, minutes ? { wakeInMinutes: minutes } : {});
     sleeping = sleeping.map(a => a.paneId === pane ? result.agent : a); render(); refresh();
-  } catch (err) { sleeping = before; agents.push(active); byPane.set(pane, active); render(); toast(errText(err), true); }
+  } catch (err) { optimisticSleepUntil.delete(pane); sleeping = before; agents.push(active); byPane.set(pane, active); render(); toast(errText(err), true); }
 }
 async function doWake(agent) {
   const before = sleeping;
-  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); if (SLEEP_MOCK) mockSleeping = sleeping;
+  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); sleepPopoverPane = null; if (SLEEP_MOCK) mockSleeping = sleeping;
   const restored = agents.find(a => a.pane === agent.paneId) || { pane: agent.paneId, id: agent.id, name: agent.name, agent: agent.role, state: 'active', status: 'idle', tags: [] };
   agents.push(restored); byPane.set(restored.pane, restored); render();
   try { if (!SLEEP_MOCK) await post(`/api/agents/${enc(agent.paneId)}/wake`); refresh(); }
@@ -560,7 +571,7 @@ async function doWake(agent) {
 }
 async function doFinish(agent) {
   const before = sleeping;
-  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); if (SLEEP_MOCK) mockSleeping = sleeping; render();
+  sleeping = sleeping.filter(a => a.paneId !== agent.paneId); sleepPopoverPane = null; if (SLEEP_MOCK) mockSleeping = sleeping; render();
   try { if (!SLEEP_MOCK) await post(`/api/agents/${enc(agent.paneId)}/finish`); refresh(); }
   catch (err) { sleeping = before; if (SLEEP_MOCK) mockSleeping = sleeping; render(); toast(errText(err), true); }
 }
@@ -2251,6 +2262,7 @@ function loadScene(name) {
     s.onload = () => {
       const m = window[global];
       m.onPick(pick);
+      if (m.onSleepingPick) m.onSleepingPick(pane => { sleepPopoverPane = pane; renderSleepingZones(); });
       if (name === 'holo') m.onShow((pane, zoom) => showOnDesktop(pane, zoom));
       // Office tower: hovering a desk opens the same card as the map (rect = the desk on screen).
       if (name === 'office' && m.onHover) m.onHover((pane, rect) => { if (pane && rect) showPeek({ dataset: { pane }, getBoundingClientRect: () => rect, isConnected: true }); else hidePeek(); });
@@ -2344,7 +2356,13 @@ async function refresh() {
     lastData = r;
     offline = false;
     for (const a of r.agents) { if (a.pane === selected && a.fresh) { a.fresh = false; post(`/api/agents/${enc(a.pane)}/seen`).catch(() => {}); } a.showFresh = !!a.fresh && a.status !== 'working' && a.status !== 'blocked'; }
-    sleeping = r.sleeping || [];
+    const reportedSleeping = r.sleeping || [];
+    for (const [pane, until] of optimisticSleepUntil) {
+      if (reportedSleeping.some(a => a.paneId === pane)) optimisticSleepUntil.delete(pane);
+      else if (Date.now() > until) optimisticSleepUntil.delete(pane);
+      else { const local = sleeping.find(a => a.paneId === pane); if (local) reportedSleeping.push(local); }
+    }
+    sleeping = reportedSleeping;
     const activeAgents = r.agents.filter(a => a.state !== 'sleeping' && !sleeping.some(s => s.paneId === a.pane));
     if (scene()) scene().update({ ...r, agents: activeAgents }, { selected, lang, offline, matches });
     // Sounds for what changed since the last look: a chime when someone needs you, a flourish when one finishes.

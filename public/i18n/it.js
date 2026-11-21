@@ -956,6 +956,7 @@
   office: {
     "title": "ORCA",
     "floor": "PIANO",
+    "waitingRoom": "SALA D’ATTESA",
     "dark": "NESSUN AGENTE SU QUESTO PIANO",
     "lobby": "ATRIO",
     "ready": "PRONTO.",

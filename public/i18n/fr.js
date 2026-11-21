@@ -956,6 +956,7 @@
   office: {
     "title": "ORCA",
     "floor": "ÉTAGE",
+    "waitingRoom": "SALLE D’ATTENTE",
     "dark": "AUCUN AGENT À CET ÉTAGE",
     "lobby": "HALL",
     "ready": "PRÊT.",

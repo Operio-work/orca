@@ -2027,11 +2027,6 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .sleep-role, .sleep-age { color: var(--text-muted); font: 400 var(--text-xs) var(--font-mono); }
 .sleep-card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
 .sleep-card-actions .btn { min-height: 30px; padding: 0 9px; font-size: var(--text-xs); }
-.pixel-wait-zone { border-style: dashed; border-width: 3px; border-radius: 2px; image-rendering: pixelated; box-shadow: 0 3px 0 var(--color-border-dim); }
-.pixel-wait-zone .sleep-zone-head h2, .pixel-wait-zone .sleep-info strong { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }
-.pixel-wait-zone .sleep-card { border-radius: 2px; border-style: dashed; image-rendering: pixelated; }
-.shore-zone { border-color: color-mix(in srgb, var(--color-blue) 45%, var(--color-border)); background: color-mix(in srgb, var(--color-blue) 9%, var(--color-surface)); }
-.shore-zone .sleep-zone-head h2::before { content: '〰 '; color: var(--color-blue); }
 .sleep-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .sleep-actions[hidden] { display: none; }
 .tile-sleeps { position: absolute; z-index: 3; right: 5px; top: 5px; display: flex; gap: 2px; opacity: 0; transition: opacity var(--dur-fast) var(--ease); }
@@ -2040,6 +2035,12 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .tile-sleeps [role="button"]:focus-visible { outline: 2px solid var(--color-orange); }
 @media (hover: none), (max-width: 599px) { .tile-sleeps { opacity: 1; } .tile-sleeps [role="button"]:not(:first-child) { display: none; } }
 @media (max-width: 520px) { .sleep-card { align-items: flex-start; flex-direction: column; } .sleep-card-actions { justify-content: flex-start; width: 100%; } }
-.pixel-wait-zone .sleep-sprite { display: block; flex: 0 0 22px; width: 22px; height: 22px; margin: 2px 5px 0 0; image-rendering: pixelated; background: var(--color-orange); box-shadow: 0 4px 0 var(--color-orange), 4px 4px 0 var(--color-orange), 8px 4px 0 var(--color-orange), 4px 8px 0 var(--color-orange), 8px 8px 0 var(--color-orange), 0 12px 0 var(--color-blue), 4px 12px 0 var(--color-blue), 8px 12px 0 var(--color-blue), 0 16px 0 var(--color-blue), 8px 16px 0 var(--color-blue); }
-.shore-zone { position: relative; overflow: hidden; background: linear-gradient(180deg, color-mix(in srgb, var(--color-blue) 14%, var(--color-surface)) 0 38%, color-mix(in srgb, var(--color-yellow) 12%, var(--color-surface)) 38% 100%); }
-.shore-zone .sleep-zone-head { padding-top: 5px; border-top: 2px dashed color-mix(in srgb, var(--color-blue) 45%, var(--color-border)); }
+
+/* Scene canvases keep their own art; this small overlay appears only after tapping a sleeper. */
+.office { position: relative; }
+.scene-sleep-popover { position: absolute; z-index: 5; inset-inline: 8px; bottom: 18px; width: min(560px, calc(100% - 16px)); margin-inline: auto; padding: 8px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.scene-sleep-popover[hidden] { display: none; }
+.sleep-popover-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 6px; color: var(--text-secondary); font: 600 var(--text-xs) var(--font-mono); }
+.sleep-popover-head .icon-btn { min-width: 30px; min-height: 30px; }
+.scene-sleep-popover .sleep-card { padding: 6px; }
+@media (max-width: 520px) { .scene-sleep-popover { inset-inline: 4px; width: calc(100% - 8px); bottom: 10px; } }
