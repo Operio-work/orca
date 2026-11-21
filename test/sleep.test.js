@@ -110,13 +110,14 @@ test('sleep routes validate pane ids and wake duration over HTTP', async t => {
   assert.equal(sleeping.json.agent.paneId, 'w1:p1');
   assert.equal(sleeping.json.agent.pid, childPid);
   await until(() => procState(childPid) === 'T');
-  assert.notEqual(procState(shell.pid), 'T', 'the pane shell stays running');
+  assert.equal(procState(shell.pid), 'T', 'the pane shell is stopped too, so it cannot take the terminal');
   assert.deepEqual((await request('POST', '/api/agents/w1%3Ap1/sleep', {})).json, { error: 'already_sleeping' });
   assert.equal((await request('GET', '/api/agents')).json.agents[0].state, 'sleeping');
   assert.equal((await request('GET', '/api/agents')).json.sleeping.length, 1);
   const woke = await request('POST', '/api/agents/w1%3Ap1/wake', {});
   assert.deepEqual(woke.json, { agent: { id: 'w1:p1', name: 'sleep-test', state: 'active' }, nudged: false });
   await until(() => procState(childPid) !== 'T');
+  await until(() => procState(shell.pid) !== 'T');
   assert.equal((await request('POST', '/api/agents/w1%3Ap1/wake', {})).json.error, 'not_sleeping');
   assert.equal(fs.existsSync(path.join(fake, 'prompts.jsonl')), false, 'an agent that was idle before sleep is not nudged');
   assert.equal((await request('POST', '/api/agents/w1%3Ap1/sleep', {})).status, 200);

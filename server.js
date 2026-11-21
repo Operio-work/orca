@@ -1329,13 +1329,18 @@ async function sleepAgent(a, wakeInMinutes) {
       if (pid !== root) tree.push({ pid, depth });
     };
     visit(root, 0);
+    if (!tree.length) throw new HttpError(410, 'gone');
     tree.sort((x, y) => y.depth - x.depth);
+    // The pane's shell is stopped FIRST. A running shell sees its foreground child stop,
+    // takes the terminal back and resets it to cooked mode; on resume the agent is then
+    // in the background, can't read input and the terminal's replies land in the shell.
+    // resumePids() continues in reverse, so the shell (pids[0]) is resumed last.
     const pids = [];
-    for (const { pid } of tree) {
+    for (const pid of [root, ...tree.map(x => x.pid)]) {
       try { process.kill(pid, 'SIGSTOP'); pids.push(pid); }
       catch (e) { if (e.code !== 'ESRCH') { try { resumePids(pids); } catch {} throw new HttpError(502, 'sleep_failed', e.message); } }
     }
-    if (!pids.length) throw new HttpError(410, 'gone');
+    if (pids.length < 2) { try { resumePids(pids); } catch {} throw new HttpError(410, 'gone'); }
     const wakeAt = wakeInMinutes == null ? null : new Date(Date.now() + wakeInMinutes * 60e3).toISOString();
     const entry = { pids, sleepingSince: new Date().toISOString(), wakeAt, statusAtSleep: a.status };
     state.sleeping[a.pane] = entry;
