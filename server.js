@@ -34,6 +34,7 @@ const { createKb, KbError, installKnowledgeSkill } = require('./lib/kb');
 const { createKbAccess, scopeOf: kbScopeOf } = require('./lib/kb-access');
 const transcript = require('./lib/transcript');
 const { createProfiles, ProfileError, reportsError, BUILTIN: PROFILE_TOOLS } = require('./lib/profiles');
+const { readStarters, viewStarters, starterProfile } = require('./lib/starters');
 const { createAccounts, AccountError } = require('./lib/accounts');
 const { createTools, ToolError } = require('./lib/tools');
 const { createBrowser } = require('./lib/browser');
@@ -236,6 +237,8 @@ const tplErr = e => { if (e instanceof TemplateError) throw new HttpError(e.stat
 // Operio's gallery for this client (operio-skills.json); a client admin requests one and ORCA Host
 // installs it through `operio-orca skills install` — the hosted panel never installs by itself.
 const skills = createSkills({ home: CFG.HOME, configDir: CFG.CONFIG_DIR, bundledDir: path.join(__dirname, 'skills'), log });
+// Starter agents (Operio /for roles), bundled with the app.
+const STARTERS = readStarters(path.join(__dirname, 'starters'), log);
 const skillErr = e => { if (e instanceof SkillError) throw new HttpError(e.status, e.code, e.detail); throw e; };
 // Who may ask Operio for a skill on a hosted panel: the client's admins and Operio staff.
 // (ORCA Host checks again before it records the request.)
@@ -2515,6 +2518,7 @@ async function api(req, res, url) {
       canEdit: canSetupAgents(login), kinds: KINDS.filter(k => k !== 'shell'), models: MODELS, tools: Object.keys(PROFILE_TOOLS),
       accounts: isAdmin(login) ? accounts.list().map(({ id, kind, label, signedIn, key }) => ({ id, kind, label, signedIn, key })) : [],
       skills: skills.list().map(s => ({ key: s.key, name: s.name })),
+      starters: canSetupAgents(login) ? viewStarters(STARTERS, { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', taken: new Set(profiles.list().map(p => p.id)) }) : [],
     });
   }
 
@@ -3053,6 +3057,25 @@ async function api(req, res, url) {
     let p;
     try { p = profiles.put(body, loginOf(req) || 'local'); } catch (e) { profileErr(e); }
     jr(req, 'profile.save', null, { profile: p.id, rev: p.rev, kind: p.kind, type: p.type, skills: p.skills.length, tools: p.tools.builtin });
+    return send(res, 200, { ok: true, profile: p });
+  }
+  // Add a starter agent: install its bundled skills (free panel only), then save it as a saved agent.
+  if (pathname === '/api/profiles/starter') {
+    if (!canSetupAgents(loginOf(req))) throw new HttpError(403, 'forbidden');
+    const st = STARTERS.find(x => x.id === String(body.id || ''));
+    if (!st) throw new HttpError(404, 'gone');
+    const lang = body.lang === 'es' ? 'es' : 'en';
+    const have = new Set(skills.list().map(x => x.key));
+    if (!CFG.HOSTED) {
+      for (const key of st.skills) {
+        if (have.has(key)) continue;
+        try { const r = skills.installBundled(key); have.add(r.key); jr(req, 'skill.install', null, { key: r.key, version: r.version, files: r.files, bytes: r.bytes, starter: st.id }); }
+        catch (e) { log('starter.skill_failed', { starter: st.id, key, error: e.message }); }
+      }
+    }
+    let p;
+    try { p = profiles.put(starterProfile(st, { lang, installed: have }), loginOf(req) || 'local'); } catch (e) { profileErr(e); }
+    jr(req, 'profile.save', null, { profile: p.id, rev: p.rev, kind: p.kind, type: p.type, skills: p.skills.length, tools: p.tools.builtin, starter: st.id });
     return send(res, 200, { ok: true, profile: p });
   }
   if (pathname === '/api/profiles/delete') {

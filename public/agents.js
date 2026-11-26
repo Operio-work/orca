@@ -17,7 +17,7 @@
   let sure = null;      // profile id whose Delete was tapped once
 
   async function load() {
-    try { data = await call('/api/profiles'); } catch (err) { toast(errText(err), true); }
+    try { data = await call('/api/profiles?lang=' + (lang === 'es' ? 'es' : 'en')); } catch (err) { toast(errText(err), true); }
   }
 
   const modelName = m => m ? m.charAt(0).toUpperCase() + m.slice(1) : '';
@@ -141,6 +141,28 @@
     emptyEl.textContent = data.canEdit ? t('agNone') : t('agNoneView');
     introEl.textContent = t('agIntro');
     if (!inForm) listEl.replaceChildren(...data.profiles.map(card));
+    const left = (data.starters || []).filter(x => !x.added);
+    const stEl = $('#ag-starters');
+    stEl.hidden = inForm || !data.canEdit || !left.length;
+    if (!stEl.hidden) $('#ag-starter-list').replaceChildren(...left.map(starterCard));
+  }
+
+  // Starter agents (Operio /for roles): one tap installs their skills and saves them.
+  function starterCard(s) {
+    const li = el('li', 'ag-st');
+    li.append(el('span', 'ag-st-icon', s.icon || '🤖'));
+    const body = el('div', 'ag-st-body');
+    body.append(el('span', 'ag-st-name', s.label), el('p', 'ag-st-sum', s.summary));
+    if (s.skills.length) body.append(el('p', 'ag-st-skills', t('agStarterSkills', s.skills.join(', '))));
+    li.append(body, button(t('agAddStarter'), 'primary', () => addStarter(s), 'st:' + s.id));
+    return li;
+  }
+  async function addStarter(s) {
+    busy = 'st:' + s.id; render();
+    try { await post('/api/profiles/starter', { id: s.id, lang: lang === 'es' ? 'es' : 'en' }); toast(t('agStarterAdded', s.label)); }
+    catch (err) { toast(errText(err), true); }
+    busy = null;
+    await load(); render();
   }
 
   async function start(p, resume) {

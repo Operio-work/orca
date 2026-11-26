@@ -2044,3 +2044,16 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .sleep-popover-head .icon-btn { min-width: 30px; min-height: 30px; }
 .scene-sleep-popover .sleep-card { padding: 6px; }
 @media (max-width: 520px) { .scene-sleep-popover { inset-inline: 4px; width: calc(100% - 8px); bottom: 10px; } }
+
+/* Starter agents in Saved agents */
+.ag-starters { display: grid; gap: var(--space-2); margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px dashed var(--color-border); }
+.ag-starters .hint { margin: 0; }
+.ag-st-title { margin: 0; font: 600 var(--text-sm) var(--font-sans); color: var(--text-primary); }
+.ag-st-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); }
+.ag-st { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius); background: var(--color-surface); }
+.ag-st-icon { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; background: color-mix(in srgb, var(--color-orange) 12%, var(--color-surface-2)); }
+.ag-st-body { display: grid; gap: 2px; min-width: 0; }
+.ag-st-name { font: 600 var(--text-base) var(--font-sans); color: var(--text-primary); }
+.ag-st-sum { margin: 0; font: 400 var(--text-xs)/1.4 var(--font-sans); color: var(--text-secondary); }
+.ag-st-skills { margin: 0; font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
+.ag-st .btn { min-height: 34px; }

@@ -426,6 +426,23 @@ test('saved agents start with their own arguments: instructions, tool limits, MC
   assert.ok(ag.start_args.includes('--tools'), 'read-only limit reaches Claude');
 });
 
+test('starter agents: listed per language, one tap installs their skills and saves them, then they leave the list', async () => {
+  const get = async lang => (await req('GET', '/api/profiles?lang=' + lang)).json;
+  const es = (await get('es')).starters.find(s => s.id === 'writer');
+  assert.equal(es.label, 'Redactor');
+  assert.equal(es.added, false);
+  assert.equal((await post('/api/profiles/starter', { id: 'nope' })).status, 404);
+  assert.equal((await req('POST', '/api/profiles/starter', { origin: 'http://evil.example', body: { id: 'writer' } })).status, 403);
+  const r = await post('/api/profiles/starter', { id: 'writer', lang: 'es' });
+  assert.equal(r.status, 200);
+  const p = r.json.profile;
+  assert.deepEqual([p.id, p.label, p.kind, p.skills], ['writer', 'Redactor', 'claude', ['template-fill', 'business-knowledge']]);
+  assert.ok(fs.existsSync(path.join(CFG, 'skills', 'template-fill', 'SKILL.md')), 'its skill is installed');
+  assert.equal((await get('en')).starters.find(s => s.id === 'writer').added, true);
+  assert.equal((await post('/api/profiles/starter', { id: 'writer' })).status, 409, 'never overwrites a saved agent');
+  assert.equal((await post('/api/profiles/delete', { id: 'writer' })).status, 200);
+});
+
 test('web browser: status in the Tools API, off by default; the panel endpoint checks its input', async () => {
   const origin = `http://${BASE}`;
   const v = await req('GET', '/api/tools');

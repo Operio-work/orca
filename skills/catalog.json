@@ -27,6 +27,20 @@
       "en": { "name": "Bilingual message polish", "summary": "Cleans up a customer message in English or Spanish and gives you both versions, same tone, ready to copy. Nothing is sent." },
       "es": { "name": "Mensajes pulidos en dos idiomas", "summary": "Mejora un mensaje para clientes en español o inglés y te da las dos versiones con el mismo tono, listas para copiar. No se envía nada." },
       "tags": ["messages", "bilingual"]
+    },
+    {
+      "key": "template-fill",
+      "version": 1,
+      "en": { "name": "Template fill", "summary": "Fills your own document templates (leases, NDAs, notices, quotes, proposals) with the details of one case and saves a draft for you to check. Anything it can't find is marked MISSING, never invented." },
+      "es": { "name": "Llenar plantillas", "summary": "Llena tus propias plantillas (contratos, NDA, avisos, cotizaciones, propuestas) con los datos de un caso y guarda un borrador para que lo revises. Lo que no encuentra lo marca como FALTA, nunca lo inventa." },
+      "tags": ["documents", "templates"]
+    },
+    {
+      "key": "followup-tracker",
+      "version": 1,
+      "en": { "name": "Follow-up tracker", "summary": "Keeps one list of what you are waiting for (signatures, deposits, quotes, client documents) and drafts polite nudges when they are due. After two nudges it hands the item back to you. Nothing is sent." },
+      "es": { "name": "Seguimiento de pendientes", "summary": "Lleva una lista de lo que estás esperando (firmas, anticipos, cotizaciones, documentos de clientes) y redacta recordatorios amables cuando toca. Tras dos recordatorios te lo devuelve a ti. No se envía nada." },
+      "tags": ["follow-ups", "payments"]
     }
   ]
 }
