@@ -35,6 +35,7 @@ const { createKbAccess, scopeOf: kbScopeOf } = require('./lib/kb-access');
 const transcript = require('./lib/transcript');
 const { createProfiles, ProfileError, reportsError, BUILTIN: PROFILE_TOOLS } = require('./lib/profiles');
 const { readStarters, viewStarters, starterProfile } = require('./lib/starters');
+const packsLib = require('./lib/packs');
 const { createAccounts, AccountError } = require('./lib/accounts');
 const { createTools, ToolError } = require('./lib/tools');
 const { createBrowser } = require('./lib/browser');
@@ -239,6 +240,9 @@ const tplErr = e => { if (e instanceof TemplateError) throw new HttpError(e.stat
 const skills = createSkills({ home: CFG.HOME, configDir: CFG.CONFIG_DIR, bundledDir: path.join(__dirname, 'skills'), log });
 // Starter agents (Operio /for roles), bundled with the app.
 const STARTERS = readStarters(path.join(__dirname, 'starters'), log);
+// Industry packs: put on this panel by ORCA Host (operio-orca packs add); read fresh on each list.
+const PACKS_DIR = path.join(CFG.CONFIG_DIR, 'packs');
+const readPacksNow = () => packsLib.readPacks(PACKS_DIR, STARTERS, log);
 const skillErr = e => { if (e instanceof SkillError) throw new HttpError(e.status, e.code, e.detail); throw e; };
 // Who may ask Operio for a skill on a hosted panel: the client's admins and Operio staff.
 // (ORCA Host checks again before it records the request.)
@@ -2518,6 +2522,7 @@ async function api(req, res, url) {
       canEdit: canSetupAgents(login), kinds: KINDS.filter(k => k !== 'shell'), models: MODELS, tools: Object.keys(PROFILE_TOOLS),
       accounts: isAdmin(login) ? accounts.list().map(({ id, kind, label, signedIn, key }) => ({ id, kind, label, signedIn, key })) : [],
       skills: skills.list().map(s => ({ key: s.key, name: s.name })),
+      packs: canSetupAgents(login) ? packsLib.viewPacks(readPacksNow(), { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', taken: new Set(profiles.list().map(p => p.id)) }) : [],
       starters: canSetupAgents(login) ? viewStarters(STARTERS, { lang: url.searchParams.get('lang') === 'es' ? 'es' : 'en', taken: new Set(profiles.list().map(p => p.id)) }) : [],
     });
   }
@@ -3058,6 +3063,26 @@ async function api(req, res, url) {
     try { p = profiles.put(body, loginOf(req) || 'local'); } catch (e) { profileErr(e); }
     jr(req, 'profile.save', null, { profile: p.id, rev: p.rev, kind: p.kind, type: p.type, skills: p.skills.length, tools: p.tools.builtin });
     return send(res, 200, { ok: true, profile: p });
+  }
+  // Install an industry pack ORCA Host put here: its agents (existing ones kept), templates and
+  // examples (never overwriting a file) and its routines (switched off; an existing one is kept).
+  // Its skills came with the pack (operio-orca packs add); the panel never installs them here.
+  if (pathname === '/api/profiles/pack') {
+    if (!canSetupAgents(loginOf(req))) throw new HttpError(403, 'forbidden');
+    const pk = readPacksNow().find(x => x.id === String(body.id || ''));
+    if (!pk) throw new HttpError(404, 'gone');
+    const lang = body.lang === 'es' ? 'es' : 'en';
+    const have = new Set(skills.list().map(x => x.key));
+    const added = [], kept = [];
+    for (const a of pk.agents) {
+      try { profiles.put(packsLib.packProfile(a, { lang, installed: have }), loginOf(req) || 'local'); added.push(a.id); }
+      catch (e) { if (e instanceof ProfileError && e.code === 'profile_exists') kept.push(a.id); else profileErr(e); }
+    }
+    let files = [], routines = [];
+    try { files = packsLib.copyFiles(pk, CFG.HOME); routines = packsLib.writeRoutines(pk, CFG.ROUTINES_DIR); }
+    catch (e) { log('pack.files_failed', { pack: pk.id, error: e.message }); throw new HttpError(500, 'pack_files', e.message); }
+    jr(req, 'pack.install', null, { pack: pk.id, agents: added, kept, files: files.length, routines });
+    return send(res, 200, { ok: true, agents: added, kept, files: files.length, routines, folder: pk.folder });
   }
   // Add a starter agent: install its bundled skills (free panel only), then save it as a saved agent.
   if (pathname === '/api/profiles/starter') {

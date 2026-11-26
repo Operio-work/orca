@@ -2062,3 +2062,15 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
   .ag-st { grid-template-columns: 48px 1fr; align-items: start; }
   .ag-st .btn { grid-column: 2; justify-self: start; }
 }
+
+/* Industry packs (from ORCA Host) */
+.ag-pk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.ag-pk { display: grid; gap: var(--space-2); padding: var(--space-3); border: 1px solid color-mix(in srgb, var(--color-orange) 40%, var(--color-border)); border-radius: var(--radius); background: color-mix(in srgb, var(--color-orange) 5%, var(--color-surface)); }
+.ag-pk.done { border-color: var(--color-border); background: var(--color-surface); }
+.ag-pk-head { display: grid; grid-template-columns: 48px 1fr; gap: var(--space-3); align-items: center; }
+.ag-pk-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 26px; background: color-mix(in srgb, var(--color-orange) 14%, var(--color-surface-2)); }
+.ag-pk-team { display: flex; gap: 6px; flex-wrap: wrap; }
+.ag-pk-chip { padding: 2px 10px; border-radius: 999px; font: 500 var(--text-xs)/1.6 var(--font-sans); color: var(--text-primary); background: var(--color-surface-2); border: 1px solid var(--color-border); }
+.ag-pk-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; padding-top: var(--space-2); border-top: 1px dashed var(--color-border); }
+.ag-pk-done { font: 600 var(--text-xs) var(--font-sans); color: var(--color-green-ink); }
+.ag-pk-foot .btn { min-height: 34px; }

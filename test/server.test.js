@@ -443,6 +443,33 @@ test('starter agents: listed per language, one tap installs their skills and sav
   assert.equal((await post('/api/profiles/delete', { id: 'writer' })).status, 200);
 });
 
+test('industry packs: the CLI adds one (with its skill), the panel lists it, Install saves agents, files and routines (off) once', async () => {
+  const { execFileSync } = require('child_process');
+  const out = execFileSync(process.execPath, [path.join(ROOT, 'lib', 'packs-cli.js'), 'add', CFG], { env: { ...process.env, HOME }, input: fs.readFileSync(path.join(__dirname, 'fixtures', 'demo-pack.json')) }).toString();
+  assert.match(out, /added demo-bakery v1 \(2 files, skills: test-cakes\)/);
+  const list = async () => (await req('GET', '/api/profiles?lang=es')).json.packs;
+  const [pk] = await list();
+  assert.deepEqual([pk.id, pk.name, pk.installed, pk.agents.length, pk.routines.length, pk.templates], ['demo-bakery', 'Panaderías (paquete de prueba)', false, 2, 1, 1]);
+  assert.equal((await req('POST', '/api/profiles/pack', { origin: 'http://evil.example', body: { id: 'demo-bakery' } })).status, 403);
+  assert.equal((await post('/api/profiles/pack', { id: 'nope' })).status, 404);
+  const r = await post('/api/profiles/pack', { id: 'demo-bakery', lang: 'es' });
+  assert.equal(r.status, 200);
+  assert.deepEqual([r.json.agents, r.json.routines, r.json.files], [['bk-communicator', 'bk-quotes'], ['bk-orders-due'], 2]);
+  const prof = (await req('GET', '/api/profiles')).json.profiles.find(p => p.id === 'bk-quotes');
+  assert.equal(prof.label, 'Cotizaciones');
+  assert.ok(prof.skills.includes('test-cakes'), 'the skill the pack brought is on the agent');
+  const have = new Set((await req('GET', '/api/profiles')).json.skills.map(s => s.key));
+  assert.ok(prof.skills.every(k => have.has(k)), 'only skills this panel has');
+  assert.ok(fs.existsSync(path.join(HOME, 'orca-desk', 'demo-bakery', 'templates', 'cake-quote.md')));
+  assert.ok(fs.existsSync(path.join(CFG, 'routines', 'bk-orders-due', 'routine.json')));
+  const rt = (await req('GET', '/api/routines')).json.routines.find(x => x.id === 'bk-orders-due');
+  assert.equal(rt.enabled, false);
+  const again = await post('/api/profiles/pack', { id: 'demo-bakery' });
+  assert.deepEqual([again.json.agents, again.json.kept.length, again.json.files, again.json.routines], [[], 2, 0, []]);
+  assert.equal((await list())[0].installed, true);
+  for (const id of ['bk-communicator', 'bk-quotes']) await post('/api/profiles/delete', { id });
+});
+
 test('web browser: status in the Tools API, off by default; the panel endpoint checks its input', async () => {
   const origin = `http://${BASE}`;
   const v = await req('GET', '/api/tools');

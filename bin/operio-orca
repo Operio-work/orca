@@ -18,6 +18,8 @@
 #                         templates set (JSON on stdin) | show | clear
 #   operio-orca skills      skills your agents can use (~/.config/operio-orca/skills):
 #                         skills list | remove KEY | install, catalog-set (JSON on stdin)
+#   operio-orca packs       industry packs from ORCA Host (~/.config/operio-orca/packs):
+#                         packs list | remove ID | add (JSON on stdin)
 #   operio-orca kb          the business's documents for agents (~/.config/operio-orca/knowledge):
 #                         kb search "question" [-n 5] [--collection NAME] [--json] | add PATH (stdin)
 #                         | remove PATH | list | status | reindex [--full]
@@ -612,6 +614,18 @@ cmd_skills() {
   "$NODE_BIN" "$APP_DIR/lib/skills-cli.js" "$sub" "$CONFIG_DIR" "${2:-}"
 }
 
+cmd_packs() {
+  local sub="${1:-}"
+  case "$sub" in
+    add|list) [ $# -eq 1 ] || die "packs $sub takes no arguments (add reads the JSON on stdin)" ;;
+    remove) [ $# -eq 2 ] || die "usage: operio-orca packs remove ID" ;;
+    ''|help|-h|--help) printf '%s\n' 'operio-orca packs list         industry packs on this panel, one per line: ID vVERSION' 'operio-orca packs remove ID    take a pack off the list (what was installed from it stays)' 'operio-orca packs add          a pack as JSON on stdin {id, version, pack, files, skills} (from ORCA Host)'; return 0 ;;
+    *) die "unknown packs command: $sub (add, remove, list)" ;;
+  esac
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" "$APP_DIR/lib/packs-cli.js" "$sub" "$CONFIG_DIR" "${2:-}"
+}
+
 cmd_kb() {
   local sub="${1:-}"
   case "$sub" in
@@ -769,6 +783,7 @@ case "${1:-help}" in
   llm) shift; cmd_llm "$@" ;;
   templates) shift; cmd_templates "$@" ;;
   skills) shift; cmd_skills "$@" ;;
+  packs) shift; cmd_packs "$@" ;;
   kb) shift; cmd_kb "$@" ;;
   browser) shift; cmd_browser "$@" ;;
   demo) shift; cmd_demo "$@" ;;

@@ -141,10 +141,40 @@
     emptyEl.textContent = data.canEdit ? t('agNone') : t('agNoneView');
     introEl.textContent = t('agIntro');
     if (!inForm) listEl.replaceChildren(...data.profiles.map(card));
+    const pkEl = $('#ag-packs');
+    pkEl.hidden = inForm || !data.canEdit || !(data.packs || []).length;
+    if (!pkEl.hidden) $('#ag-pack-list').replaceChildren(...data.packs.map(packCard));
     const left = (data.starters || []).filter(x => !x.added);
     const stEl = $('#ag-starters');
     stEl.hidden = inForm || !data.canEdit || !left.length;
     if (!stEl.hidden) $('#ag-starter-list').replaceChildren(...left.map(starterCard));
+  }
+
+  // Industry packs (from ORCA Host): a ready team for one kind of business.
+  function packCard(p) {
+    const li = el('li', 'ag-pk' + (p.installed ? ' done' : ''));
+    const head = el('div', 'ag-pk-head');
+    head.append(el('span', 'ag-pk-icon', p.icon || '🧰'));
+    const txt = el('div', 'ag-st-body');
+    txt.append(el('span', 'ag-st-name', p.name), el('p', 'ag-st-sum', p.summary));
+    head.append(txt);
+    const team = el('div', 'ag-pk-team');
+    for (const a of p.agents) team.append(el('span', 'ag-pk-chip', a.label));
+    const foot = el('div', 'ag-pk-foot');
+    foot.append(el('span', 'ag-st-skills', t('agPackIn', p.agents.length, p.routines.length, p.templates)));
+    if (p.installed) foot.append(el('span', 'ag-pk-done', '✓ ' + t('agPackDone')));
+    else foot.append(button(t('agInstallPack'), 'primary', () => installPack(p), 'pk:' + p.id));
+    li.append(head, team, foot);
+    return li;
+  }
+  async function installPack(p) {
+    busy = 'pk:' + p.id; render();
+    try {
+      const r = await post('/api/profiles/pack', { id: p.id, lang: lang === 'es' ? 'es' : 'en' });
+      toast(t('agPackInstalled', p.name, r.agents.length, r.routines.length, r.folder), false, 8000);
+    } catch (err) { toast(errText(err), true); }
+    busy = null;
+    await load(); render();
   }
 
   // Starter agents (Operio /for roles): one tap installs their skills and saves them.

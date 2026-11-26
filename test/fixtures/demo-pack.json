@@ -1,0 +1,33 @@
+{
+  "id": "demo-bakery",
+  "version": "1",
+  "pack": {
+    "id": "demo-bakery",
+    "icon": "🥐",
+    "look": "reception",
+    "folder": "~/orca-desk/demo-bakery",
+    "en": { "name": "Bakeries (test pack)", "summary": "A made-up pack for tests: answers about cakes and writes custom-cake quotes." },
+    "es": { "name": "Panaderías (paquete de prueba)", "summary": "Un paquete inventado para pruebas: responde sobre pasteles y escribe cotizaciones." },
+    "agents": [
+      { "id": "bk-communicator", "base": "communicator", "look": "reception",
+        "en": { "label": "Cake questions", "summary": "Answers cake questions.", "focus": "You work for a bakery. Orders go to ~/orca-desk/demo-bakery/inbox/." },
+        "es": { "label": "Preguntas de pasteles", "summary": "Responde sobre pasteles.", "focus": "Trabajas para una panadería. Los pedidos van a ~/orca-desk/demo-bakery/inbox/." } },
+      { "id": "bk-quotes", "look": "writer", "skills": ["template-fill", "test-cakes"],
+        "en": { "label": "Cake quotes", "summary": "Custom-cake quotes.", "instructions": "You write custom-cake quotes from ~/orca-desk/demo-bakery/templates/cake-quote.md. Drafts only." },
+        "es": { "label": "Cotizaciones", "summary": "Cotizaciones de pasteles.", "instructions": "Escribes cotizaciones desde ~/orca-desk/demo-bakery/templates/cake-quote.md. Solo borradores." } }
+    ],
+    "routines": [
+      { "id": "bk-orders-due", "name": { "en": "Cake orders due", "es": "Pasteles por entregar" },
+        "problem": { "en": "Tomorrow's cake orders.", "es": "Los pasteles de mañana." },
+        "prompt": "List tomorrow's orders from ~/orca-desk/demo-bakery/orders.csv. Read only.",
+        "schedule": "0 18 * * *", "approval": "none", "agent": "claude", "cwd": "~" }
+    ]
+  },
+  "files": {
+    "templates/cake-quote.md": "# Quote for {{client}}\n\nCake: {{cake}} · {{price}}\n",
+    "examples/README.md": "Made-up bakery for tests.\n"
+  },
+  "skills": [
+    { "key": "test-cakes", "version": "1", "files": { "SKILL.md": "---\nname: test-cakes\ndescription: Test skill that comes with the demo pack.\n---\n\n# Test cakes\n\nOnly for tests.\n" } }
+  ]
+}
