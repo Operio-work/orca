@@ -1,6 +1,6 @@
 {
   "name": "operio-orca",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "ORCA by Operio: a self-hosted control panel for your AI coding agents, with scheduled routines. Runs on herdr.",
   "homepage": "https://make.operio.work",
   "main": "server.js",

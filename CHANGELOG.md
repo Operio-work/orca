@@ -3,6 +3,19 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.8.0] - 2026-11-26
+
+### Added
+- **Starter agents.** Saved agents now offers five ready-made agents for everyday office work:
+  Communicator (answers repeat customer questions from your own documents), Writer (documents
+  from your own templates), Researcher (finds anything in your documents and says where),
+  Reporter (daily or weekly one-page brief) and Chaser (keeps track of what you are waiting for
+  and drafts polite nudges). One tap adds the agent and installs the skills it needs; you can
+  edit everything after. English and Spanish. They draft only: nothing is sent.
+- **Two new skills:** Template fill (fills your own templates and marks anything missing instead
+  of inventing it) and Follow-up tracker (one list of what you are waiting for, nudges when due,
+  hands it back to you after two).
+
 ## [0.7.1] - 2026-11-21
 
 ### Fixed
