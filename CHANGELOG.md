@@ -3,6 +3,19 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.9.0] - 2026-11-26
+
+### Added
+- **Industry packs.** An industry pack is a set of ready-made agents, document templates with
+  examples, and routines for one kind of business. A pack your provider gives you shows in Saved
+  agents under Industry packs; one tap adds its agents, copies its templates into your desk folder
+  and adds its routines switched off, so nothing runs until you turn it on. Admins manage them with
+  `operio-orca packs add|remove|list`.
+
+### Fixed
+- The Saved agents dialog scrolls as one, so the list is no longer squeezed above the starters;
+  on phones a starter's Add button sits under its text.
+
 ## [0.8.0] - 2026-11-26
 
 ### Added
