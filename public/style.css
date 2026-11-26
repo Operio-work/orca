@@ -2057,3 +2057,8 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .ag-st-sum { margin: 0; font: 400 var(--text-xs)/1.4 var(--font-sans); color: var(--text-secondary); }
 .ag-st-skills { margin: 0; font: 400 11px/1.4 var(--font-mono); color: var(--text-muted); overflow-wrap: anywhere; }
 .ag-st .btn { min-height: 34px; }
+.ag-dialog #ag-list { overflow: visible; flex: none; }
+@media (max-width: 480px) {
+  .ag-st { grid-template-columns: 48px 1fr; align-items: start; }
+  .ag-st .btn { grid-column: 2; justify-self: start; }
+}
