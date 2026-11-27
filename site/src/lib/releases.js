@@ -11,6 +11,29 @@
 /** @type {Release[]} */
 export const RELEASES = [
   {
+    version: '0.11.3',
+    title: { en: 'A bigger Map on your phone', es: 'Un Mapa más grande en tu celular' },
+    items: [
+      {
+        title: { en: 'A larger Map on phones', es: 'Un Mapa más grande en el celular' },
+        body: {
+          en: 'Agents show as two big cards per row with readable names and status. Anyone who needs you comes first in each team, and nothing scrolls sideways.',
+          es: 'Los agentes aparecen como dos tarjetas grandes por fila, con nombre y estado legibles. Quien te necesita va primero en cada equipo, y nada se desplaza de lado.',
+        },
+      },
+      {
+        title: { en: 'Admin keeps your edits safe', es: 'Admin cuida tus cambios' },
+        body: {
+          en: 'Leaving a section with unsaved changes asks before discarding them. Saved agents, Accounts, Tools, Skills and Knowledge scroll down to the last item, on laptops and phones.',
+          es: 'Salir de una sección con cambios sin guardar pregunta antes de descartarlos. Agentes guardados, Cuentas, Herramientas, Habilidades y Conocimiento se desplazan hasta el último elemento, en laptop y celular.',
+        },
+      },
+    ],
+    shots: [
+      { id: 'wn-map-phone', caption: { en: 'The Map on a phone', es: 'El Mapa en el celular' }, alt: { en: 'ORCA on a phone in the light theme: two big agent cards per row, the ones that need you in red at the top of each team.', es: 'ORCA en un celular en tema claro: dos tarjetas grandes de agentes por fila, las que te necesitan en rojo arriba de cada equipo.' } },
+    ],
+  },
+  {
     version: '0.11.2',
     title: { en: 'Calmer notices, a clearer Admin', es: 'Avisos más discretos, un Admin más claro' },
     items: [
