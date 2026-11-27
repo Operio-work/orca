@@ -1910,7 +1910,7 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .adm-wrap > .tpl-head { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
 .adm-wrap > .tpl-head h2::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 10px; border-radius: 50%; background: var(--color-orange); vertical-align: 1px; }
 .adm-back { display: none; }
-.adm-grid { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 0; overflow: hidden; flex: 1; }
+.adm-grid { display: grid; grid-template-columns: 248px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); min-height: 0; overflow: hidden; flex: 1; }
 .adm-nav { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3); border-right: 1px solid var(--color-border); background: var(--color-surface); overflow-y: auto; overscroll-behavior: contain; }
 .adm-group { margin: var(--space-4) var(--space-3) var(--space-1); font: 600 var(--text-xs) var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
 .adm-tab { display: flex; align-items: center; gap: 10px; text-align: left; min-height: 40px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius); background: none; color: var(--text-secondary); font: 500 var(--text-sm) var(--font-sans); cursor: pointer; }
@@ -1925,6 +1925,7 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 /* A manager inside Admin: no second title or Close button, no dialog padding or height cap. */
 .adm-embed > .adm-h:has(+ .tpl-wrap) { display: none; }
 .adm-body > .tpl-wrap { max-height: none; padding: 0; overflow: visible; }
+.adm-body .tpl-list, .adm-body .kb-wrap { overflow-y: visible; overscroll-behavior: auto; }
 .adm-body > .tpl-wrap > .tpl-head h2 { font-size: var(--text-lg); }
 .adm-body > .tpl-wrap > .tpl-head > .icon-btn[id$="-close"] { display: none; }
 .adm-body > form#llm-form { padding: 0; }
