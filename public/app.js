@@ -362,14 +362,82 @@ async function call(path, opts = {}) {
 }
 const post = (path, body = {}) => call(path, { method: 'POST', body: JSON.stringify(body) });
 
-let toastTimer;
+const activeToasts = [];
+// Toasts live in the top layer (a manual popover), so they also show above an open dialog.
+function toastHost() {
+  const host = $('#toasts');
+  if (host.showPopover) { try { if (host.matches(':popover-open')) host.hidePopover(); host.showPopover(); } catch { /* not supported */ } }
+  return host;
+}
+function dismissToast(msg) { for (const item of [...activeToasts]) if (item.dataset.msg === msg) item.querySelector('.toast-close')?.click(); }
 function toast(msg, isError = false, ms) {
-  const el = $('#toast');
-  el.textContent = msg;
-  el.classList.toggle('error', isError);
-  el.hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, ms || (isError ? 5000 : 2200));
+  // The same message again (e.g. "offline" on every failed check) restarts its timer, never stacks.
+  const same = activeToasts.find(item => item.dataset.msg === msg);
+  if (same) { same.dispatchEvent(new Event('toast-restart')); toastHost(); return; }
+  const host = toastHost();
+  const duration = Number.isFinite(ms) && ms > 0 ? ms : (isError ? 6000 : 3000);
+  const item = document.createElement('div');
+  item.className = `toast${isError ? ' error' : ''}`;
+  item.setAttribute('role', isError ? 'alert' : 'status');
+  item.setAttribute('aria-live', isError ? 'assertive' : 'polite');
+  const message = document.createElement('span');
+  message.className = 'toast-message';
+  message.textContent = msg;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'toast-close';
+  close.setAttribute('aria-label', t('close'));
+  close.textContent = '×';
+  const timer = document.createElement('span');
+  timer.className = 'toast-timer';
+  timer.setAttribute('aria-hidden', 'true');
+  timer.append(document.createElement('i'));
+  item.dataset.msg = msg;
+  item.style.setProperty('--toast-duration', `${duration}ms`);
+  item.append(message, close, timer);
+
+  let remaining = duration;
+  let startedAt = 0;
+  let timeout;
+  const pause = () => {
+    if (!timeout) return;
+    clearTimeout(timeout);
+    timeout = null;
+    remaining = Math.max(0, remaining - (Date.now() - startedAt));
+    item.classList.add('paused');
+  };
+  const resume = () => {
+    if (timeout || !item.isConnected) return;
+    item.classList.remove('paused');
+    startedAt = Date.now();
+    timeout = setTimeout(remove, remaining);
+  };
+  const remove = () => {
+    clearTimeout(timeout);
+    timeout = null;
+    const index = activeToasts.indexOf(item);
+    if (index !== -1) activeToasts.splice(index, 1);
+    item.remove();
+  };
+  item.addEventListener('pointerenter', pause);
+  item.addEventListener('pointerleave', resume);
+  item.addEventListener('pointerdown', pause);
+  item.addEventListener('pointerup', resume);
+  item.addEventListener('pointercancel', resume);
+  close.addEventListener('click', remove);
+  item.addEventListener('toast-restart', () => {
+    clearTimeout(timeout); timeout = null; remaining = duration;
+    const bar = timer.firstChild; bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    resume();
+  });
+  while (activeToasts.length >= 3) {
+    const oldest = activeToasts[0];
+    const dismiss = oldest.querySelector('.toast-close');
+    dismiss?.click();
+  }
+  activeToasts.push(item);
+  host.append(item);
+  resume();
 }
 
 // ─── Status bar: counts double as highlights; tags and Unnamed too ───────────
@@ -2429,7 +2497,7 @@ async function refresh() {
     attend();
     window.OrcaChat?.update();
     if (selected) loadOutput();
-    if ($('#toast').textContent === t('offline')) $('#toast').hidden = true;
+    dismissToast(t('offline'));
   } catch {
     offline = true;
     if (scene()) scene().update(null, { offline });
