@@ -49,8 +49,15 @@
     nav.replaceChildren(...kids);
   }
   function unmount() { if (mounted) { try { mounted.unmount(); } catch { /* gone */ } mounted = null; } }
-  function show(s) {
-    if (cur === 'people' && dirty && s !== 'people' && !confirmLeave()) return;
+  function hasUnsaved() { return dirty || !!EMBED[cur]?.()?.isDirty?.(); }
+  function confirmLeave() { return !hasUnsaved() || window.confirm(t('admDiscardConfirm')); }
+  function discardDraft() { draft = null; dirty = false; EMBED[cur]?.()?.discard?.(); }
+  function show(s, force = false) {
+    if (cur === s && !force) return true;
+    if (!force && hasUnsaved()) {
+      if (!confirmLeave()) return false;
+      discardDraft();
+    }
     unmount();
     cur = s;
     renderNav();
@@ -62,12 +69,12 @@
       body.classList.add('adm-embed');
       mounted = api;
       Promise.resolve(api.mount(body)).catch(err => toast(errText(err), true));
-      return;
+      return true;
     }
     body.classList.remove('adm-embed');
     body.replaceChildren(el('h3', 'adm-h', t('adm_' + s)), ...(VIEWS[s]?.() || []));
+    return true;
   }
-  function confirmLeave() { toast(t('admUnsaved'), true); return false; }
 
   const p = (cls, text) => el('p', cls, text);
   function action(label, fn, cls = 'primary') {
@@ -86,10 +93,16 @@
     const sw = el('label', 'adm-switch');
     const cb = el('input');
     cb.type = 'checkbox'; cb.checked = draft.allowlist;
-    cb.addEventListener('change', () => { draft.allowlist = cb.checked; dirty = true; show('people'); });
+    const state = p('hint adm-state ' + (draft.allowlist ? 'ok' : 'warn'), draft.allowlist ? t('admAllowOn') : t('admAllowOff'));
+    cb.addEventListener('change', () => {
+      draft.allowlist = cb.checked;
+      state.className = 'hint adm-state ' + (draft.allowlist ? 'ok' : 'warn');
+      state.textContent = draft.allowlist ? t('admAllowOn') : t('admAllowOff');
+      markDirty();
+    });
     sw.append(cb, el('span', null, t('admAllowlist')));
-    out.push(sw, p('hint adm-state ' + (draft.allowlist ? 'ok' : 'warn'), draft.allowlist ? t('admAllowOn') : t('admAllowOff')));
-    const list = el('ul', 'adm-people');
+    out.push(sw, state);
+    const list = el('ul', 'adm-people adm-access-list');
     draft.people.forEach((x, i) => list.append(personRow(x, i)));
     out.push(list);
     const add = el('form', 'adm-add');
@@ -99,28 +112,39 @@
     add.addEventListener('submit', e => {
       e.preventDefault();
       draft.people.push({ login: inp.value.trim().toLowerCase(), name: '', role: 'member', folders: [] });
-      dirty = true; show('people');
+      dirty = true; show('people', true);
+      body.querySelector(`[data-person="${draft.people.length - 1}"][data-field="name"]`)?.focus();
     });
     out.push(add, p('hint', t('admRolesHint')));
     const save = action(t('save'), savePeople);
     save.disabled = !dirty;
-    out.push(row(action(t('cancel'), () => { draft = null; dirty = false; show('people'); }, 'ghost'), save));
+    const actions = row(action(t('cancel'), () => { discardDraft(); show('people', true); }, 'ghost'), save);
+    actions.classList.add('adm-sticky-actions');
+    out.push(actions);
     return out;
   }
   function personRow(x, i) {
     const li = el('li', 'adm-person');
+    li.dataset.person = String(i);
     const top = el('div', 'adm-ptop');
     const name = el('input');
-    name.value = x.name; name.placeholder = t('admNamePh'); name.maxLength = 40; name.setAttribute('aria-label', t('name'));
+    name.value = x.name; name.placeholder = t('admNamePh'); name.maxLength = 40; name.setAttribute('aria-label', t('name')); name.dataset.field = 'name';
     name.addEventListener('input', () => { x.name = name.value; markDirty(); });
     const role = el('select');
     role.append(new Option(t('admRoleAdmin'), 'admin'), new Option(t('admRoleMember'), 'member'));
+    role.dataset.field = 'role';
     role.value = x.role;
-    role.addEventListener('change', () => { x.role = role.value; dirty = true; show('people'); });
+    role.addEventListener('change', () => { x.role = role.value; dirty = true; show('people', true); body.querySelector(`[data-person="${i}"][data-field="role"]`)?.focus(); });
     const rm = el('button', 'icon-btn');
     rm.type = 'button'; rm.title = t('admRemove'); rm.setAttribute('aria-label', t('admRemove'));
+    rm.dataset.field = 'remove';
     rm.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-x"/></svg>';
-    rm.addEventListener('click', () => { draft.people.splice(i, 1); dirty = true; show('people'); });
+    rm.addEventListener('click', () => {
+      draft.people.splice(i, 1); dirty = true; show('people', true);
+      const next = Math.min(i, draft.people.length - 1);
+      const target = body.querySelector(`[data-person="${next}"][data-field="remove"]`) || body.querySelector('.adm-add input');
+      target?.focus();
+    });
     top.append(name, role, rm);
     li.append(top, el('div', 'adm-login', x.login + (x.login === data.me ? ' · ' + t('admYou') : '')));
     if (x.role === 'member') {
@@ -133,12 +157,16 @@
   }
   function markDirty() { if (!dirty) { dirty = true; const b = body.querySelector('.adm-actions .btn.primary'); if (b) b.disabled = false; } }
   async function savePeople() {
+    const button = body.querySelector('.adm-sticky-actions .btn.primary');
+    const label = button?.textContent;
+    if (button) { button.disabled = true; button.textContent = t('admSaving'); }
     try {
       await post('/api/admin/access', draft);
       toast(t('admSaved'));
-      draft = null; dirty = false;
-      await load(); show('people');
+      discardDraft();
+      await load(); show('people', true);
     } catch (err) { toast(errText(err), true); }
+    finally { if (button?.isConnected) { button.disabled = false; button.textContent = label; } }
   }
 
   // ── Tools: MCP servers for saved agents + their secrets (values are write-only)
@@ -309,16 +337,32 @@
     else { dialog.classList.remove('in-section'); body.replaceChildren(); }
   }
   function close() { if (dialog.open) dialog.close(); }
+  function requestClose() {
+    if (hasUnsaved() && !confirmLeave()) return false;
+    discardDraft();
+    close();
+    return true;
+  }
   dialog.addEventListener('close', () => { unmount(); btn.setAttribute('aria-expanded', 'false'); });
-  dialog.addEventListener('cancel', e => { if (dirty) { e.preventDefault(); toast(t('admUnsaved'), true); } });
-  dialog.addEventListener('click', e => { if (e.target === dialog && !dirty) close(); });
+  dialog.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault(); e.stopImmediatePropagation(); requestClose();
+  }, true);
+  dialog.addEventListener('cancel', e => { e.preventDefault(); requestClose(); });
+  dialog.addEventListener('click', e => { if (e.target === dialog) requestClose(); });
   btn.addEventListener('click', open);
-  $('#adm-close').addEventListener('click', () => { if (dirty) { draft = null; dirty = false; } close(); });
-  $('#adm-back').addEventListener('click', () => { if (cur === 'people' && dirty) { toast(t('admUnsaved'), true); return; } unmount(); cur = null; renderNav(); dialog.classList.remove('in-section'); });
+  $('#adm-close').addEventListener('click', requestClose);
+  $('#adm-back').addEventListener('click', () => {
+    if (hasUnsaved()) {
+      if (!confirmLeave()) return;
+      discardDraft();
+    }
+    unmount(); cur = null; renderNav(); dialog.classList.remove('in-section');
+  });
   // Only admins see the gear (the server checks every call anyway).
   const sync = () => { btn.hidden = !access.admin; };
   sync();
   setInterval(sync, 3000);
   // open('accounts') jumps straight to a section (also when Admin is already open).
-  window.OrcaAdmin = { open: want => (dialog.open && data && has(want) ? show(want) : open(want)), close };
+  window.OrcaAdmin = { open: want => (dialog.open && data && has(want) ? show(want) : open(want)), close: requestClose };
 })();

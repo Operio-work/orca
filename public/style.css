@@ -2187,3 +2187,9 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 @media (max-width: 599px) {
   .toasts[popover] { right: var(--space-3); }
 }
+
+/* Admin edits stay reachable while a long people list scrolls. */
+.adm-sticky-actions { position: sticky; bottom: 0; z-index: 2; margin-top: auto; padding: var(--space-3) 0 max(var(--space-2), env(safe-area-inset-bottom)); border-top: 1px solid var(--color-border); background: var(--color-bg); }
+.adm-wrap > .tpl-head .icon-btn { width: 44px; height: 44px; }
+.adm-access-list > .adm-person, .adm-access-list .adm-login { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .adm-switch input, .adm-switch input::before, .adm-tab { transition: none; } }

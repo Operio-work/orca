@@ -19,6 +19,7 @@
   let data = { personal: [], company: [], operio: [], scopes: ['personal'], canEditCompany: false };
   let tab = 'personal';
   let editing = null;      // { id?, scope } while the form is open
+  let editingInitial = null;
   let confirmDel = null;   // id waiting for "Yes, delete"
   let caret = null;        // prompt selection when the picker opened
 
@@ -117,6 +118,7 @@
     sel.replaceChildren(...scopes.map(s => { const o = el('option', '', t(s === 'personal' ? 'tplScopeMine' : 'tplScopeCompany')); o.value = s; return o; }));
     sel.value = editing.scope;
     sel.disabled = !!x; // moving a template between scopes = make a new one
+    editingInitial = { title: form.title.value, body: form.body.value, scope: sel.value };
     $('#tpl-scope-row').hidden = scopes.length < 2;
     form.hidden = false;
     listEl.hidden = emptyEl.hidden = tabsEl.hidden = searchEl.hidden = true;
@@ -125,6 +127,7 @@
 
   function closeForm() {
     editing = null;
+    editingInitial = null;
     form.hidden = true;
     listEl.hidden = searchEl.hidden = false;
     render();
@@ -170,7 +173,7 @@
   }
   function close() { if (dialog.open) dialog.close(); }
 
-  dialog.addEventListener('close', () => { btn.setAttribute('aria-expanded', 'false'); editing = null; });
+  dialog.addEventListener('close', () => { btn.setAttribute('aria-expanded', 'false'); editing = null; editingInitial = null; });
   dialog.addEventListener('click', e => { if (e.target === dialog) close(); }); // backdrop
   btn.addEventListener('click', open);
   $('#tpl-close').addEventListener('click', close);
@@ -180,8 +183,13 @@
     if (e.key === 'Enter') { e.preventDefault(); listEl.querySelector('.tpl-use')?.click(); }
   });
   const embed = orcaEmbeddable(dialog, dialog.querySelector('.tpl-wrap'), async () => {
-    searchEl.value = ''; confirmDel = null; editing = null; form.hidden = true; listEl.hidden = searchEl.hidden = false;
+    searchEl.value = ''; confirmDel = null; editing = null; editingInitial = null; form.hidden = true; listEl.hidden = searchEl.hidden = false;
     await load(); render();
   });
-  window.OrcaTemplates = { open: () => { if (btn.offsetParent !== null) open(); }, mount: h => embed.mount(h), unmount: () => embed.unmount() };
+  window.OrcaTemplates = {
+    open: () => { if (btn.offsetParent !== null) open(); },
+    mount: h => embed.mount(h), unmount: () => embed.unmount(),
+    isDirty: () => !!editing && !!editingInitial && (form.title.value !== editingInitial.title || form.body.value !== editingInitial.body || form.scope.value !== editingInitial.scope),
+    discard: () => { if (editing) closeForm(); },
+  };
 })();

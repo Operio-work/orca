@@ -279,6 +279,8 @@
     "admRolesHint": "Les modifications s’appliquent immédiatement, sans redémarrage. Vous ne pouvez pas vous retirer vous-même des administrateurs ici, pour ne pas vous bloquer l’accès.",
     "admSaved": "Personnes et accès enregistrés",
     "admUnsaved": "Enregistrez ou annulez d’abord vos modifications",
+    "admDiscardConfirm": "Abandonner vos modifications non enregistrées et quitter ?",
+    "admSaving": "Enregistrement…",
     "admAgentsIntro": "{0} agent(s) enregistré(s), {1} compte(s) supplémentaire(s). Configurez les agents une fois (instructions, compétences, outils) ainsi que les connexions qu’ils utilisent.",
     "admSkillsIntro": "{0} compétence(s) installée(s). Les compétences apprennent aux agents une tâche étape par étape.",
     "admKnowledgeIntro": "{0} document(s). Documents de l’entreprise que les agents consultent avant de répondre.",
