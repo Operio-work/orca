@@ -1073,7 +1073,7 @@ function renderHistory(a) {
 call('/api/artifacts').then(({ url }) => {
   const a = $('#artifacts-btn');
   if (!url || !a) return;
-  a.href = url;
+  a.href = '/api/artifacts/open'; // signs you in when the app uses ORCA sign-in
   a.title = t('artifacts');
   a.setAttribute('aria-label', a.title);
   a.hidden = false;

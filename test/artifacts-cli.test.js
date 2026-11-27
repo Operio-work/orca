@@ -5,13 +5,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
-const { main, buildPublishBody, loadSettings, saveSettings, slugify, CliError } = require('../lib/artifacts-cli');
+const { main, buildPublishBody, loadSettings, saveSettings, slugify, ssoSecret, CliError } = require('../lib/artifacts-cli');
 
 const TOKEN = 'x'.repeat(32);
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'orca-art-'));
 
 // A fake ORCA Artifacts app: records bodies, answers like /api/publish does.
-function fakeApp(t) {
+function fakeApp(t, { sso = false } = {}) {
   const seen = [];
   const server = http.createServer((req, res) => {
     let body = '';
@@ -20,7 +20,7 @@ function fakeApp(t) {
       const ok = req.headers.authorization === `Bearer ${TOKEN}`;
       res.setHeader('content-type', 'application/json');
       if (!ok) { res.statusCode = 401; return res.end('{}'); }
-      if (req.method === 'GET') return res.end('{"ok":true,"publish":true}');
+      if (req.method === 'GET') return res.end(JSON.stringify({ ok: true, publish: true, sso }));
       const b = JSON.parse(body);
       seen.push(b);
       if (b.kind === 'dashboard' && b.spec.slug === 'bad') { res.statusCode = 422; return res.end('{"ok":false,"problems":["slug is reserved"]}'); }
@@ -41,9 +41,10 @@ test('setup saves the address with mode 600 and checks the token', async (t) => 
   await main(['setup', dir, app.url + '/some/path', TOKEN], {}, (s) => out.push(s));
   const file = path.join(dir, 'artifacts.json');
   assert.equal(fs.statSync(file).mode & 0o777, 0o600);
-  assert.deepEqual(loadSettings(dir, {}), { url: app.url, token: TOKEN });
+  assert.deepEqual(loadSettings(dir, {}), { url: app.url + '/some/path', token: TOKEN, sso: false });
   assert.match(out[0], /token OK/);
   await assert.rejects(main(['setup', dir, app.url, 'y'.repeat(32)], {}, () => {}), /refused/);
+  assert.equal(loadSettings(dir, {}).token, TOKEN, 'a refused setup keeps the working one');
 });
 
 test('setup refuses plain http to other machines and short tokens', () => {
@@ -56,7 +57,7 @@ test('setup refuses plain http to other machines and short tokens', () => {
 test('env wins over the saved settings', () => {
   const dir = tmp();
   saveSettings(dir, 'https://a.example', TOKEN);
-  assert.deepEqual(loadSettings(dir, { ARTIFACTS_URL: 'https://b.example', ARTIFACTS_TOKEN: 't' }), { url: 'https://b.example', token: 't' });
+  assert.deepEqual(loadSettings(dir, { ARTIFACTS_URL: 'https://b.example', ARTIFACTS_TOKEN: 't' }), { url: 'https://b.example', token: 't', sso: false });
 });
 
 test('publish a page folder: files, slug from the folder name, binary as base64', () => {
@@ -125,4 +126,28 @@ test('refusals and missing setup are plain messages', async (t) => {
 
 test('slugify', () => {
   assert.equal(slugify('Reporte Semanal — Café'), 'reporte-semanal-cafe');
+});
+
+test('setup keeps the app path and notes ORCA sign-in', async (t) => {
+  const app = await fakeApp(t, { sso: true });
+  const dir = tmp();
+  const out = [];
+  await main(['setup', dir, `${app.url}/c/acme/artifacts/`, TOKEN], {}, (l) => out.push(l));
+  const saved = JSON.parse(fs.readFileSync(path.join(dir, 'artifacts.json'), 'utf8'));
+  assert.equal(saved.url, `${app.url}/c/acme/artifacts`);
+  assert.equal(saved.sso, true);
+  assert.match(out[0], /one sign-in with ORCA/);
+  assert.equal(loadSettings(dir, {}).sso, true);
+});
+
+test('setup saves nothing when the app refuses the token', async (t) => {
+  const app = await fakeApp(t);
+  const dir = tmp();
+  await assert.rejects(main(['setup', dir, app.url, 'y'.repeat(32)], {}, () => {}), /token was refused/);
+  assert.equal(fs.existsSync(path.join(dir, 'artifacts.json')), false);
+});
+
+test('sign-in secret matches the one ORCA Artifacts derives', () => {
+  // Same value as orca-artifacts src/lib/server/identity.test.ts
+  assert.equal(ssoSecret('x'.repeat(24)), 'ETUP5H30-KMfchE4UkDCWwyef8GK0KVsj3dF4g7MIpM');
 });

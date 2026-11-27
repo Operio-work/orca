@@ -3,6 +3,17 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.11.0] - unreleased
+
+### Added
+- **One sign-in with ORCA Artifacts.** When the Artifacts app is set to sign people in through ORCA
+  (ORCA Artifacts 0.3, `ARTIFACTS_AUTH=orca`), the Artifacts button in the panel opens it already signed in.
+  `operio-orca artifact setup` notices this by itself; nothing else to configure.
+
+### Changed
+- `operio-orca artifact setup` keeps the app's path (an app served at `https://host/team/artifacts` works),
+  and saves nothing when the app refuses the token, so a typo never replaces a working setup.
+
 ## [0.10.0] - 2026-11-26
 
 ### Added

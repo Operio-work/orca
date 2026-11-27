@@ -15,6 +15,7 @@ const http = require('http');
 const PANEL_VERSION = require('./package.json').version;
 const fs   = require('fs');
 const path = require('path');
+const os = require('os');
 const zlib = require('zlib');
 const crypto = require('crypto');
 const vm = require('vm');
@@ -43,6 +44,7 @@ const { createOllama } = require('./lib/ollama');
 const opencodeTranscript = require('./lib/opencode-transcript');
 const llm = require('./lib/llm');
 const identity = require('./lib/identity');
+const artifactsCli = require('./lib/artifacts-cli');
 const sleepState = require('./lib/sleep');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
@@ -2644,11 +2646,26 @@ async function api(req, res, url) {
   }
 
   // ── ORCA Artifacts link (operio-orca artifact setup): the app's address only, never the token.
-  if (req.method === 'GET' && pathname === '/api/artifacts') {
-    let url = null;
-    try { url = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'artifacts.json'), 'utf8')).url || null; } catch { /* not set up */ }
-    if (url && !/^https?:\/\//.test(url)) url = null;
-    return send(res, 200, { url });
+  if (req.method === 'GET' && (pathname === '/api/artifacts' || pathname === '/api/artifacts/open')) {
+    let cfg = {};
+    try { cfg = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'artifacts.json'), 'utf8')) || {}; } catch { /* not set up */ }
+    const url = typeof cfg.url === 'string' && /^https?:\/\//.test(cfg.url) ? cfg.url.replace(/\/+$/, '') : null;
+    if (pathname === '/api/artifacts') return send(res, 200, { url });
+    if (!url) throw new HttpError(404, 'not_set_up');
+    // The app signs people in with ORCA: hand it a one-time ticket (5 minutes) for whoever is here.
+    // Without that it has its own sign-in (or none): just open it.
+    let to = url + '/';
+    if (cfg.sso && cfg.token) {
+      const login = loginOf(req);
+      const p = hostPerson(login);
+      const person = p
+        ? { u: login.slice(2), n: p.name, r: p.role }
+        : { u: 'orca', n: process.env.OPERIO_ORCA_OWNER || os.userInfo().username || 'ORCA', r: 'client_admin' };
+      const ticket = identity.sign(artifactsCli.ssoSecret(cfg.token), person);
+      to = `${url}/auth/orca?ticket=${encodeURIComponent(ticket)}&return=%2F`;
+    }
+    res.writeHead(302, { location: to, 'cache-control': 'no-store' });
+    return res.end();
   }
 
   if (req.method === 'GET' && pathname === '/api/meta') {
