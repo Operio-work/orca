@@ -4,6 +4,9 @@
   import HeroVideo from '#lib/components/HeroVideo.svelte';
   import Icon from '#lib/components/Icon.svelte';
   import OperioLogo from '#lib/components/OperioLogo.svelte';
+  import TryBoard from '#lib/components/TryBoard.svelte';
+  import InstallTerminal from '#lib/components/InstallTerminal.svelte';
+  import WordReveal from '#lib/components/WordReveal.svelte';
   import { freeEntries, packOutput } from '#lib/catalog.js';
   import { href, GITHUB_URL, INSTALL_CMD, TALK_URL, partnersUrl } from '#lib/site.js';
 
@@ -19,6 +22,23 @@
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050], team: [910, 560] };
   // Pixel sizes of the 0.3.0 captures in static/shots (talk, templates, skills, knowledge).
   /** @type {Record<string, [number, number]>} */
+  // Pains: on wide screens one framed shot stays pinned beside the list and changes with the pain in the
+  // middle of the screen. On phones each pain keeps its own shot (the pinned one is hidden).
+  let active = $state(0);
+  /** @type {HTMLElement | undefined} */
+  let painList = $state();
+  $effect(() => {
+    if (!painList || typeof IntersectionObserver === 'undefined') return;
+    const items = [...painList.querySelectorAll('.pain')];
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) active = items.indexOf(/** @type {Element} */ (e.target));
+      },
+      { rootMargin: '-45% 0px -45% 0px' }
+    );
+    items.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  });
   const SHOT2 = { "artifacts-drafts": [910, 560], "artifacts-dashboard": [910, 560], starters: [910, 560], "adm-overview": [910, 560], "adm-agents": [910, 560], "adm-skills": [910, 560], browser: [910, 560], approval: [910, 560], routine: [910, 560], agents: [910, 560], admin: [910, 560], languages: [910, 560], talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
 </script>
 
@@ -69,15 +89,27 @@
   </div>
 </div>
 
+<section class="section try" aria-labelledby="try">
+  <div class="container try-grid">
+    <div class="section-head try-head">
+      <p class="eyebrow">{h.tryIt.eyebrow}</p>
+      <h2 id="try">{h.tryIt.title}</h2>
+      <p>{h.tryIt.lead}</p>
+    </div>
+    <TryBoard s={h.tryIt} />
+  </div>
+</section>
+
 <section class="section pains-section" aria-labelledby="pains">
   <div class="container">
     <div class="section-head">
       <h2 id="pains">{h.painsTitle}</h2>
       <p>{h.painsLead}</p>
     </div>
-    <ol class="pains">
-      {#each h.pains as p}
-        <li class="pain">
+    <div class="pains-wrap">
+    <ol class="pains" bind:this={painList}>
+      {#each h.pains as p, i}
+        <li class="pain" class:on={active === i}>
           <div class="pain-copy">
             <h3><span class="visually-hidden">{h.painLabel}: </span>{p.pain}</h3>
             <p class="pain-body">{p.painBody}</p>
@@ -102,6 +134,17 @@
         </li>
       {/each}
     </ol>
+    <div class="pin" aria-hidden="true">
+      <div class="pin-box">
+        {#each h.pains as p, i}
+          <div class="stage" class:on={active === i} data-shot={p.id}>
+            <img src="/pains/{p.id}-{lang}.webp" width={SHOT[p.id][0]} height={SHOT[p.id][1]} alt="" loading="lazy" decoding="async" />
+          </div>
+        {/each}
+      </div>
+      <ol class="pin-dots">{#each h.pains as _, i}<li class:on={active === i}></li>{/each}</ol>
+    </div>
+    </div>
   </div>
 </section>
 
@@ -122,6 +165,7 @@
 <section class="section" aria-labelledby="how">
   <div class="container">
     <div class="section-head"><h2 id="how">{h.howTitle}</h2></div>
+    <div class="how-grid">
     <ol class="how">
       {#each h.steps as step, i}
         <li>
@@ -131,7 +175,13 @@
         </li>
       {/each}
     </ol>
+    <InstallTerminal s={h.term} />
+    </div>
   </div>
+</section>
+
+<section class="section tagline-sec">
+  <div class="container"><WordReveal lines={h.tagline} /></div>
 </section>
 
 <section class="section" aria-labelledby="whats-new">
@@ -438,6 +488,42 @@
     :global(:root:not([data-theme='light'])) .shots img { filter: brightness(0.93); }
   }
 
+  /* ── Try it ── */
+  .try-grid { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: 64px; align-items: center; }
+  .try-head { margin-bottom: 0; }
+  .eyebrow { margin-bottom: 12px; font-family: var(--font-mono); font-size: 0.75rem; line-height: 1rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-orange-ink); }
+
+  /* ── Pains, pinned shot (wide screens) ── */
+  .pains-wrap { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .pin { display: none; }
+  @media (min-width: 901px) {
+    .pains-wrap { grid-template-columns: minmax(0, 1fr) minmax(0, 30rem); gap: 64px; }
+    .pain { grid-template-columns: minmax(0, 1fr); min-height: 56vh; align-content: center; opacity: 0.4; transition: opacity 500ms var(--ease-out); }
+    .pain.on { opacity: 1; }
+    .pain > .stage { display: none; }
+    .pin { display: block; position: sticky; top: calc(50vh - 180px); align-self: start; margin-top: 40px; }
+    .pin-box { position: relative; height: 320px; }
+    .pin .stage {
+      position: absolute; inset: 0; opacity: 0; transform: translateY(24px) scale(0.98);
+      transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1), transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .pin .stage.on { opacity: 1; transform: none; }
+    .pin-dots { display: flex; justify-content: center; gap: 8px; margin-top: 16px; list-style: none; }
+    .pin-dots li { width: 8px; height: 8px; border-radius: 9999px; background: var(--color-border); transition: background-color 300ms var(--ease-out), transform 300ms var(--ease-out); }
+    .pin-dots li.on { background: var(--color-orange); transform: scale(1.25); }
+  }
+  @media (min-width: 901px) and (prefers-reduced-motion: reduce) {
+    .pain, .pin .stage { transition: opacity 300ms var(--ease-out); }
+    .pin .stage { transform: none; }
+  }
+
+  /* ── Tagline ── */
+  .tagline-sec { text-align: center; }
+
+  /* ── How + terminal ── */
+  .how-grid { display: grid; gap: 48px; }
+  .how-grid > :global(.term-wrap) { width: 100%; max-width: 44rem; justify-self: center; }
+
   /* ── How ORCA compares: three lines and a link, no table on the home page ── */
   .vs-teaser { padding: 64px 0; }
   .vs-grid { display: grid; grid-template-columns: minmax(0, 18rem) minmax(0, 1fr); gap: 48px; align-items: start; }
@@ -621,6 +707,7 @@
     .hero-copy { max-width: 42rem; }
   }
   @media (max-width: 900px) {
+    .try-grid { grid-template-columns: 1fr; gap: 24px; }
     .vs-grid { grid-template-columns: 1fr; gap: 20px; }
     .pain { grid-template-columns: 1fr; gap: 24px; padding: 32px 0; }
     .biz-grid, .faq-grid, .team-grid { grid-template-columns: 1fr; gap: 32px; }
