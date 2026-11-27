@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [0.11.0] - unreleased
+## [0.11.0] - 2026-11-27
 
 ### Added
 - **One sign-in with ORCA Artifacts.** When the Artifacts app is set to sign people in through ORCA
