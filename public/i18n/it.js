@@ -279,6 +279,8 @@
     "admRolesHint": "Le modifiche valgono subito, senza riavviare. Qui non puoi rimuovere te stesso come admin, così non ti blocchi fuori.",
     "admSaved": "Persone e accessi salvati",
     "admUnsaved": "Prima salva o annulla le modifiche",
+    "admDiscardConfirm": "Scartare le modifiche non salvate e uscire?",
+    "admSaving": "Salvataggio…",
     "admAgentsIntro": "{0} agente/i salvato/i, {1} account extra. Configura gli agenti una volta (istruzioni, skill, strumenti) e gli accessi su cui girano.",
     "admSkillsIntro": "{0} skill installate. Le skill insegnano agli agenti un compito passo dopo passo.",
     "admKnowledgeIntro": "{0} documento/i. Documenti aziendali che gli agenti cercano prima di rispondere.",

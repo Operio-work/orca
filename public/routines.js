@@ -71,6 +71,7 @@
   // Unsaved choices survive the 10 s refresh in `pending` (routine id -> picker value).
   const Cron = window.OperioOrcaCron;
   const pending = new Map();
+  const pendingCron = new Map();
   const pad2 = n => String(n).padStart(2, '0');
   const labelled = (text, control) => { const l = mk('label', 'rt-field'); l.append(mk('span', 'rt-field-l', text), control); return l; };
   const select = (opts, value) => {
@@ -78,7 +79,9 @@
     for (const [v, label] of opts) s.append(new Option(label, String(v), false, String(v) === String(value)));
     return s;
   };
-  const saveSchedule = (r, schedule) => act(() => post(`/api/routines/${enc(r.id)}/schedule`, { schedule }), () => t('rtSaved'));
+  const saveSchedule = (r, schedule) => act(() => post(`/api/routines/${enc(r.id)}/schedule`, { schedule }), () => {
+    pending.delete(r.id); pendingCron.delete(r.id); return t('rtSaved');
+  });
 
   function schedulePicker(r) {
     const wrap = mk('div', 'rt-sched');
@@ -99,7 +102,7 @@
         : { freq: freq.value, hour: h, minute: m, day: Number(day.value) };
     };
     const preview = mk('span', 'rt-preview');
-    const save = btn(t('rtSave'), 'chip small primary', () => { let line; try { line = Cron.toCron(current()); } catch { return; } pending.delete(r.id); saveSchedule(r, line); });
+    const save = btn(t('rtSave'), 'chip small primary', () => { let line; try { line = Cron.toCron(current()); } catch { return; } saveSchedule(r, line); });
     const sync = () => {
       const f = freq.value;
       fDay.hidden = f !== 'weekly'; fTime.hidden = f === 'hourly' || f === 'custom'; fMin.hidden = f !== 'hourly';
@@ -112,7 +115,7 @@
     time.addEventListener('input', changed);
     freq.setAttribute('aria-label', t('rtFreq'));
     row.append(labelled(t('rtFreq'), freq), fDay, fTime, fMin, preview, save);
-    if (r.schedule !== r.packSchedule) row.append(btn(t('rtReset'), 'chip small', () => { pending.delete(r.id); saveSchedule(r, ''); }));
+    if (r.schedule !== r.packSchedule) row.append(btn(t('rtReset'), 'chip small', () => saveSchedule(r, '')));
     sync();
 
     const adv = mk('details', 'rt-adv');
@@ -121,9 +124,10 @@
     if (!parsed) adv.append(mk('p', 'rt-hint', t('rtCustomHint')));
     const advRow = mk('div', 'rt-row');
     const input = mk('input');
-    input.value = r.schedule; input.spellcheck = false; input.autocomplete = 'off';
+    input.value = pendingCron.has(r.id) ? pendingCron.get(r.id) : r.schedule; input.spellcheck = false; input.autocomplete = 'off';
     input.setAttribute('aria-label', t('rtCron')); input.placeholder = t('rtCron');
-    advRow.append(input, btn(t('rtSave'), 'chip small', () => { pending.delete(r.id); saveSchedule(r, input.value); }));
+    input.addEventListener('input', () => { if (input.value === r.schedule) pendingCron.delete(r.id); else pendingCron.set(r.id, input.value); });
+    advRow.append(input, btn(t('rtSave'), 'chip small', () => saveSchedule(r, input.value)));
     adv.append(advRow);
     wrap.append(row, adv);
     return wrap;
@@ -214,6 +218,8 @@
     open: () => open(),
     mount(host) { host.append(body); mounted = true; load(); tick(); },
     unmount() { if (!mounted) return; view.append(body); mounted = false; if (view.hidden) { clearInterval(timer); timer = null; } },
+    isDirty: () => pending.size > 0 || pendingCron.size > 0,
+    discard() { pending.clear(); pendingCron.clear(); },
   };
   function open() {
     view.hidden = false;
