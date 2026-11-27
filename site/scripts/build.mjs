@@ -23,7 +23,7 @@ const log = await new Promise((resolve, reject) => {
 const problems = [];
 if (/\[500\]|\b500 GET\b/.test(log)) problems.push('the build log reports a 500 during prerender');
 
-const pages = ['/', '/catalog', '/install', '/compare', '/managed', '/buddy', '/terms', '/privacy', ...catalog.entries.map((e) => `/catalog/${e.id}`)];
+const pages = ['/', '/catalog', '/install', '/compare', '/managed', '/buddy', '/whats-new', '/terms', '/privacy', ...catalog.entries.map((e) => `/catalog/${e.id}`)];
 const files = pages.flatMap((p) => [
   p === '/' ? 'index.html' : `${p.slice(1)}.html`,
   p === '/' ? 'es.html' : `es${p}.html`
@@ -59,6 +59,19 @@ if (fs.existsSync(tarball)) {
   files.push(`releases/${tarName}`, `releases/${tarName}.sha256`);
 } else {
   problems.push(`missing dist/${tarName}`);
+}
+
+// What's new must cover the newest release: CHANGELOG.md, package.json and src/lib/releases.js agree,
+// and every picture it names exists in both languages.
+const { RELEASES } = await import(path.join(root, 'src', 'lib', 'releases.js'));
+const changelogTop = (fs.readFileSync(path.join(root, '..', 'CHANGELOG.md'), 'utf8').match(/^## \[(\d+\.\d+\.\d+)\]/m) || [])[1];
+if (changelogTop !== version) problems.push(`CHANGELOG.md starts at ${changelogTop}, package.json is ${version}`);
+if (!RELEASES.some((r) => r.version === changelogTop)) problems.push(`src/lib/releases.js has no What's new entry for ${changelogTop} (add one, EN and ES)`);
+if (RELEASES[0]?.version !== changelogTop) problems.push(`src/lib/releases.js must start with ${changelogTop}`);
+for (const r of RELEASES) {
+  for (const k of ['en', 'es']) if (!r.title[k] || r.items.some((i) => !i.title[k] || !i.body[k])) problems.push(`releases.js ${r.version}: missing ${k} text`);
+  for (const sh of r.shots || []) for (const k of ['en', 'es'])
+    if (!fs.existsSync(path.join(root, 'static', 'shots', `${sh.id}-${k}.webp`))) problems.push(`releases.js ${r.version}: missing static/shots/${sh.id}-${k}.webp`);
 }
 
 if (problems.length) {

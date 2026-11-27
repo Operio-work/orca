@@ -92,4 +92,8 @@ ssh deploy@box1 'rsync -a --delete ~/backups/make.operio.work/<timestamp>/ /var/
   rebuilds it with `scripts/release.sh` and fails unless its sha256 equals `PANEL_SHA256` in
   `install.sh`; `deploy.sh` checks the live tarball against the live `install.sh` pin.
   The GitHub release carries the same file as a mirror (the installer falls back to it).
+- **What's new** (`/whats-new` and the home section) comes from `src/lib/releases.js` (EN + ES text and
+  pictures), dated from `CHANGELOG.md`. The build fails until the newest CHANGELOG version has an entry
+  there. Pictures: `static/shots/<id>-<lang>.webp`, 1820x1120, light theme, taken from
+  `operio-orca demo` (fictional businesses) in both languages.
 - Add make.operio.work to monitoring (HTTPS and certificate expiry).

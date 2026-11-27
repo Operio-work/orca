@@ -5,12 +5,27 @@ const en = {
   htmlLang: 'en',
   ogLocale: 'en_US',
   skip: 'Skip to content',
-  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', managed: 'Managed', buddy: 'ORCA Buddy', github: 'ORCA on GitHub', home: 'ORCA home', menu: 'Menu', closeMenu: 'Close the menu' },
+  nav: { catalog: 'Catalog', install: 'Install', compare: 'Compare', whatsNew: 'What’s new', managed: 'Managed', buddy: 'ORCA Buddy', github: 'ORCA on GitHub', home: 'ORCA home', menu: 'Menu', closeMenu: 'Close the menu' },
   langSwitch: { label: 'Español', short: 'ES', aria: 'Ver esta página en español' },
   theme: { toDark: 'Switch to dark theme', toLight: 'Switch to light theme' },
   by: 'by',
 
   copy: { copy: 'Copy', copied: 'Copied', label: 'Copy the command', done: 'Command copied' },
+
+  whatsNewPage: {
+    title: 'What’s new in ORCA: every release',
+    description: 'Every ORCA release, newest first, with pictures: what changed, when, and what it means for your agents.',
+    eyebrow: 'Release notes',
+    h1: 'What’s new in ORCA',
+    lead: 'Every release, newest first. The pictures come from the built-in demo, with fictional businesses.',
+    latest: 'Latest',
+    updateLabel: 'Already installed? Update with',
+    versions: 'Versions',
+    also: 'Also',
+    older: 'Older releases are in the full changelog.',
+    changelog: 'Full changelog on GitHub',
+    install: 'Install ORCA',
+  },
 
   home: {
     title: 'ORCA by Operio: one board for all your AI agents',
@@ -121,45 +136,11 @@ const en = {
     ],
 
     whatsNew: {
-      "title": "What’s new in 0.11",
+      title: 'What’s new in {v}',
+      lead: 'Released {date}. Pictures from the built-in demo, with fictional businesses.',
+      all: 'See every release',
       "video": { "name": "operio-orca-artifacts", "play": "Watch ORCA Artifacts", "length": "0:50", "playLabel": "Play the video about ORCA Artifacts, 50 seconds, music only with no narration", "label": "ORCA Artifacts, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "ORCA Artifacts: your agents’ reports and dashboards, in one app." },
-      "shots": [
-        {
-          "id": "artifacts-drafts",
-          "caption": "ORCA Artifacts: drafts waiting for you",
-          "alt": "The ORCA Artifacts app with To approve open: a weekly owner summary and a dental recall list sent by agents, each marked Draft with Approve and Reject buttons."
-        },
-        {
-          "id": "artifacts-dashboard",
-          "caption": "A dashboard your agents keep up to date",
-          "alt": "An ORCA Artifacts dashboard of reviews and replies: 140 reviews, 4.11 average stars, 22 drafts to approve and 787 minutes saved, with bars by status."
-        },
-        {
-          "id": "starters",
-          "caption": "Starter agents, one tap each",
-          "alt": "The Saved agents window with Starter agents: Communicator, Writer, Researcher, Reporter and Chaser, each with what it does, its skills and an Add button."
-        }
-      ],
-      "items": [
-        {
-          "title": "Your agents publish to ORCA Artifacts",
-          "body": "Reports, trackers and dashboards go to ORCA Artifacts, the free app for your team’s pages and dashboards. Everything arrives as a draft: you approve it before anyone sees it. Numbers on approved dashboards refresh on their own."
-        },
-        {
-          "title": "One sign-in",
-          "body": "The Artifacts button in ORCA opens the app already signed in. No second password for your team."
-        },
-        {
-          "title": "Alerts on your phone",
-          "body": "Install Artifacts on your phone and tap the bell. You hear about it when a draft waits for you, or when a number on a dashboard crosses the line you set."
-        },
-        {
-          "title": "Share straight in",
-          "body": "On Android, share a link, a photo or a PDF to Artifacts from any app. It lands as a draft page for you to approve."
-        }
-      ],
-      "note": "Also in 0.11: a tidier top bar, notices that stack in a corner instead of covering your agents, and a clearer Admin. Since 0.9: starter agents, industry packs, and agents you can put to sleep.",
-      "changelog": 'Full changelog'
+      changelog: 'Full changelog'
     },
 
     tryIt: {
@@ -667,12 +648,27 @@ const es = {
   htmlLang: 'es-MX',
   ogLocale: 'es_MX',
   skip: 'Ir al contenido',
-  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', managed: 'Gestionado', buddy: 'ORCA Buddy', github: 'ORCA en GitHub', home: 'Inicio de ORCA', menu: 'Menú', closeMenu: 'Cerrar el menú' },
+  nav: { catalog: 'Catálogo', install: 'Instalar', compare: 'Comparar', whatsNew: 'Novedades', managed: 'Gestionado', buddy: 'ORCA Buddy', github: 'ORCA en GitHub', home: 'Inicio de ORCA', menu: 'Menú', closeMenu: 'Cerrar el menú' },
   langSwitch: { label: 'English', short: 'EN', aria: 'View this page in English' },
   theme: { toDark: 'Cambiar a tema oscuro', toLight: 'Cambiar a tema claro' },
   by: 'por',
 
   copy: { copy: 'Copiar', copied: 'Copiado', label: 'Copiar el comando', done: 'Comando copiado' },
+
+  whatsNewPage: {
+    title: 'Novedades de ORCA: todas las versiones',
+    description: 'Todas las versiones de ORCA, de la más nueva a la más antigua, con imágenes: qué cambió, cuándo y qué significa para tus agentes.',
+    eyebrow: 'Notas de versión',
+    h1: 'Novedades de ORCA',
+    lead: 'Todas las versiones, la más nueva primero. Las imágenes son de la demo incluida, con negocios ficticios.',
+    latest: 'La más nueva',
+    updateLabel: '¿Ya lo tienes? Actualiza con',
+    versions: 'Versiones',
+    also: 'Además',
+    older: 'Las versiones anteriores están en el registro de cambios completo.',
+    changelog: 'Registro de cambios completo en GitHub',
+    install: 'Instalar ORCA',
+  },
 
   home: {
     title: 'ORCA por Operio: un tablero para todos tus agentes de IA',
@@ -783,45 +779,11 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      "title": "Novedades de la 0.11",
+      title: 'Novedades de la {v}',
+      lead: 'Publicada el {date}. Imágenes de la demo incluida, con negocios ficticios.',
+      all: 'Ver todas las versiones',
       "video": { "name": "operio-orca-artifacts", "play": "Mira ORCA Artifacts", "length": "0:50", "playLabel": "Reproduce el video de ORCA Artifacts, 50 segundos, solo música sin narración", "label": "ORCA Artifacts, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "ORCA Artifacts: los reportes y tableros de tus agentes, en una sola app." },
-      "shots": [
-        {
-          "id": "artifacts-drafts",
-          "caption": "ORCA Artifacts: borradores que esperan tu aprobación",
-          "alt": "La app ORCA Artifacts con Por aprobar abierto: un resumen semanal para el dueño y una lista de pacientes por llamar enviados por agentes, cada uno marcado Borrador con botones Aprobar y Rechazar."
-        },
-        {
-          "id": "artifacts-dashboard",
-          "caption": "Un tablero que tus agentes mantienen al día",
-          "alt": "Un tablero de ORCA Artifacts de reseñas y respuestas: 140 reseñas, 4.11 estrellas promedio, 22 borradores por aprobar y 787 minutos ahorrados, con barras por estado."
-        },
-        {
-          "id": "starters",
-          "caption": "Agentes listos, con un toque",
-          "alt": "La ventana Agentes guardados con Agentes listos: Comunicador, Redactor, Investigador, Reportero y Seguimiento, cada uno con lo que hace, sus habilidades y un botón Agregar."
-        }
-      ],
-      "items": [
-        {
-          "title": "Tus agentes publican en ORCA Artifacts",
-          "body": "Reportes, registros y tableros van a ORCA Artifacts, la app gratuita para las páginas y tableros de tu equipo. Todo llega como borrador: tú lo apruebas antes de que alguien lo vea. Las cifras de los tableros aprobados se actualizan solas."
-        },
-        {
-          "title": "Un solo inicio de sesión",
-          "body": "El botón Artifacts de ORCA abre la app con la sesión ya iniciada. Tu equipo no necesita otra contraseña."
-        },
-        {
-          "title": "Alertas en tu celular",
-          "body": "Instala Artifacts en tu celular y toca la campana. Te avisa cuando un borrador te espera o cuando una cifra de un tablero cruza el límite que pusiste."
-        },
-        {
-          "title": "Comparte directo a la app",
-          "body": "En Android, comparte un enlace, una foto o un PDF a Artifacts desde cualquier app. Llega como página en borrador para que la apruebes."
-        }
-      ],
-      "note": "También en la 0.11: una barra superior más ordenada, avisos que se apilan en una esquina en vez de tapar a tus agentes y un Admin más claro. Desde la 0.9: agentes listos, paquetes por industria y agentes que puedes poner a dormir.",
-      "changelog": 'Registro de cambios completo'
+      changelog: 'Registro de cambios completo'
     },
 
     tryIt: {

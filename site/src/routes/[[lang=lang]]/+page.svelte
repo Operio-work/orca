@@ -9,6 +9,8 @@
   import WordReveal from '#lib/components/WordReveal.svelte';
   import { freeEntries, packOutput } from '#lib/catalog.js';
   import { href, GITHUB_URL, INSTALL_CMD, TALK_URL, partnersUrl } from '#lib/site.js';
+  import { RELEASES, minorOf, anchorOf } from '#lib/releases.js';
+  import { LATEST, formatDate } from '#lib/changelog.js';
 
   let { data } = $props();
   const lang = $derived(data.lang);
@@ -20,8 +22,6 @@
   // Pixel sizes of the demo crops in static/pains (phone crops are 2x captures).
   /** @type {Record<string, [number, number]>} */
   const SHOT = { 'needs-you': [780, 1050], board: [910, 340], phone: [780, 1050], approve: [780, 1050], team: [910, 560] };
-  // Pixel sizes of the 0.3.0 captures in static/shots (talk, templates, skills, knowledge).
-  /** @type {Record<string, [number, number]>} */
   // Pains: on wide screens one framed shot stays pinned beside the list and changes with the pain in the
   // middle of the screen. On phones each pain keeps its own shot (the pinned one is hidden).
   let active = $state(0);
@@ -39,7 +39,12 @@
     items.forEach((el) => io.observe(el));
     return () => io.disconnect();
   });
-  const SHOT2 = { "artifacts-drafts": [910, 560], "artifacts-dashboard": [910, 560], starters: [910, 560], "adm-overview": [910, 560], "adm-agents": [910, 560], "adm-skills": [910, 560], browser: [910, 560], approval: [910, 560], routine: [910, 560], agents: [910, 560], admin: [910, 560], languages: [910, 560], talk: [910, 560], templates: [910, 560], skills: [910, 560], knowledge: [910, 560] };
+  // What's new: every release in the newest minor version (0.11.0, 0.11.1, 0.11.2 …), from releases.js.
+  const newGroup = RELEASES.filter((r) => minorOf(r.version) === minorOf(LATEST.version));
+  const newItems = newGroup.flatMap((r) => r.items);
+  // Up to four pictures: the first of each release, then the rest.
+  const allShots = newGroup.flatMap((r) => (r.shots || []).map((s, i) => ({ ...s, version: r.version, rank: i })));
+  const newShots = [...allShots].sort((x, y) => x.rank - y.rank).slice(0, 4);
 </script>
 
 <Seo title={h.title} description={h.description} {lang} ogLocale={t.ogLocale} />
@@ -186,35 +191,36 @@
 
 <section class="section" aria-labelledby="whats-new">
   <div class="container">
-    <div class="section-head"><h2 id="whats-new">{h.whatsNew.title}</h2></div>
-    {#if h.whatsNew.video}<div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name={h.whatsNew.video.name ?? 'operio-orca-0.6'} lazy /></div>{/if}
+    <div class="section-head new-head">
+      <div>
+        <h2 id="whats-new">{h.whatsNew.title.replace('{v}', minorOf(LATEST.version))}</h2>
+        <p>{h.whatsNew.lead.replace('{date}', formatDate(LATEST.date, lang))}</p>
+      </div>
+      <a class="link new-all" href={href(lang, '/whats-new')}>{h.whatsNew.all} <span class="arrow" aria-hidden="true"><Icon name="arrow" size={16} /></span></a>
+    </div>
+    {#if h.whatsNew.video}<div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name={h.whatsNew.video.name} lazy /></div>{/if}
     <div class="shots">
-      {#each h.whatsNew.shots as s}
+      {#each newShots as s}
         <figure>
-          <img
-            src="/shots/{s.id}-{lang}.webp"
-            width={SHOT2[s.id][0]}
-            height={SHOT2[s.id][1]}
-            alt={s.alt}
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>{s.caption}</figcaption>
+          <a href="{href(lang, '/whats-new')}#{anchorOf(s.version)}">
+            <img src="/shots/{s.id}-{lang}.webp" width="910" height="560" alt={L(s.alt)} loading="lazy" decoding="async" />
+          </a>
+          <figcaption><span class="ver">{s.version}</span>{L(s.caption)}</figcaption>
         </figure>
       {/each}
     </div>
     <ul class="new-list">
-      {#each h.whatsNew.items as item}
+      {#each newItems as item}
         <li>
           <span class="new-mark" aria-hidden="true"><Icon name="check" size={14} /></span>
           <div>
-            <h3>{item.title}</h3>
-            <p>{item.body}</p>
+            <h3>{L(item.title)}</h3>
+            <p>{L(item.body)}</p>
           </div>
         </li>
       {/each}
     </ul>
-    <p class="new-note">{h.whatsNew.note} <a class="link" href="{GITHUB_URL}/blob/main/CHANGELOG.md">{h.whatsNew.changelog}</a></p>
+    <p class="new-note"><a class="link" href="{GITHUB_URL}/blob/main/CHANGELOG.md">{h.whatsNew.changelog}</a></p>
   </div>
 </section>
 
@@ -559,7 +565,7 @@
   .how h3 { font-size: var(--text-xl); margin-bottom: 10px; }
   .how p { color: var(--text-secondary); max-width: 32ch; }
 
-  /* ── What's new in 0.3.0: four framed captures in two rows (2 + 2), then a two-column list ── */
+  /* ── What's new (from releases.js): up to four framed captures in two rows (2 + 2), then a two-column list ── */
   .shots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin-bottom: 40px; }
   .shots figure { grid-column: span 3; min-width: 0; }
   .shots img {
@@ -569,6 +575,17 @@
     background: var(--color-surface);
     box-shadow: var(--shadow-card);
   }
+  .new-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .new-all { white-space: nowrap; }
+  .new-all .arrow { display: inline-block; vertical-align: -3px; margin-left: 4px; transition: transform var(--dur) var(--ease-out); }
+  .shots a { display: block; border-radius: var(--radius-lg); }
+  .shots img { transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .new-all:hover .arrow { transform: translateX(3px); }
+    .shots a:hover img { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  }
+  .shots a:focus-visible { outline: 2px solid var(--color-orange); outline-offset: 4px; }
+  .ver { display: inline-block; margin-right: 8px; padding: 2px 8px; border-radius: 9999px; background: var(--tint-orange); color: var(--color-orange-ink); letter-spacing: 0; }
   .shots figcaption {
     margin-top: 10px;
     font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600;

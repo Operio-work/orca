@@ -25,6 +25,7 @@
         <a href={href(lang, '/catalog')}>{t.nav.catalog}</a>
         <a href={href(lang, '/install')}>{t.nav.install}</a>
         <a href={href(lang, '/compare')}>{t.nav.compare}</a>
+        <a href={href(lang, '/whats-new')}>{t.nav.whatsNew}</a>
         <a href={href(lang, '/managed')}>{t.nav.managed}</a>
         <a href={href(lang, '/buddy')}>{t.nav.buddy} <span class="soon">{t.footer.soon}</span></a>
         <a href={GITHUB_URL}>{t.footer.github}</a>

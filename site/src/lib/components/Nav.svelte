@@ -10,7 +10,7 @@
   const other = $derived(lang === 'es' ? 'en' : 'es');
   const here = $derived(basePath(page.url.pathname));
   const section = $derived(
-    here.startsWith('/catalog') ? 'catalog' : here === '/install' ? 'install' : here === '/compare' ? 'compare' : here === '/managed' ? 'managed' : ''
+    here.startsWith('/catalog') ? 'catalog' : here === '/install' ? 'install' : here === '/compare' ? 'compare' : here === '/managed' ? 'managed' : here === '/whats-new' ? 'whats-new' : ''
   );
 
   let scrolled = $state(false);
@@ -59,6 +59,7 @@
       <li><a href={href(lang, '/catalog')} aria-current={section === 'catalog' ? 'page' : undefined}>{t.nav.catalog}</a></li>
       <li><a href={href(lang, '/install')} aria-current={section === 'install' ? 'page' : undefined}>{t.nav.install}</a></li>
       <li><a href={href(lang, '/compare')} aria-current={section === 'compare' ? 'page' : undefined}>{t.nav.compare}</a></li>
+      <li><a href={href(lang, '/whats-new')} aria-current={section === 'whats-new' ? 'page' : undefined}>{t.nav.whatsNew}</a></li>
       <li class="nav-managed"><a href={href(lang, '/managed')} aria-current={section === 'managed' ? 'page' : undefined}>{t.nav.managed}</a></li>
     </ul>
     <div class="tools">
@@ -89,6 +90,7 @@
       <li><a href={href(lang, '/catalog')} aria-current={section === 'catalog' ? 'page' : undefined}>{t.nav.catalog}</a></li>
       <li><a href={href(lang, '/install')} aria-current={section === 'install' ? 'page' : undefined}>{t.nav.install}</a></li>
       <li><a href={href(lang, '/compare')} aria-current={section === 'compare' ? 'page' : undefined}>{t.nav.compare}</a></li>
+      <li><a href={href(lang, '/whats-new')} aria-current={section === 'whats-new' ? 'page' : undefined}>{t.nav.whatsNew}</a></li>
       <li><a href={href(lang, '/managed')} aria-current={section === 'managed' ? 'page' : undefined}>{t.nav.managed}</a></li>
       <li><a class="menu-gh" href={GITHUB_URL}><Icon name="github" size={17} /><span>{t.nav.github}</span></a></li>
     </ul>
