@@ -691,8 +691,10 @@ function renderMap() {
     block.dataset.minW = minW.toFixed(3);
 
     const kids = [];
-    for (const p of tab.panes) {
-      if (sleeping.some(s => s.paneId === p.pane)) continue;
+    const priority = p => ({ blocked: 0, working: 1, fresh: 2, idle: 3, done: 4, unknown: 5 }[byPane.get(p.pane)?.status] ?? 6);
+    const awake = tab.panes.filter(p => !sleeping.some(s => s.paneId === p.pane))
+      .sort((p, q) => (byPane.has(q.pane) - byPane.has(p.pane)) || (isPhone() ? priority(p) - priority(q) : 0) || (p.y - q.y) || (p.x - q.x));
+    for (const p of awake) {
       const a = byPane.get(p.pane);
       let el = tiles.get(p.pane);
       if (a) {
