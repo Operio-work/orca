@@ -3,6 +3,19 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.11.3] - 2026-11-27
+
+### Changed
+- **A larger Map on phones.** Agents show as two big cards per row with readable names and status,
+  anyone who needs you comes first in each team, and nothing scrolls sideways.
+- **Admin sections scroll properly.** Saved agents, Accounts, Tools, Skills and Knowledge scroll as one
+  area down to the last item, on laptops and phones.
+- **Admin keeps your edits safe.** Leaving a section with unsaved changes (back, close, Esc or another
+  section) asks before discarding them; People & access keeps Save in reach on long lists.
+
+### Fixed
+- The counts bar stays above the agent cards' buttons while the page scrolls.
+
 ## [0.11.2] - 2026-11-27
 
 ### Changed
