@@ -137,7 +137,7 @@
 <section class="section" aria-labelledby="whats-new">
   <div class="container">
     <div class="section-head"><h2 id="whats-new">{h.whatsNew.title}</h2></div>
-    {#if h.whatsNew.video}<div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name="operio-orca-0.6" lazy /></div>{/if}
+    {#if h.whatsNew.video}<div class="new-video"><HeroVideo {lang} s={h.whatsNew.video} name={h.whatsNew.video.name ?? 'operio-orca-0.6'} lazy /></div>{/if}
     <div class="shots">
       {#each h.whatsNew.shots as s}
         <figure>

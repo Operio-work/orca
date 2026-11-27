@@ -122,6 +122,7 @@ const en = {
 
     whatsNew: {
       "title": "What’s new in 0.10",
+      "video": { "name": "operio-orca-artifacts", "play": "Watch ORCA Artifacts", "length": "0:50", "playLabel": "Play the video about ORCA Artifacts, 50 seconds, music only with no narration", "label": "ORCA Artifacts, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "ORCA Artifacts: your agents’ reports and dashboards, in one app." },
       "shots": [
         {
           "id": "artifacts-drafts",
@@ -747,6 +748,7 @@ vsTitle: 'Cómo se compara ORCA',
 
     whatsNew: {
       "title": "Novedades de la 0.10",
+      "video": { "name": "operio-orca-artifacts", "play": "Mira ORCA Artifacts", "length": "0:50", "playLabel": "Reproduce el video de ORCA Artifacts, 50 segundos, solo música sin narración", "label": "ORCA Artifacts, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "ORCA Artifacts: los reportes y tableros de tus agentes, en una sola app." },
       "shots": [
         {
           "id": "artifacts-drafts",
