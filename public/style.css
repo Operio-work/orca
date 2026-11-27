@@ -129,7 +129,6 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 .filters { display: flex; flex-wrap: wrap; gap: var(--space-1); min-width: 0; padding-left: var(--space-2); border-left: 1px solid var(--color-border); }
 .filters > * { flex-shrink: 0; }
 @media (max-width: 599px) { .filters { flex: 1 1 0; padding-left: 0; border-left: 0; } }
-/* Cheat sheet: one-key shortcuts, a quiet line under the header (keyboards only) */
 /* Priority strip: agents, needs-you first (phones: one line that scrolls; wider: wraps) */
 .queue {
   display: flex; gap: 6px; margin: -2px calc(-1 * var(--space-4)) 6px; padding: 0 var(--space-4);
@@ -137,8 +136,8 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
   -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent); mask-image: linear-gradient(90deg, #000 92%, transparent);
 }
 .queue::-webkit-scrollbar { display: none; }
-/* Wider screens: every agent visible — the strip wraps instead of hiding the rest off the edge */
-@media (min-width: 600px) { .queue { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; row-gap: 6px; } }
+@media (min-width: 600px) { .queue { overflow: hidden; -webkit-mask-image: none; mask-image: none; } }
+.q.q-more { color: var(--text-muted); font-weight: 400; padding: 0 10px; }
 .queue:empty { display: none; }
 .q {
   flex: none; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px 0 8px;
@@ -165,20 +164,17 @@ button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulat
 @keyframes qpulse { 50% { opacity: 0.35; } }
 @media (prefers-reduced-motion: reduce) { .q.working .qdot { animation: none; } }
 
-.cheats-row { display: flex; align-items: center; gap: var(--space-2); min-height: 26px; margin: -4px 0 6px; }
-.cheats { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font: 400 0.68rem/1.4 var(--font-mono); color: var(--text-muted); }
-.cheats[hidden] { display: none; }
-.cheat { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.cheats kbd, .cheats-show kbd {
-  display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 4px;
-  font: 600 0.66rem/1 var(--font-mono); color: var(--text-secondary); background: var(--color-surface);
+/* Shortcuts: Admin → Shortcuts and the small dialog for people without Admin */
+.keys-list { list-style: none; margin: 0 0 var(--space-3); padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 18px; }
+.keys-list li { display: flex; align-items: center; gap: 10px; font: 400 var(--text-sm, 0.85rem)/1.3 var(--font-sans); color: var(--text-secondary); }
+.keys-list kbd {
+  display: inline-grid; place-items: center; min-width: 26px; height: 24px; padding: 0 6px; border-radius: 5px; flex: none;
+  font: 600 0.72rem/1 var(--font-mono); color: var(--text-primary); background: var(--color-surface);
   border: 1px solid var(--color-border); box-shadow: 0 1px 0 var(--color-border);
 }
-.cheat.hit kbd { animation: kbd-hit 0.35s var(--ease-out); }
-@keyframes kbd-hit { 0% { background: var(--color-orange); color: var(--on-orange); border-color: var(--color-orange); transform: translateY(1px); box-shadow: none; } }
-.cheats-show { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; font: 400 0.68rem var(--font-mono); color: var(--text-muted); cursor: pointer; }
-.cheats-show[hidden] { display: none; }
-@media (hover: none) and (pointer: coarse), (max-width: 599px) { .cheats-row { display: none; } }
+.keys-dialog { max-width: min(560px, calc(100vw - 32px)); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-bg, var(--color-surface)); color: var(--text-primary); }
+.keys-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.keys-dialog h2 { margin: 0 0 6px; font-size: 1.05rem; }
 .filters:empty { display: none; }
 /* Sound toggle, at the right of the status bar */
 .sound-btn { display: grid; place-items: center; width: 36px; height: 36px; margin-left: auto; flex-shrink: 0; border-radius: var(--radius);

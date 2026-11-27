@@ -134,7 +134,7 @@ const T = {
     e_same_place: 'It’s already there. Pick another place.',
     e_ws_gone: 'That workspace was closed. Pick another place.',
     e_move_failed: 'The move didn’t finish. Check the desktop and try again.',
-    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kTpl: 'templates', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', rdReader: 'Reader', rdTerm: 'Terminal', rdAnswerBelow: 'Answer with the buttons below.', rdPermission: 'Permission request', ltLocked: 'The live terminal needs your PIN.', ltUnlock: 'Unlock with PIN', rdYou: 'You', rdSteps: '{0} steps', rdFailed: '{0} failed', rdCompacted: 'Earlier conversation compacted', rdCopied: 'Copied {0}', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kHide: 'hide keys', kClose: 'close', showKeys: 'Keys', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: links, history, name, tags, move',
+    officeView: 'Office view (8-bit)', kNew: 'new', kNeeds: 'needs you', kNext: 'next', kPrev: 'previous', kShow: 'show on desktop', kReply: 'reply', kTpl: 'templates', kRename: 'rename', kMap: 'map', kOffice: 'office', kIslands: 'islands', kHolo: '3D', holoView: 'Holo table (3D)', zoom: 'Zoom', zoomed: 'Zoomed!', kZoom: 'zoom on desktop', zoomKey: 'Show on desktop, zoomed (Z)', zoomedToast: '{0} is in front, zoomed', ctxWord: 'context', ctxLabel: 'Context used: {0}%{1}', recapLabel: 'Recap', recapNext: 'Next', rdReader: 'Reader', rdTerm: 'Terminal', rdAnswerBelow: 'Answer with the buttons below.', rdPermission: 'Permission request', ltLocked: 'The live terminal needs your PIN.', ltUnlock: 'Unlock with PIN', rdYou: 'You', rdSteps: '{0} steps', rdFailed: '{0} failed', rdCompacted: 'Earlier conversation compacted', rdCopied: 'Copied {0}', freshTag: 'New', freshAria: 'just finished', finHead: '{0} finished', finTook: 'took {0}', finOpen: 'Open', finDismiss: 'Dismiss', finAll: 'Dismiss all', termLight: 'Terminal: light', termDark: 'Terminal: dark', queueLabel: 'Agents by priority: needs you, finished, working, idle', jobsTitle: 'Latest jobs', jobsN: '{0} done in 24h', jobNow: 'Working now', jobAgo: '{0} ago', jobTook: 'took {0}', jobsTile: '{0} jobs done in 24h', jobAsked: 'You asked', kOpen: 'open (3D)', kSound: 'sound', soundOn: 'Sound on', soundOff: 'Sound off', sounds: 'Sounds', kKeys: 'all shortcuts', kClose: 'close', qMore: '+{0}', qMoreTitle: '{0} more agents: open the Map', adm_shortcuts: 'Shortcuts', admD_shortcuts: 'One-key moves around ORCA', admShortcutsIntro: 'When you are not typing, one key moves you around ORCA. Press ? to open this list.', nobodyNeeds: 'Nobody needs you right now', views: 'View', mapView: 'Map', islandView: 'Islands (90s sim)', show: 'Show', shown: 'On screen!', focusKey: 'Show on desktop (D)', more: 'More: links, history, name, tags, move',
     // From the live panel: saved agents, workers, accounts, Admin, tools.
     usage: "Plan usage", usageTip: "Plan usage — {0}", agentTokens: "Session tokens: {0} input · {1} output", umSession: "5-hour session {0} %", umWeekly: "weekly {0} %", umStale: "(last reading)", notYours: "Not in your folders", sandboxOff: "Shell sandbox is off — ask Sam to enable it", pinTitle: "Defuse to open a shell", pinDefuse: "Defuse", pinSet: "Set a shell PIN", pinSetSub: "Pick a 4–8 digit PIN. You’ll enter it to open shells.", pinAskSub: "Enter your PIN to open shells for {0} min.", pinNew: "New PIN", pinSave: "Save PIN", pinWrong: "Wrong PIN — {0} left before it blows", pinBoom: "💥 Boom! Locked for {0}s", pinLocked: "Locked — wait {0}s", pinOk: "Defused — shells open for {0} min", pinUnlockedMsg: "Shells unlocked", pinShort: "PIN must be 4–8 digits", pinChange: "Change PIN", pinCurrent: "Current PIN", e_not_yours: "That agent isn’t in your folders.", e_no_pin: "Set a shell PIN first.", e_bad_pin: "Wrong PIN.", e_bomb: "Too many tries — locked briefly.", e_bad_pin_format: "PIN must be 4–8 digits.", kd_gemini: "Google · Gemini CLI", kd_ollama: "Local models on this computer (slow)", kindGemini: "Gemini", kindOllama: "Local (Ollama)", accTitle: "Accounts", accOpen: "Accounts", accIntro: "Run one kind of agent under several accounts. Claude and Codex: add an account, then sign it in once on this computer with the command shown. Google (Gemini and Antigravity): paste an API key from that Google account. Agents pick the account when they start.", accDefault: "Default login", accSignedIn: "Signed in", accNeedsSignIn: "Not signed in", accAdd: "Add account", accName: "Name", accNamePh: "e.g. the account’s email", accKind: "Agent", accRemove: "Remove", accRemoveSure: "Remove? Its login is deleted", accRename: "Rename", accSignIn: "Sign in: run this in a terminal on this computer", accCopy: "Copy", accCopied: "Command copied", accAdded: "{0} added — now sign it in", accRemoved: "{0} removed", accPick: "Account", accUnnamed: "unnamed", e_ollama_off: "Ollama isn’t running on this computer, or has no model that can use tools.", e_bad_account: "That account doesn’t belong to this agent kind any more. Pick another.", e_account_exists: "An account with that name already exists for this agent.", e_account_name: "Give the account a name.", e_account_in_use: "A saved agent uses this account. Change it first.", e_needs_key: "This account has no API key yet. Add it under Saved agents → Accounts.", e_needs_account: "Gemini needs an account with an API key. Add one under Saved agents → Accounts.", accGoogle: "Google key (Gemini + Antigravity)", accKey: "API key", accKeyPh: "Paste the key (AIza…)", accKeyHow: "Sign in to aistudio.google.com/apikey with this Google account, create a key and paste it here. ORCA keeps it on this computer and never shows it again.", accSetKey: "Replace key", accSaveKey: "Save key", accKeySaved: "Key saved for {0}", accKeyMissing: "No key yet",
     // From the live panel: saved agents, workers, accounts, Admin, tools.
@@ -260,7 +260,7 @@ const T = {
     e_same_place: 'Ya está ahí. Elige otro lugar.',
     e_ws_gone: 'Ese espacio de trabajo se cerró. Elige otro lugar.',
     e_move_failed: 'No se completó el movimiento. Revisa el escritorio e inténtalo de nuevo.',
-    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kTpl: 'plantillas', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdAnswerBelow: 'Responde con los botones de abajo.', rdPermission: 'Solicitud de permiso', ltLocked: 'La terminal en vivo necesita tu PIN.', ltUnlock: 'Desbloquear con PIN', rdYou: 'Tú', rdSteps: '{0} pasos', rdFailed: '{0} fallaron', rdCompacted: 'Conversación anterior compactada', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kHide: 'ocultar', kClose: 'cerrar', showKeys: 'Teclas', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
+    officeView: 'Vista oficina (8 bits)', kNew: 'nuevo', kNeeds: 'te necesita', kNext: 'siguiente', kPrev: 'anterior', kShow: 'mostrar', kReply: 'responder', kTpl: 'plantillas', kRename: 'renombrar', kMap: 'mapa', kOffice: 'oficina', kIslands: 'islas', kHolo: '3D', holoView: 'Mesa holo (3D)', zoom: 'Ampliar', zoomed: '¡Ampliado!', kZoom: 'ampliar en escritorio', zoomKey: 'Mostrar en el escritorio, ampliado (Z)', zoomedToast: '{0} al frente, ampliado', ctxWord: 'contexto', ctxLabel: 'Contexto usado: {0}%{1}', recapLabel: 'Resumen', recapNext: 'Siguiente', rdReader: 'Lectura', rdTerm: 'Terminal', rdAnswerBelow: 'Responde con los botones de abajo.', rdPermission: 'Solicitud de permiso', ltLocked: 'La terminal en vivo necesita tu PIN.', ltUnlock: 'Desbloquear con PIN', rdYou: 'Tú', rdSteps: '{0} pasos', rdFailed: '{0} fallaron', rdCompacted: 'Conversación anterior compactada', rdCopied: 'Copiado {0}', freshTag: 'Nuevo', freshAria: 'acaba de terminar', finHead: '{0} terminó', finTook: 'duró {0}', finOpen: 'Abrir', finDismiss: 'Descartar', finAll: 'Descartar todo', termLight: 'Terminal: claro', termDark: 'Terminal: oscuro', queueLabel: 'Agentes por prioridad: te necesita, terminado, trabajando, inactivo', jobsTitle: 'Últimos trabajos', jobsN: '{0} hechos en 24 h', jobNow: 'Trabajando ahora', jobAgo: 'hace {0}', jobTook: 'duró {0}', jobsTile: '{0} trabajos hechos en 24 h', jobAsked: 'Pediste', kOpen: 'abrir (3D)', kSound: 'sonido', soundOn: 'Sonido activado', soundOff: 'Sonido desactivado', sounds: 'Sonidos', kKeys: 'todos los atajos', kClose: 'cerrar', qMore: '+{0}', qMoreTitle: '{0} agentes más: abrir el Mapa', adm_shortcuts: 'Atajos', admD_shortcuts: 'Una tecla para moverte en ORCA', admShortcutsIntro: 'Cuando no estás escribiendo, una tecla te mueve por ORCA. Pulsa ? para abrir esta lista.', nobodyNeeds: 'Nadie te necesita ahora', views: 'Vista', mapView: 'Mapa', islandView: 'Islas (simulador de los 90)', show: 'Mostrar', shown: '¡En pantalla!', focusKey: 'Mostrar en el escritorio (D)', more: 'Más: enlaces, historial, nombre, etiquetas, mover',
     // From the live panel: saved agents, workers, accounts, Admin, tools.
     usage: "Uso del plan", usageTip: "Uso del plan — {0}", agentTokens: "Tokens de sesión: {0} entrada · {1} salida", umSession: "sesión de 5 horas {0} %", umWeekly: "semanal {0} %", umStale: "(última lectura)", notYours: "Fuera de tus carpetas", sandboxOff: "El sandbox de terminal está apagado — pídeselo a Sam", pinTitle: "Desactiva para abrir una terminal", pinDefuse: "Desactivar", pinSet: "Crea un PIN de terminal", pinSetSub: "Elige un PIN de 4 a 8 dígitos. Lo pedirás para abrir terminales.", pinAskSub: "Escribe tu PIN para abrir terminales por {0} min.", pinNew: "PIN nuevo", pinSave: "Guardar PIN", pinWrong: "PIN incorrecto — quedan {0} antes de estallar", pinBoom: "💥 ¡Boom! Bloqueado {0}s", pinLocked: "Bloqueado — espera {0}s", pinOk: "Desactivado — terminales por {0} min", pinUnlockedMsg: "Terminales desbloqueadas", pinShort: "El PIN debe tener 4–8 dígitos", pinChange: "Cambiar PIN", pinCurrent: "PIN actual", e_not_yours: "Ese agente no está en tus carpetas.", e_no_pin: "Primero crea un PIN de terminal.", e_bad_pin: "PIN incorrecto.", e_bomb: "Demasiados intentos — bloqueado un momento.", e_bad_pin_format: "El PIN debe tener 4–8 dígitos.", kd_gemini: "Google · Gemini CLI", kd_ollama: "Modelos locales en este equipo (lento)", kindGemini: "Gemini", kindOllama: "Local (Ollama)", accTitle: "Cuentas", accOpen: "Cuentas", accIntro: "Usa un tipo de agente con varias cuentas. Claude y Codex: agrega una cuenta y conéctala una vez en este equipo con el comando que aparece. Google (Gemini y Antigravity): pega una clave de API de esa cuenta de Google. Los agentes eligen la cuenta al arrancar.", accDefault: "Cuenta predeterminada", accSignedIn: "Conectada", accNeedsSignIn: "Sin conectar", accAdd: "Agregar cuenta", accName: "Nombre", accNamePh: "p. ej. el correo de la cuenta", accKind: "Agente", accRemove: "Quitar", accRemoveSure: "¿Quitar? Se borra su sesión", accRename: "Renombrar", accSignIn: "Conectar: ejecuta esto en una terminal de este equipo", accCopy: "Copiar", accCopied: "Comando copiado", accAdded: "{0} agregada: ahora conéctala", accRemoved: "{0} quitada", accPick: "Cuenta", accUnnamed: "sin nombre", e_ollama_off: "Ollama no está corriendo en este equipo o no tiene un modelo que use herramientas.", e_bad_account: "Esa cuenta ya no corresponde a este tipo de agente. Elige otra.", e_account_exists: "Ya existe una cuenta con ese nombre para este agente.", e_account_name: "Ponle un nombre a la cuenta.", e_account_in_use: "Un agente guardado usa esta cuenta. Cámbialo primero.", e_needs_key: "Esta cuenta aún no tiene clave de API. Agrégala en Agentes guardados → Cuentas.", e_needs_account: "Gemini necesita una cuenta con clave de API. Agrégala en Agentes guardados → Cuentas.", accGoogle: "Clave de Google (Gemini + Antigravity)", accKey: "Clave de API", accKeyPh: "Pega la clave (AIza…)", accKeyHow: "Entra a aistudio.google.com/apikey con esta cuenta de Google, crea una clave y pégala aquí. ORCA la guarda en este equipo y no la vuelve a mostrar.", accSetKey: "Cambiar clave", accSaveKey: "Guardar clave", accKeySaved: "Clave guardada para {0}", accKeyMissing: "Sin clave",
     // From the live panel: saved agents, workers, accounts, Admin, tools.
@@ -1858,26 +1858,41 @@ const SHORTCUTS = [
   ['i', 'kIslands', () => setView('island')],
   ['3', 'kHolo', () => setView('holo')],
   ['s', 'kSound', () => toggleSound()],
-  ['?', 'kHide', () => toggleCheats()],
+  ['?', 'kKeys', () => openShortcuts()],
 ];
-const cheatsEl = $('#cheats');
-let cheatsHidden = safeGet('orca-cheats') === 'off';
-function renderCheats() {
-  cheatsEl.hidden = cheatsHidden;
-  $('#cheats-show').hidden = !cheatsHidden;
-  const items = [...SHORTCUTS.map(([k, label]) => [k.toUpperCase(), t(label)]), ['Esc', t('kClose')]];
-  cheatsEl.replaceChildren(...items.map(([k, label]) => {
-    const s = document.createElement('span');
-    s.className = 'cheat';
-    s.dataset.key = k.toLowerCase();
+// The list of keys (Admin → Shortcuts, or the small dialog for people without Admin).
+function shortcutItems() { return [...SHORTCUTS.map(([k, label]) => [k === 'enter' ? 'Enter' : k.toUpperCase(), t(label)]), ['Esc', t('kClose')]]; }
+function shortcutList() {
+  const ul = document.createElement('ul');
+  ul.className = 'keys-list';
+  for (const [k, label] of shortcutItems()) {
+    const li = document.createElement('li');
     const kb = document.createElement('kbd');
     kb.textContent = k;
-    s.append(kb, label);
-    return s;
-  }));
+    li.append(kb, el('span', null, label));
+    ul.append(li);
+  }
+  return ul;
 }
-function toggleCheats() { cheatsHidden = !cheatsHidden; safeSet('orca-cheats', cheatsHidden ? 'off' : 'on'); renderCheats(); }
-$('#cheats-show').addEventListener('click', toggleCheats);
+window.OrcaShortcuts = { list: shortcutList };
+let keysDlg = null;
+function openShortcuts() {
+  if (access.admin && window.OrcaAdmin) return window.OrcaAdmin.open('shortcuts');
+  if (!keysDlg) {
+    keysDlg = document.createElement('dialog');
+    keysDlg.className = 'keys-dialog';
+    keysDlg.setAttribute('aria-labelledby', 'keys-title');
+    keysDlg.addEventListener('click', e => { if (e.target === keysDlg) keysDlg.close(); });
+    document.body.append(keysDlg);
+  }
+  const h = el('h2', null, t('adm_shortcuts'));
+  h.id = 'keys-title';
+  const x = el('button', 'btn ghost', t('kClose'));
+  x.type = 'button';
+  x.addEventListener('click', () => keysDlg.close());
+  keysDlg.replaceChildren(h, el('p', 'hint', t('admShortcutsIntro')), shortcutList(), x);
+  keysDlg.showModal();
+}
 document.addEventListener('keydown', e => {
   if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
   if (e.target.closest?.('input, textarea, select, [contenteditable]') || document.querySelector('dialog[open]')) return;
@@ -1885,8 +1900,6 @@ document.addEventListener('keydown', e => {
   if (!hit) return;
   e.preventDefault();
   hit[2]();
-  const chip = cheatsEl.querySelector(`[data-key="${CSS.escape(hit[0])}"]`);
-  if (chip) { chip.classList.remove('hit'); void chip.offsetWidth; chip.classList.add('hit'); }
 });
 $('#sheet-close').addEventListener('click', () => closeSheet());
 scrim.addEventListener('click', () => closeSheet());
@@ -2141,11 +2154,13 @@ function renderTags(a) {
 // ─── Priority strip: every agent on one line, ordered like herdr's own list ───
 // Needs you → just finished (unseen) → working → idle; inside each, the latest change first.
 const RANK = { blocked: 0, done: 1, working: 2, idle: 3 };
+const QUEUE_MAX = 5; // the strip shows the top 5 (needs you first, then the latest change); the rest are on the Map
 function renderQueue() {
   const box = $('#queue');
   box.setAttribute('aria-label', t('queueLabel'));
-  const order = [...agents].sort((a, b) => (RANK[a.status] ?? 4) - (RANK[b.status] ?? 4) || (b.seq || 0) - (a.seq || 0));
-  const key = order.map(a => `${a.pane}:${a.status}:${a.name}:${a.claim?.id || ''}`).join('|') + lang;
+  const all = [...agents].sort((a, b) => (RANK[a.status] ?? 4) - (RANK[b.status] ?? 4) || (b.seq || 0) - (a.seq || 0));
+  const order = all.slice(0, QUEUE_MAX), rest = all.length - order.length;
+  const key = order.map(a => `${a.pane}:${a.status}:${a.name}:${a.claim?.id || ''}`).join('|') + '+' + rest + lang;
   if (box.dataset.key !== key) {
     box.dataset.key = key;
     box.replaceChildren(...order.map(a => {
@@ -2157,6 +2172,15 @@ function renderQueue() {
       b.addEventListener('click', () => pick(a.pane));
       return b;
     }));
+    if (rest > 0) {
+      const m = document.createElement('button');
+      m.type = 'button';
+      m.className = 'q q-more';
+      m.textContent = t('qMore', rest);
+      m.title = t('qMoreTitle', rest);
+      m.addEventListener('click', () => setView('map'));
+      box.append(m);
+    }
   }
   for (const b of box.children) {
     const a = byPane.get(b.dataset.pane);
@@ -2882,7 +2906,6 @@ function applyLang() {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   fillDialog();
   labelView();
-  renderCheats();
   renderMemory();
   render();
   document.dispatchEvent(new Event('operio-orca:lang'));

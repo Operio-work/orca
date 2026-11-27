@@ -15,16 +15,16 @@
     ['', ['overview']],
     ['admG_team', ['people', 'agents', 'accounts']],
     ['admG_work', ['tools', 'skills', 'knowledge', 'templates', 'routines']],
-    ['admG_setup', ['keys', 'activity', 'security']],
+    ['admG_setup', ['keys', 'activity', 'security', 'shortcuts']],
   ];
-  const ICON = { overview: 'i-map', people: 'i-team', agents: 'i-team', accounts: 'i-link', tools: 'i-gear', skills: 'i-skill', knowledge: 'i-book', templates: 'i-tpl', routines: 'i-clock', keys: 'i-key', activity: 'i-journal', security: 'i-power' };
+  const ICON = { overview: 'i-map', people: 'i-team', agents: 'i-team', accounts: 'i-link', tools: 'i-gear', skills: 'i-skill', knowledge: 'i-book', templates: 'i-tpl', routines: 'i-clock', keys: 'i-key', activity: 'i-journal', security: 'i-power', shortcuts: 'i-kbd' };
   // These sections are the managers themselves (their dialog's content moves in here).
   const EMBED = {
     agents: () => window.OrcaAgents, accounts: () => window.OrcaAgents?.acc, skills: () => window.OrcaSkills,
     knowledge: () => window.OrcaKnowledge, templates: () => window.OrcaTemplates, routines: () => window.OrcaRoutines, keys: () => window.OrcaKeys,
   };
   let data = null, cur = null, draft = null, dirty = false, mounted = null;
-  const has = s => s === 'overview' || !!data?.sections[s];
+  const has = s => s === 'overview' || (s === 'shortcuts' && !!window.OrcaShortcuts) || !!data?.sections[s];
 
   async function load() {
     try { data = await call('/api/admin'); } catch (err) { toast(errText(err), true); data = null; }
@@ -261,6 +261,7 @@
   const VIEWS = {
     tools: () => { const ph = [p('hint', '…')]; toolsView().then(v => { if (cur === 'tools') body.replaceChildren(el('h3', 'adm-h', t('adm_tools')), ...v); }); return ph; },
     people: peopleView,
+    shortcuts: () => [p('hint', t('admShortcutsIntro')), window.OrcaShortcuts.list()],
     overview: overviewView,
     activity: () => [p('hint', t('admActivityIntro')), row(link(t('journal'), '/journal.html'))],
     // Each ORCA reports what applies to it: SAMIX the access list, sandbox and PIN; the others less.
@@ -302,8 +303,9 @@
     await load();
     if (!data) { dialog.close(); return; }
     renderNav();
-    // Phones start on the list of sections; wider screens open People & access.
-    if (matchMedia('(min-width: 700px)').matches) show(want && has(want) ? want : 'overview');
+    // A requested section opens directly; otherwise phones start on the list, wider screens on Overview.
+    if (want && has(want)) show(want);
+    else if (matchMedia('(min-width: 700px)').matches) show('overview');
     else { dialog.classList.remove('in-section'); body.replaceChildren(); }
   }
   function close() { if (dialog.open) dialog.close(); }

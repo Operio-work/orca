@@ -3,6 +3,15 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [0.11.1] - 2026-11-27
+
+### Changed
+- **A tidier top bar.** The agent bar under the header shows the five agents that matter most
+  (anyone who needs you first, then the latest activity) on one line; "+N" opens the Map with the
+  rest.
+- **Keyboard shortcuts moved to Admin → Shortcuts.** The row of keys under the header is gone; the
+  keys still work everywhere, and ? opens the list (people without Admin get a small list instead).
+
 ## [0.11.0] - 2026-11-27
 
 ### Added
