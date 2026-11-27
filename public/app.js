@@ -363,8 +363,18 @@ async function call(path, opts = {}) {
 const post = (path, body = {}) => call(path, { method: 'POST', body: JSON.stringify(body) });
 
 const activeToasts = [];
-function toast(msg, isError = false, ms) {
+// Toasts live in the top layer (a manual popover), so they also show above an open dialog.
+function toastHost() {
   const host = $('#toasts');
+  if (host.showPopover) { try { if (host.matches(':popover-open')) host.hidePopover(); host.showPopover(); } catch { /* not supported */ } }
+  return host;
+}
+function dismissToast(msg) { for (const item of [...activeToasts]) if (item.dataset.msg === msg) item.querySelector('.toast-close')?.click(); }
+function toast(msg, isError = false, ms) {
+  // The same message again (e.g. "offline" on every failed check) restarts its timer, never stacks.
+  const same = activeToasts.find(item => item.dataset.msg === msg);
+  if (same) { same.dispatchEvent(new Event('toast-restart')); toastHost(); return; }
+  const host = toastHost();
   const duration = Number.isFinite(ms) && ms > 0 ? ms : (isError ? 6000 : 3000);
   const item = document.createElement('div');
   item.className = `toast${isError ? ' error' : ''}`;
@@ -382,6 +392,7 @@ function toast(msg, isError = false, ms) {
   timer.className = 'toast-timer';
   timer.setAttribute('aria-hidden', 'true');
   timer.append(document.createElement('i'));
+  item.dataset.msg = msg;
   item.style.setProperty('--toast-duration', `${duration}ms`);
   item.append(message, close, timer);
 
@@ -414,6 +425,11 @@ function toast(msg, isError = false, ms) {
   item.addEventListener('pointerup', resume);
   item.addEventListener('pointercancel', resume);
   close.addEventListener('click', remove);
+  item.addEventListener('toast-restart', () => {
+    clearTimeout(timeout); timeout = null; remaining = duration;
+    const bar = timer.firstChild; bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    resume();
+  });
   while (activeToasts.length >= 3) {
     const oldest = activeToasts[0];
     const dismiss = oldest.querySelector('.toast-close');
@@ -2481,7 +2497,7 @@ async function refresh() {
     attend();
     window.OrcaChat?.update();
     if (selected) loadOutput();
-    if ($('#toast').textContent === t('offline')) $('#toast').hidden = true;
+    dismissToast(t('offline'));
   } catch {
     offline = true;
     if (scene()) scene().update(null, { offline });

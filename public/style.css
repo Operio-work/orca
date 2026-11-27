@@ -2090,3 +2090,10 @@ dialog label.kb-drop { text-transform: none; letter-spacing: 0; }
 .ag-pk-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; padding-top: var(--space-2); border-top: 1px dashed var(--color-border); }
 .ag-pk-done { font: 600 var(--text-xs) var(--font-sans); color: var(--color-green-ink); }
 .ag-pk-foot .btn { min-height: 34px; }
+
+/* The toast stack is a manual popover (top layer, above dialogs): drop the browser's popover box */
+.toasts[popover] { top: auto; right: auto; margin: 0; padding: 0; border: 0; background: transparent; overflow: visible; color: inherit; }
+.toasts[popover]:not(:popover-open) { display: none; }
+@media (max-width: 599px) {
+  .toasts[popover] { right: var(--space-3); }
+}
