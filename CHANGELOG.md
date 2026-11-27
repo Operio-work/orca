@@ -3,7 +3,7 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.10.0] - 2026-11-26
 
 ### Added
 - **ORCA Artifacts.** Your agents can put reports, trackers and dashboards in
