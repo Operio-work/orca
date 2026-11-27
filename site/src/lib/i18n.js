@@ -121,49 +121,44 @@ const en = {
     ],
 
     whatsNew: {
-      "title": "What’s new in 0.6",
+      "title": "What’s new in 0.10",
       "shots": [
         {
-          "id": "adm-overview",
-          "caption": "Admin → Overview",
-          "alt": "The full-screen Admin page: a sidebar with Team, What agents use and Settings, and Overview cards counting saved agents, accounts, tools, skills, knowledge, templates and routines."
+          "id": "artifacts-drafts",
+          "caption": "ORCA Artifacts: drafts waiting for you",
+          "alt": "The ORCA Artifacts app with To approve open: a weekly owner summary and a dental recall list sent by agents, each marked Draft with Approve and Reject buttons."
         },
         {
-          "id": "adm-agents",
-          "caption": "Saved agents, right inside Admin",
-          "alt": "Admin with Saved agents open: a worker request to approve, and each saved agent with its model, who it reports to, and Open or Start buttons."
+          "id": "artifacts-dashboard",
+          "caption": "A dashboard your agents keep up to date",
+          "alt": "An ORCA Artifacts dashboard of reviews and replies: 140 reviews, 4.11 average stars, 22 drafts to approve and 787 minutes saved, with bars by status."
         },
         {
-          "id": "adm-skills",
-          "caption": "Skills, ready to install",
-          "alt": "Admin with Skills open: Business knowledge, Review reply drafts and Weekly owner summary, each with an Install button."
+          "id": "starters",
+          "caption": "Starter agents, one tap each",
+          "alt": "The Saved agents window with Starter agents: Communicator, Writer, Researcher, Reporter and Chaser, each with what it does, its skills and an Add button."
         }
       ],
       "items": [
         {
-          "title": "Admin is one full-screen page",
-          "body": "Everything you set up for your agents now lives in one place, with a sidebar: Team, What agents use, and Settings. No more windows on top of windows."
+          "title": "Your agents publish to ORCA Artifacts",
+          "body": "Reports, trackers and dashboards go to ORCA Artifacts, the free app for your team’s pages and dashboards. Everything arrives as a draft: you approve it before anyone sees it. Numbers on approved dashboards refresh on their own."
         },
         {
-          "title": "An overview at a glance",
-          "body": "Admin opens on a card for each area with its count: saved agents, accounts, tools, skills, knowledge, templates and routines. Tap a card to go there."
+          "title": "Starter agents",
+          "body": "Five ready-made agents for office work: Communicator, Writer, Researcher, Reporter and Chaser. One tap adds an agent with its skills; you can change everything after."
         },
         {
-          "title": "Every area opens in place",
-          "body": "Saved agents, accounts, tools and the web browser, skills, knowledge, templates, routines and API keys all open right inside Admin."
+          "title": "Industry packs",
+          "body": "A ready team for one kind of business: agents, document templates with examples, and routines that arrive switched off, so nothing runs until you turn it on."
         },
         {
-          "title": "Made for your phone too",
-          "body": "On a phone you see the list of areas first, and Back takes you back to it."
-        },
-        {
-          "title": "Skills and Knowledge open again",
-          "body": "A bug kept them from opening on the open-source panel. Fixed."
+          "title": "Put an agent to sleep",
+          "body": "Sleep for 15 minutes, an hour, or until you wake it. A sleeping agent uses no tokens; Wake picks up where it stopped and Finish ends the job."
         }
       ],
-      "note": "Also in 0.5: a web browser for your agents, form filling that waits for your approval, and the free Website & Google Profile Check routine.",
-      "changelog": 'Full changelog',
-      "video": { "play": "Watch what’s new", "length": "0:50", "playLabel": "Play the video about what’s new in ORCA 0.6, 50 seconds, music only with no narration", "label": "What’s new in ORCA 0.6, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "What’s new in ORCA 0.6: Admin is one full page, with every area in one place." }
+      "note": "Also since 0.6: Template fill and Follow-up tracker skills, and clocks fixed in every language.",
+      "changelog": 'Full changelog'
     },
 
     bizTitle: 'Run a business?',
@@ -751,49 +746,44 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      "title": "Novedades de la 0.6",
+      "title": "Novedades de la 0.10",
       "shots": [
         {
-          "id": "adm-overview",
-          "caption": "Administración → Resumen",
-          "alt": "La página de Administración a pantalla completa: una barra lateral con Equipo, Lo que usan los agentes y Ajustes, y tarjetas de Resumen con el total de agentes guardados, cuentas, herramientas, habilidades, conocimiento, plantillas y rutinas."
+          "id": "artifacts-drafts",
+          "caption": "ORCA Artifacts: borradores que esperan tu aprobación",
+          "alt": "La app ORCA Artifacts con Por aprobar abierto: un resumen semanal para el dueño y una lista de pacientes por llamar enviados por agentes, cada uno marcado Borrador con botones Aprobar y Rechazar."
         },
         {
-          "id": "adm-agents",
-          "caption": "Agentes guardados, dentro de Administración",
-          "alt": "Administración con Agentes guardados abierto: una solicitud de trabajador por aprobar y cada agente guardado con su modelo, a quién reporta y los botones Abrir o Iniciar."
+          "id": "artifacts-dashboard",
+          "caption": "Un tablero que tus agentes mantienen al día",
+          "alt": "Un tablero de ORCA Artifacts de reseñas y respuestas: 140 reseñas, 4.11 estrellas promedio, 22 borradores por aprobar y 787 minutos ahorrados, con barras por estado."
         },
         {
-          "id": "adm-skills",
-          "caption": "Habilidades listas para instalar",
-          "alt": "Administración con Habilidades abierto: Conocimiento del negocio, Borradores de respuesta a reseñas y Resumen semanal para el dueño, cada una con un botón Instalar."
+          "id": "starters",
+          "caption": "Agentes listos, con un toque",
+          "alt": "La ventana Agentes guardados con Agentes listos: Comunicador, Redactor, Investigador, Reportero y Seguimiento, cada uno con lo que hace, sus habilidades y un botón Agregar."
         }
       ],
       "items": [
         {
-          "title": "La Administración es una sola página",
-          "body": "Todo lo que configuras para tus agentes está ahora en un solo lugar, con una barra lateral: Equipo, Lo que usan los agentes y Ajustes. Se acabaron las ventanas encima de otras ventanas."
+          "title": "Tus agentes publican en ORCA Artifacts",
+          "body": "Reportes, registros y tableros van a ORCA Artifacts, la app gratuita para las páginas y tableros de tu equipo. Todo llega como borrador: tú lo apruebas antes de que alguien lo vea. Las cifras de los tableros aprobados se actualizan solas."
         },
         {
-          "title": "Un resumen de un vistazo",
-          "body": "La Administración abre con una tarjeta por área y su total: agentes guardados, cuentas, herramientas, habilidades, conocimiento, plantillas y rutinas. Toca una tarjeta para ir ahí."
+          "title": "Agentes listos",
+          "body": "Cinco agentes ya preparados para la oficina: Comunicador, Redactor, Investigador, Reportero y Seguimiento. Un toque agrega el agente con sus habilidades; después puedes cambiarlo todo."
         },
         {
-          "title": "Cada área se abre ahí mismo",
-          "body": "Agentes guardados, cuentas, herramientas y el navegador web, habilidades, conocimiento, plantillas, rutinas y claves de API se abren dentro de la Administración."
+          "title": "Paquetes por industria",
+          "body": "Un equipo listo para un tipo de negocio: agentes, plantillas de documentos con ejemplos y rutinas que llegan apagadas, así que nada corre hasta que tú lo enciendas."
         },
         {
-          "title": "Pensada también para tu teléfono",
-          "body": "En el teléfono primero ves la lista de áreas, y Atrás te regresa a ella."
-        },
-        {
-          "title": "Habilidades y Conocimiento vuelven a abrirse",
-          "body": "Un error impedía abrirlas en el panel de código abierto. Corregido."
+          "title": "Pon a dormir a un agente",
+          "body": "Duerme 15 minutos, una hora o hasta que lo despiertes. Un agente dormido no gasta tokens; Despertar sigue donde se quedó y Terminar cierra el trabajo."
         }
       ],
-      "note": "También en la 0.5: un navegador web para tus agentes, llenado de formularios que espera tu aprobación y la rutina gratis Revisión de sitio web y perfil de Google.",
-      "changelog": 'Registro de cambios completo',
-      "video": { "play": "Mira las novedades", "length": "0:50", "playLabel": "Reproduce el video de las novedades de ORCA 0.6, 50 segundos, solo música sin narración", "label": "Novedades de ORCA 0.6, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "Novedades de ORCA 0.6: la Administración es una sola página, con todas las áreas en un solo lugar." }
+      "note": "También desde la 0.6: habilidades Llenar plantillas y Seguimiento de pendientes, y relojes arreglados en todos los idiomas.",
+      "changelog": 'Registro de cambios completo'
     },
 
     bizTitle: '¿Tienes un negocio?',
