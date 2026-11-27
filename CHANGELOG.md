@@ -3,9 +3,13 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
-## [Unreleased]
+## [0.11.2] - 2026-11-27
 
 ### Changed
+- **Notices that stay out of the way.** Short messages now stack in a corner (bottom-left on
+  computers, above the message box on phones) instead of covering agent cards: at most three, each
+  with a timer bar and a close button, paused while you point at it, and shown above open windows
+  such as Admin. The same message no longer piles up, and "offline" clears itself when ORCA is back.
 - **A clearer Admin workspace.** Admin areas now share consistent navigation, buttons, fields, switches,
   status labels and spacing. The phone layout keeps navigation compact, and embedded managers fit the
   available screen without clipping their content.
