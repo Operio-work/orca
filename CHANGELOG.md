@@ -3,6 +3,13 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Changed
+- **A clearer Admin workspace.** Admin areas now share consistent navigation, buttons, fields, switches,
+  status labels and spacing. The phone layout keeps navigation compact, and embedded managers fit the
+  available screen without clipping their content.
+
 ## [0.11.1] - 2026-11-27
 
 ### Changed
