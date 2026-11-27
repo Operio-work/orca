@@ -2643,6 +2643,14 @@ async function api(req, res, url) {
     return send(res, 200, { blocks, rev });
   }
 
+  // ── ORCA Artifacts link (operio-orca artifact setup): the app's address only, never the token.
+  if (req.method === 'GET' && pathname === '/api/artifacts') {
+    let url = null;
+    try { url = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'artifacts.json'), 'utf8')).url || null; } catch { /* not set up */ }
+    if (url && !/^https?:\/\//.test(url)) url = null;
+    return send(res, 200, { url });
+  }
+
   if (req.method === 'GET' && pathname === '/api/meta') {
     const [tabsOut, wsOut] = await Promise.all([herdrJson(['tab', 'list']), herdrJson(['workspace', 'list'])]);
     const tabs = (tabsOut.result?.tabs || []).map(t => ({ id: t.tab_id, ws: t.workspace_id, number: t.number, label: t.label || null }));

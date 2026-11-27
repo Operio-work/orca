@@ -41,6 +41,13 @@
       "en": { "name": "Follow-up tracker", "summary": "Keeps one list of what you are waiting for (signatures, deposits, quotes, client documents) and drafts polite nudges when they are due. After two nudges it hands the item back to you. Nothing is sent." },
       "es": { "name": "Seguimiento de pendientes", "summary": "Lleva una lista de lo que estás esperando (firmas, anticipos, cotizaciones, documentos de clientes) y redacta recordatorios amables cuando toca. Tras dos recordatorios te lo devuelve a ti. No se envía nada." },
       "tags": ["follow-ups", "payments"]
+    },
+    {
+      "key": "publish-artifact",
+      "version": 1,
+      "en": { "name": "Publish to ORCA Artifacts", "summary": "Your agents put reports, trackers and dashboards in ORCA Artifacts as drafts. You approve each one before your team sees it; numbers for approved dashboards refresh on their own." },
+      "es": { "name": "Publicar en ORCA Artifacts", "summary": "Tus agentes publican reportes, registros y tableros en ORCA Artifacts como borradores. Tú apruebas cada uno antes de que tu equipo lo vea; las cifras de los tableros aprobados se actualizan solas." },
+      "tags": ["reports", "dashboards"]
     }
   ]
 }

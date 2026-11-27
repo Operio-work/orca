@@ -15,6 +15,7 @@ const scrim = $('#scrim'); // desktop: blurred workspace behind the agent window
 // ─── i18n (EN / ES) ───────────────────────────────────────────────────────────
 const T = {
   en: {
+    artifacts: 'ORCA Artifacts — reports and dashboards',
     journal: 'Journal — activity and daily review', journalN: 'Journal — {0} days to review',
     stop: 'Stop', stopHint: 'interrupts the job, the agent stays', stopped: '{0} stopped', stopExited: '{0} stopped — and exited', stopStill: '{0} is still working — try Esc or ⌃C',
     endAgent: 'End agent', endTitle: 'End {0}?', endConfirm: 'End agent', ending: 'Ending…', endChecking: 'Checking what it would lose…',
@@ -140,6 +141,7 @@ const T = {
     admSecHosted: "People and sign-in are managed by Operio in ORCA Host.", admSecFree: "One person, this computer: ORCA only answers on this machine. Anyone who can use it can drive your agents.", admToolsFreeWarn: "An MCP server you add runs with your own rights on this computer. Only add servers you trust.", 
   },
   es: {
+    artifacts: 'ORCA Artifacts — reportes y tableros',
     journal: 'Bitácora — actividad y revisión diaria', journalN: 'Bitácora — {0} días por revisar',
     stop: 'Detener', stopHint: 'interrumpe el trabajo, el agente sigue', stopped: '{0} detenido', stopExited: '{0} detenido — y se cerró', stopStill: '{0} sigue trabajando — prueba Esc o ⌃C',
     endAgent: 'Terminar agente', endTitle: '¿Terminar {0}?', endConfirm: 'Terminar agente', ending: 'Terminando…', endChecking: 'Revisando qué se perdería…',
@@ -1066,6 +1068,16 @@ function renderHistory(a) {
     return li;
   }));
 }
+
+// ORCA Artifacts button: shown once `operio-orca artifact setup` saved the app's address.
+call('/api/artifacts').then(({ url }) => {
+  const a = $('#artifacts-btn');
+  if (!url || !a) return;
+  a.href = url;
+  a.title = t('artifacts');
+  a.setAttribute('aria-label', a.title);
+  a.hidden = false;
+}).catch(() => { /* older panel or offline: no button */ });
 
 // Journal button: how many finished days nobody has reviewed yet.
 function renderJournalBadge(j) {

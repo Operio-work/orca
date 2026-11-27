@@ -3,6 +3,17 @@
 All notable changes to ORCA. Versions follow [Semantic Versioning](https://semver.org).
 The installer pins one panel release and one herdr release together; `operio-orca update` moves both.
 
+## [Unreleased]
+
+### Added
+- **ORCA Artifacts.** Your agents can put reports, trackers and dashboards in
+  [ORCA Artifacts](https://github.com/Operio-work/orca-artifacts), the app for your team's live pages and
+  dashboards. What they send arrives as a draft; a person approves it there before anyone sees it.
+  `operio-orca artifact setup URL TOKEN` connects ORCA to the app; `artifact publish PATH` sends a page
+  (a folder with index.html) or a dashboard; `artifact data NAME FILE` refreshes the numbers of
+  something already approved. The new **Publish to ORCA Artifacts** skill teaches agents how, and an
+  Artifacts button in the panel opens the app once it is set up.
+
 ## [0.9.0] - 2026-11-26
 
 ### Added

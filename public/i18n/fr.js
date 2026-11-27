@@ -3,6 +3,7 @@
 (g => { g.ORCA_I18N = {
   lang: "fr",
   app: {
+    "artifacts": "ORCA Artifacts — rapports et tableaux de bord",
     "journal": "Journal — activité et bilan quotidien",
     "journalN": "Journal — {0} jours à examiner",
     "stop": "Arrêter",

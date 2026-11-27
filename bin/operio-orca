@@ -25,6 +25,8 @@
 #                         | remove PATH | list | status | reindex [--full]
 #   operio-orca browser     the agents' web browser, read only (off until you turn it on):
 #                         browser on | off | forms on|off | reset | status | test URL
+#   operio-orca artifact    send pages, dashboards and data to ORCA Artifacts (drafts you approve there):
+#                         artifact setup URL TOKEN | status | off | publish PATH | data NAME FILE
 #   operio-orca demo        a demo with two fictional businesses and scripted agents on
 #                         http://127.0.0.1:7172 (--reset, --speed N, --stop)
 #   operio-orca uninstall   remove ORCA (keeps ~/.config/operio-orca unless --purge)
@@ -614,6 +616,26 @@ cmd_skills() {
   "$NODE_BIN" "$APP_DIR/lib/skills-cli.js" "$sub" "$CONFIG_DIR" "${2:-}"
 }
 
+cmd_artifact() {
+  local sub="${1:-}"
+  case "$sub" in
+    setup|status|off|publish|data) ;;
+    ''|help|-h|--help) printf '%s\n' \
+      'operio-orca artifact setup URL TOKEN     the ORCA Artifacts app address and its publish token' \
+      'operio-orca artifact status              is it set up, and does the token work' \
+      'operio-orca artifact off                 forget the address and token' \
+      'operio-orca artifact publish PATH [--slug SLUG] [--by NAME]' \
+      '                                         a folder with index.html or an .html file → a page;' \
+      '                                         a dashboard .json → a dashboard. Both arrive as drafts.' \
+      'operio-orca artifact data NAME FILE|-    JSON → the data a dashboard reads (no approval needed)' \
+      '                       --page SLUG FILE  → that page'"'"'s data.json'; return 0 ;;
+    *) die "unknown artifact command: $sub (setup, status, off, publish, data)" ;;
+  esac
+  shift
+  [ -n "$NODE_BIN" ] || die "node not found"
+  "$NODE_BIN" "$APP_DIR/lib/artifacts-cli.js" "$sub" "$CONFIG_DIR" "$@"
+}
+
 cmd_packs() {
   local sub="${1:-}"
   case "$sub" in
@@ -786,6 +808,7 @@ case "${1:-help}" in
   packs) shift; cmd_packs "$@" ;;
   kb) shift; cmd_kb "$@" ;;
   browser) shift; cmd_browser "$@" ;;
+  artifact|artifacts) shift; cmd_artifact "$@" ;;
   demo) shift; cmd_demo "$@" ;;
   uninstall) shift; cmd_uninstall "$@" ;;
   run) cmd_run ;;
