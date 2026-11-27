@@ -18,7 +18,7 @@
 set -euo pipefail
 
 # ─── Pinned versions (ORCA moves herdr and the panel together) ───────────
-PANEL_VERSION="0.11.2"
+PANEL_VERSION="0.11.3"
 HERDR_VERSION="0.9.5"
 HERDR_BASE_URL="https://github.com/herdrdev/herdr/releases/download/v${HERDR_VERSION}"
 # sha256 of each release asset, from the GitHub release v0.9.5 (published 2026-10-14).
@@ -35,7 +35,7 @@ HERDR_SHA256_macos_aarch64="fb77c2232a05a8035421382c894392f4174e4e38a18e48af3dd0
 # Served by make.operio.work, with the GitHub release as a mirror. Same file, same sha256.
 PANEL_URL="https://make.operio.work/releases/operio-orca-${PANEL_VERSION}.tar.gz"
 PANEL_MIRROR_URL="https://github.com/operio-work/orca/releases/download/v${PANEL_VERSION}/operio-orca-${PANEL_VERSION}.tar.gz"
-PANEL_SHA256="f948b103b1664562b3b8fd8d6989219a09cdbf8ee393b6c372d7d18adb65a5a2"
+PANEL_SHA256="4352b2ce5c38cc8575ddbee50d9f8e467ea467d864154e7a4a311b89c52de758"
 # For testing only: fetch the tarball from another URL (e.g. a local copy of the site).
 # The sha256 above is still enforced; there is no way to override it.
 if [ -n "${OPERIO_ORCA_PANEL_URL:-}" ]; then PANEL_URL="$OPERIO_ORCA_PANEL_URL"; PANEL_MIRROR_URL=""; fi
