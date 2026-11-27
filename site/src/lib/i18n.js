@@ -121,7 +121,7 @@ const en = {
     ],
 
     whatsNew: {
-      "title": "What’s new in 0.10",
+      "title": "What’s new in 0.11",
       "video": { "name": "operio-orca-artifacts", "play": "Watch ORCA Artifacts", "length": "0:50", "playLabel": "Play the video about ORCA Artifacts, 50 seconds, music only with no narration", "label": "ORCA Artifacts, video. Music only, no narration. Captions repeat the text shown on screen.", "close": "Close the video", "captions": "English", "posterAlt": "ORCA Artifacts: your agents’ reports and dashboards, in one app." },
       "shots": [
         {
@@ -146,19 +146,19 @@ const en = {
           "body": "Reports, trackers and dashboards go to ORCA Artifacts, the free app for your team’s pages and dashboards. Everything arrives as a draft: you approve it before anyone sees it. Numbers on approved dashboards refresh on their own."
         },
         {
-          "title": "Starter agents",
-          "body": "Five ready-made agents for office work: Communicator, Writer, Researcher, Reporter and Chaser. One tap adds an agent with its skills; you can change everything after."
+          "title": "One sign-in",
+          "body": "The Artifacts button in ORCA opens the app already signed in. No second password for your team."
         },
         {
-          "title": "Industry packs",
-          "body": "A ready team for one kind of business: agents, document templates with examples, and routines that arrive switched off, so nothing runs until you turn it on."
+          "title": "Alerts on your phone",
+          "body": "Install Artifacts on your phone and tap the bell. You hear about it when a draft waits for you, or when a number on a dashboard crosses the line you set."
         },
         {
-          "title": "Put an agent to sleep",
-          "body": "Sleep for 15 minutes, an hour, or until you wake it. A sleeping agent uses no tokens; Wake picks up where it stopped and Finish ends the job."
+          "title": "Share straight in",
+          "body": "On Android, share a link, a photo or a PDF to Artifacts from any app. It lands as a draft page for you to approve."
         }
       ],
-      "note": "Also since 0.6: Template fill and Follow-up tracker skills, and clocks fixed in every language.",
+      "note": "Also in 0.11: a tidier top bar, notices that stack in a corner instead of covering your agents, and a clearer Admin. Since 0.9: starter agents, industry packs, and agents you can put to sleep.",
       "changelog": 'Full changelog'
     },
 
@@ -747,7 +747,7 @@ vsTitle: 'Cómo se compara ORCA',
     ],
 
     whatsNew: {
-      "title": "Novedades de la 0.10",
+      "title": "Novedades de la 0.11",
       "video": { "name": "operio-orca-artifacts", "play": "Mira ORCA Artifacts", "length": "0:50", "playLabel": "Reproduce el video de ORCA Artifacts, 50 segundos, solo música sin narración", "label": "ORCA Artifacts, video. Solo música, sin narración. Los subtítulos repiten el texto en pantalla.", "close": "Cerrar el video", "captions": "Español", "posterAlt": "ORCA Artifacts: los reportes y tableros de tus agentes, en una sola app." },
       "shots": [
         {
@@ -772,19 +772,19 @@ vsTitle: 'Cómo se compara ORCA',
           "body": "Reportes, registros y tableros van a ORCA Artifacts, la app gratuita para las páginas y tableros de tu equipo. Todo llega como borrador: tú lo apruebas antes de que alguien lo vea. Las cifras de los tableros aprobados se actualizan solas."
         },
         {
-          "title": "Agentes listos",
-          "body": "Cinco agentes ya preparados para la oficina: Comunicador, Redactor, Investigador, Reportero y Seguimiento. Un toque agrega el agente con sus habilidades; después puedes cambiarlo todo."
+          "title": "Un solo inicio de sesión",
+          "body": "El botón Artifacts de ORCA abre la app con la sesión ya iniciada. Tu equipo no necesita otra contraseña."
         },
         {
-          "title": "Paquetes por industria",
-          "body": "Un equipo listo para un tipo de negocio: agentes, plantillas de documentos con ejemplos y rutinas que llegan apagadas, así que nada corre hasta que tú lo enciendas."
+          "title": "Alertas en tu celular",
+          "body": "Instala Artifacts en tu celular y toca la campana. Te avisa cuando un borrador te espera o cuando una cifra de un tablero cruza el límite que pusiste."
         },
         {
-          "title": "Pon a dormir a un agente",
-          "body": "Duerme 15 minutos, una hora o hasta que lo despiertes. Un agente dormido no gasta tokens; Despertar sigue donde se quedó y Terminar cierra el trabajo."
+          "title": "Comparte directo a la app",
+          "body": "En Android, comparte un enlace, una foto o un PDF a Artifacts desde cualquier app. Llega como página en borrador para que la apruebes."
         }
       ],
-      "note": "También desde la 0.6: habilidades Llenar plantillas y Seguimiento de pendientes, y relojes arreglados en todos los idiomas.",
+      "note": "También en la 0.11: una barra superior más ordenada, avisos que se apilan en una esquina en vez de tapar a tus agentes y un Admin más claro. Desde la 0.9: agentes listos, paquetes por industria y agentes que puedes poner a dormir.",
       "changelog": 'Registro de cambios completo'
     },
 
