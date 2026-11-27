@@ -98,7 +98,7 @@ const en = {
 
     vsTitle: 'How ORCA compares',
     vsLines: [
-      'herdr runs the terminals. ORCA adds the phone, the alerts, the routines and the approvals.',
+      'Terminal tools run your agents. ORCA adds the phone, the alerts, the routines and the approvals.',
       'Claude Code, Codex, Gemini, opencode and local models on one board, with a phone alert and one-tap answers, free on your own computer.',
       'Want it always on, without your computer? ORCA Managed by Operio runs it for you.'
     ],
@@ -161,6 +161,42 @@ const en = {
       "note": "Also in 0.11: a tidier top bar, notices that stack in a corner instead of covering your agents, and a clearer Admin. Since 0.9: starter agents, industry packs, and agents you can put to sleep.",
       "changelog": 'Full changelog'
     },
+
+    tryIt: {
+      eyebrow: 'Try it here',
+      title: 'Answer an agent with one tap',
+      lead: 'This is a demo board with a fictional restaurant. Tap an answer, then approve the draft, the way you would from your phone.',
+      label: 'Interactive demo of the ORCA board with a fictional restaurant',
+      demoTag: 'Demo',
+      tiles: ['reservations', 'menu-post', 'review-replies'],
+      states: { needs: 'Needs you', working: 'Working', waiting: 'Idle', done: 'Done' },
+      asks: 'asks you',
+      question: 'How should I answer the Morgan party?',
+      context: 'A party of 8 at 8:00 pm, a birthday. The only fit is joining tables 4 and 5, which uses the 8:15 walk-in buffer.',
+      answers: ['Join tables 4 + 5 at 8:00 pm', 'Offer 6:30 pm instead', 'Put them on the waitlist'],
+      hint: 'Try it: pick an answer',
+      routine: 'routine, 9:00 am',
+      draftTitle: 'Replies to 3 new reviews',
+      draft: 'Three drafts are ready, one per review. They wait here until you approve them, so nothing reaches a customer on its own.',
+      approve: 'Approve',
+      doneTag: 'All clear',
+      doneTitle: 'Nobody is waiting on you',
+      doneBody: 'Reservations went with “{answer}”, and the review replies are approved. The board is calm again.',
+      again: 'Start over',
+      notif: ['Answer sent to reservations: {answer}', 'Review replies approved'],
+      status: [
+        'The reservations agent needs an answer from you.',
+        'Answer sent. The review replies routine has drafts waiting for your approval.',
+        'Drafts approved. No agent is waiting on you.',
+      ],
+    },
+    term: {
+      label: 'A terminal running the ORCA install line, then the ORCA board opening',
+      ready: 'ready',
+      working: 'working',
+      tiles: ['front-desk', 'researcher', 'reporter'],
+    },
+    tagline: ['Every agent on one board.', 'Nothing goes out', 'until you approve it.'],
 
     bizTitle: 'Run a business?',
     bizBody:
@@ -724,7 +760,7 @@ const es = {
 
 vsTitle: 'Cómo se compara ORCA',
     vsLines: [
-      'herdr corre las terminales. ORCA le suma el celular, los avisos, las rutinas y las aprobaciones.',
+      'Las herramientas de terminal corren a tus agentes. ORCA les suma el celular, los avisos, las rutinas y las aprobaciones.',
       'Claude Code, Codex, Gemini, opencode y modelos locales en un tablero, con aviso al celular y respuestas con un toque, gratis en tu propia computadora.',
       '¿Lo quieres siempre prendido, sin tu computadora? ORCA Gestionado por Operio lo opera por ti.'
     ],
@@ -787,6 +823,42 @@ vsTitle: 'Cómo se compara ORCA',
       "note": "También en la 0.11: una barra superior más ordenada, avisos que se apilan en una esquina en vez de tapar a tus agentes y un Admin más claro. Desde la 0.9: agentes listos, paquetes por industria y agentes que puedes poner a dormir.",
       "changelog": 'Registro de cambios completo'
     },
+
+    tryIt: {
+      eyebrow: 'Pruébalo aquí',
+      title: 'Responde a un agente con un toque',
+      lead: 'Es un tablero de demo con un restaurante ficticio. Toca una respuesta y luego aprueba el borrador, como lo harías desde tu celular.',
+      label: 'Demo interactiva del tablero de ORCA con un restaurante ficticio',
+      demoTag: 'Demo',
+      tiles: ['reservaciones', 'post-menu', 'resenas'],
+      states: { needs: 'Te necesita', working: 'Trabajando', waiting: 'En espera', done: 'Listo' },
+      asks: 'te pregunta',
+      question: '¿Cómo respondo al grupo Morgan?',
+      context: 'Un grupo de 8 a las 8:00 pm, un cumpleaños. Solo caben juntando las mesas 4 y 5, lo que usa el margen para clientes sin reserva de las 8:15.',
+      answers: ['Juntar mesas 4 + 5 a las 8:00 pm', 'Ofrecer 6:30 pm', 'Ponerlos en lista de espera'],
+      hint: 'Pruébalo: elige una respuesta',
+      routine: 'rutina, 9:00 am',
+      draftTitle: 'Respuestas a 3 reseñas nuevas',
+      draft: 'Hay tres borradores listos, uno por reseña. Esperan aquí hasta que los apruebes, así que nada llega solo a un cliente.',
+      approve: 'Aprobar',
+      doneTag: 'Todo en orden',
+      doneTitle: 'Nadie te está esperando',
+      doneBody: 'Reservaciones siguió con «{answer}» y las respuestas a reseñas están aprobadas. El tablero está tranquilo.',
+      again: 'Empezar de nuevo',
+      notif: ['Respuesta enviada a reservaciones: {answer}', 'Respuestas a reseñas aprobadas'],
+      status: [
+        'El agente de reservaciones necesita una respuesta tuya.',
+        'Respuesta enviada. La rutina de reseñas tiene borradores esperando tu aprobación.',
+        'Borradores aprobados. Ningún agente te está esperando.',
+      ],
+    },
+    term: {
+      label: 'Una terminal que corre la línea de instalación de ORCA y luego abre el tablero',
+      ready: 'listo',
+      working: 'trabajando',
+      tiles: ['recepcion', 'investigador', 'reportero'],
+    },
+    tagline: ['Todos tus agentes en un tablero.', 'Nada sale', 'hasta que tú lo apruebes.'],
 
     bizTitle: '¿Tienes un negocio?',
     bizBody:
